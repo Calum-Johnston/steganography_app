@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Desktop application.iml" filepath="$PROJECT_DIR$/Desktop application.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Steganography Desktop App.iml" filepath="$PROJECT_DIR$/Steganography Desktop App.iml" />
     </modules>
   </component>
 </project>
