@@ -3,6 +3,7 @@ package com.java.calumjohnston;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -74,6 +75,32 @@ public class encoder_GUI {
     public void LSB(){
         // Get binary equivalent of text to hide
         StringBuilder binary = getBinaryData(textField.getText());
+
+        int currentPosition = 0;
+        int x = 0; int y = 0;
+        while(currentPosition < binary.length()){
+
+            // Get current pixel data
+            int pixel = coverImage.getRGB(x, y);
+            int red = (pixel & 0x00ff0000) >> 16;
+            int green = (pixel & 0x0000ff00) >> 8;
+            int blue = pixel & 0x000000ff;
+
+            // Manipulate data here
+
+            // Update current pixel data
+            Color newColour = new Color(red, green, blue);
+            int newRGB = newColour.getRGB();
+            coverImage.setRGB(x, y, newRGB);
+
+            // Update position
+            currentPosition += 1;
+            x += 1;
+            if(x == coverImage.getWidth()){
+                x = 0;
+                y += 1;
+            }
+        }
     }
 
 
