@@ -64,7 +64,7 @@ public class encoder_GUI {
 
 
     /**
-     * FUNCTION: Performs the LSB algorithm
+     * FUNCTION: Performs the LSB algorithm and writes result to file
      *           (detailed in text document: LSB.txt)
      * INPUT: BufferedImage coverImage: The image of which data will be hidden in
      *        String binary: The data to hide in the image
@@ -79,7 +79,6 @@ public class encoder_GUI {
         int currentPosition = 0;
         int x = 0; int y = 0;
         while(currentPosition < binary.length()){
-
             // Get current pixel data
             int pixel = coverImage.getRGB(x, y);
             int red = (pixel & 0x00ff0000) >> 16;
@@ -87,6 +86,9 @@ public class encoder_GUI {
             int blue = pixel & 0x000000ff;
 
             // Manipulate data here
+            String binaryGreen = Integer.toBinaryString(green);
+            String newGreen = binaryGreen.substring(0, binaryGreen.length() - 1) + binary.charAt(currentPosition);
+            green = Integer.parseInt(newGreen, 2);
 
             // Update current pixel data
             Color newColour = new Color(red, green, blue);
@@ -101,6 +103,14 @@ public class encoder_GUI {
                 y += 1;
             }
         }
+
+        try{
+            File outputFile = new File("Result.png");
+            ImageIO.write(coverImage, "jpg", outputFile);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
     }
 
 
