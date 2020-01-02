@@ -10,7 +10,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.stream.Collectors;
 
 public class encoder_GUI {
@@ -25,6 +24,14 @@ public class encoder_GUI {
     private BufferedReader textFile;
     private String text;
 
+
+    /**
+     * FUNCTION: Constructor for Encoder GUI
+     * INPUT: None
+     * RETURN: None
+     *
+     * NOTES: Sets up all default variables, listeners, etc
+     * **/
     public encoder_GUI() {
 
         encodeButton.setEnabled(false);
@@ -35,49 +42,14 @@ public class encoder_GUI {
         selectImageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                openFileChooser.setFileFilter(new FileNameExtensionFilter("PNG images", "png"));
-                int returnValue = openFileChooser.showOpenDialog(null);
-                if(returnValue == JFileChooser.APPROVE_OPTION){
-                    try{
-                        // Get image based from file explorer
-                        coverImage = ImageIO.read(openFileChooser.getSelectedFile());
-
-                        // User can now encode
-                        encodeButton.setEnabled(true);
-
-                        // Debugging purposes
-                        System.out.println("Successfully read in image");
-                    }catch(IOException e){
-                        System.out.println("Failed to read in image");
-                    }
-                }
+                readImageFile();
             }
         });
 
         textButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                openFileChooser.setFileFilter(new FileNameExtensionFilter("Text files", "txt"));
-                int returnValue = openFileChooser.showOpenDialog(null);
-                if(returnValue == JFileChooser.APPROVE_OPTION){
-                    try{
-                        try{
-                            // Reads in text file selected in file explorer
-                            textFile = new BufferedReader(new FileReader(openFileChooser.getSelectedFile()));
-
-                            // Converts text file to string
-                            // https://stackoverflow.com/questions/15040504/how-to-easily-convert-a-bufferedreader-to-a-string
-                            text = textFile.lines().collect(Collectors.joining());
-                            System.out.println(text);
-                        }catch(Exception e){
-                            e.printStackTrace();
-                        }
-
-                        System.out.println("Success");
-                    }catch(Exception e){
-                        System.out.println("Fail");
-                    }
-                }
+                readTextFile();
             }
         });
 
@@ -89,10 +61,112 @@ public class encoder_GUI {
         });
     }
 
-    public void LSB(){
 
+    /**
+     * FUNCTION: Performs the LSB algorithm
+     *           (detailed in text document: LSB.txt)
+     * INPUT: BufferedImage coverImage: The image of which data will be hidden in
+     *        String binary: The data to hide in the image
+     * RETURN: None
+     *
+     * NOTES: None
+     * **/
+    public void LSB(){
+        // Get binary equivalent of text to hide
+        StringBuilder binary = getBinaryData(textField.getText());
     }
 
+
+
+    // ====== PURPOSE FUNCTIONS ======
+    /**
+     * FUNCTION: Reads in a image file from the file explorer
+     * INPUT: None
+     * RETURN: None
+     *
+     * NOTES: None
+     * **/
+    public void readImageFile(){
+        openFileChooser.setFileFilter(new FileNameExtensionFilter("PNG images", "png"));
+        int returnValue = openFileChooser.showOpenDialog(null);
+        if(returnValue == JFileChooser.APPROVE_OPTION){
+            try{
+                // Get image based from file explorer
+                coverImage = ImageIO.read(openFileChooser.getSelectedFile());
+
+                // User can now encode
+                encodeButton.setEnabled(true);
+
+                // Debugging purposes
+                System.out.println("Successfully read in image");
+
+            }catch(IOException e){
+                System.out.println("Failed to read in image");
+            }
+        }
+    }
+
+
+    /**
+     * FUNCTION: Reads in a text file from the file explorer
+     * INPUT: None
+     * RETURN: None
+     *
+     * NOTES: None
+     * **/
+    public void readTextFile(){
+        openFileChooser.setFileFilter(new FileNameExtensionFilter("Text files", "txt"));
+        int returnValue = openFileChooser.showOpenDialog(null);
+        if(returnValue == JFileChooser.APPROVE_OPTION){
+            try{
+                // Reads in text file selected in file explorer
+                textFile = new BufferedReader(new FileReader(openFileChooser.getSelectedFile()));
+
+                // Converts text file to string
+                // https://stackoverflow.com/questions/15040504/how-to-easily-convert-a-bufferedreader-to-a-string
+                text = textFile.lines().collect(Collectors.joining());
+
+                // Write text to text field
+                textField.setText(text);
+
+                // Debugging purposes
+                System.out.println("Success");
+
+            }catch(Exception e){
+                System.out.println("Fail");
+            }
+        }
+    }
+
+
+    /**
+     * FUNCTION: Converts input text string into binary
+     * INPUT: String text: The text the user wishes to convert
+     * RETURN: StringBuilder binary: The binary equivalent of the input text
+     *
+     * NOTES: Currently only uses 7 bit ASCII, can update at later stage
+     * **/
+    public StringBuilder getBinaryData(String text){
+        byte[] bytes = text.getBytes();
+        StringBuilder binary = new StringBuilder();
+        for(byte b : bytes){
+            String binaryData = Integer.toBinaryString(b);
+            String formatted = ("0000000" + binaryData).substring(binaryData.length());
+            binary.append(formatted);
+        }
+        return binary;
+    }
+
+
+
+
+    /**
+     * FUNCTION: Main Method
+     * INPUT: String[] args: Any arguments passed in when originally run
+     * RETURN: None
+     *
+     * NOTES: Will remove later (only currently in use for testing)
+     * **/
     public static void main(String[] args) {
         JFrame frame = new JFrame("Encoder");
         frame.setContentPane(new encoder_GUI().rootPanel);
