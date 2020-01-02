@@ -12,21 +12,13 @@ public class main_GUI{
     private JPanel rootPanel;
     private JButton encodeButton;
 
-    private final JFileChooser openFileChooser;
-    private BufferedImage coverImage;
-
     public main_GUI(){
-
-        openFileChooser = new JFileChooser();
-        openFileChooser.setCurrentDirectory(new File("C:\\"));
-        openFileChooser.setFileFilter(new FileNameExtensionFilter("PNG images", "png"));
 
         encodeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 frame.dispose();
-                JFrame encoder = new JFrame("encoder_GUI");
-                encoder.setVisible(true);
+                // Open encoder GUI
             }
         });
     }
@@ -34,10 +26,12 @@ public class main_GUI{
 
 
     public static void main(String[] args) {
-        frame = new JFrame("main_GUI");
+        JFrame frame = new JFrame("Main");
         frame.setContentPane(new main_GUI().rootPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
+        frame.setResizable(false);
+        frame.setTitle("Steganography - MAIN MENU");
+        frame.setSize(500, 500);
         frame.setVisible(true);
     }
 }
