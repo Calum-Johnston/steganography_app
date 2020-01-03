@@ -30,6 +30,9 @@ public class encoder_GUI {
     private String coverImageName;
 
 
+
+
+    // ======= CONSTRUCTOR =======
     /**
      * FUNCTION: Constructor for Encoder GUI
      * INPUT: None
@@ -67,6 +70,9 @@ public class encoder_GUI {
     }
 
 
+
+
+    // ======= ENCODE FUNCTIONS =======
     /**
      * FUNCTION: Determines which algorithm to apply when embedding the data
      * INPUT: None
@@ -82,7 +88,6 @@ public class encoder_GUI {
         LSBMR(coverImage, binaryText);
     }
 
-    // ====== ALGORITHMS ======
     /**
      * FUNCTION: Performs the LSB algorithm
      * INPUT: BufferedImage coverImage: The image of which data will be hidden in
@@ -194,25 +199,20 @@ public class encoder_GUI {
 
         for(int pos = 0; pos < binaryText.length(); pos += 2){
             // Get message data from text at specific points
-           // data_1 = binaryText.charAt(pos);
-            //data_2 = binaryText.charAt(pos + 1);
-            data_1 = '1';
-            data_2 = '0';
+            data_1 = binaryText.charAt(pos);
+            data_2 = binaryText.charAt(pos + 1);
 
             // Get first pixel data from image at a specific location
-            //int pixel_left = coverImage.getRGB(x, y);
-            //int red_left = (pixel_left & 0x00ff0000) >> 16;
-            //int green_left = (pixel_left & 0x0000ff00) >> 8;
-            //int blue_left = pixel_left & 0x000000ff;
+            int pixel_left = coverImage.getRGB(x, y);
+            int red_left = (pixel_left & 0x00ff0000) >> 16;
+            int green_left = (pixel_left & 0x0000ff00) >> 8;
+            int blue_left = pixel_left & 0x000000ff;
 
             // Get second pixel data from image at a specific location
-            //int pixel_right = coverImage.getRGB(x + 1, y);
-            //int red_right = (pixel_right & 0x00ff0000) >> 16;
-            //int green_right = (pixel_right & 0x0000ff00) >> 8;
-            //int blue_right = pixel_right & 0x000000ff;
-
-            int green_left = 12;
-            int green_right = 41;
+            int pixel_right = coverImage.getRGB(x + 1, y);
+            int red_right = (pixel_right & 0x00ff0000) >> 16;
+            int green_right = (pixel_right & 0x0000ff00) >> 8;
+            int blue_right = pixel_right & 0x000000ff;
 
             // Manipulate pixel data
             // Binary relationship between both pixels LSB
@@ -232,10 +232,6 @@ public class encoder_GUI {
             String binary_green_right_LSB = binary_green_right.substring(binary_green_right.length() - 1);
 
             // Case 1:
-            System.out.println(Character.toString(data_1));
-            System.out.println(binary_green_left_LSB);
-            System.out.println(Character.toString(data_2));
-            System.out.println(LSB_Relationship_2);
             if(Character.toString(data_1).equals(binary_green_left_LSB) &&
                 !(Character.toString(data_2).equals(LSB_Relationship))){
                 // normal, +-1
@@ -252,23 +248,19 @@ public class encoder_GUI {
                     Character.toString(data_2).equals(LSB_Relationship_2)){
                 // -1, normal
                 green_left -= 1;
-            }else{
+            }else {
                 // +1, normal
                 green_right += 1;
             }
 
-            System.out.println(green_left);
-            System.out.println(green_right);
-            System.out.println();
-
             // Write new pixel data to image at specified location
-            //Color newColour = new Color(red_left, green_left, blue_left);
-            //int newRGB = newColour.getRGB();
-            //coverImage.setRGB(x, y, newRGB);
+            Color newColour = new Color(red_left, green_left, blue_left);
+            int newRGB = newColour.getRGB();
+            coverImage.setRGB(x, y, newRGB);
 
-           // Color newColour_2 = new Color(red_right, green_right, blue_right);
-            //int newRGB_2 = newColour.getRGB();
-            //coverImage.setRGB(x + 1, y, newRGB_2);
+            Color newColour_2 = new Color(red_right, green_right, blue_right);
+            int newRGB_2 = newColour.getRGB();
+            coverImage.setRGB(x + 1, y, newRGB_2);
 
 
             // Update position in image to manipulate pixel
@@ -283,7 +275,10 @@ public class encoder_GUI {
 
     }
 
-    // ====== PURPOSE FUNCTIONS ======
+
+
+
+    // ======= PURPOSE FUNCTIONS =======
     /**
      * FUNCTION: Reads in a image file from the file explorer
      * INPUT: None
@@ -317,7 +312,6 @@ public class encoder_GUI {
             }
         }
     }
-
 
     /**
      * FUNCTION: Reads in a text file from the file explorer
@@ -353,7 +347,6 @@ public class encoder_GUI {
         }
     }
 
-
     /**
      * FUNCTION: Converts input text string into binary
      * INPUT: String text: The text the user wishes to convert
@@ -372,7 +365,6 @@ public class encoder_GUI {
         return binary;
     }
 
-
     /**
      * FUNCTION: Writes in a image file to the disk
      * INPUT: BufferedImage image: Image to write to file
@@ -383,7 +375,7 @@ public class encoder_GUI {
     public void writeImageFile(BufferedImage image){
         try{
             // Writes file to the disk (w/extension of algorithm used)
-            File outputFile = new File("rsts/LSB_" + coverImageName + ".png");
+            File outputFile = new File("rsts/" + coverImageName + "_encoded.png");
             ImageIO.write(coverImage, "png", outputFile);
 
             // Debugging purposes
@@ -397,7 +389,7 @@ public class encoder_GUI {
 
 
 
-
+    // ======= MAIN METHOD =======
     /**
      * FUNCTION: Main Method
      * INPUT: String[] args: Any arguments passed in when originally run
