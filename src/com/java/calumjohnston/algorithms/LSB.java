@@ -190,11 +190,18 @@ public class LSB {
 
         // Gets the binary text
         StringBuilder binaryText = getBinaryText(stegoImage, endPoint[0], endPoint[1]);
+        if(binaryText == null){
+            return "";
+        }
 
         // Converts binary text to ASCII text
         StringBuilder text = getText(binaryText);
+        if(text == null){
+            return "";
+        }
 
         return text.toString();
+
     }
 
     /**
@@ -243,8 +250,17 @@ public class LSB {
      */
     public StringBuilder getBinaryText(BufferedImage stegoImage, int endX, int endY){
         StringBuilder binaryText = new StringBuilder();
+
+        // Get position to start collecting data from
         int currentX = param_endX_length + param_endY_length;
         int currentY = (param_endX_length + param_endY_length) / stegoImage.getWidth();
+
+        // Check if positions are out of bounds
+        // (i.e. it is an image that has been encoded)
+        if(endX >= stegoImage.getWidth() || endY >= stegoImage.getHeight()){
+            return null;  // Return null to indicate not an encoded image
+        }
+
         while(currentX != endX || currentY != endY){
             binaryText.append(getPixelLSB(stegoImage, currentX, currentY));
             currentX = (currentX + 1) % stegoImage.getWidth();
@@ -263,6 +279,13 @@ public class LSB {
      */
     public StringBuilder getText(StringBuilder binaryText){
         StringBuilder text = new StringBuilder();
+
+        // Check if binaryText length is a multiple of 8
+        // (if not then it has not been encoded with our algorithm)
+        if(binaryText.length() % 8 != 0){
+            return null;
+        }
+
         for(int i = 0; i < binaryText.length(); i += 8){
             String binaryData = binaryText.substring(i, i + 8);
             char characterData = (char) Integer.parseInt(binaryData, 2);

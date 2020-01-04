@@ -1,5 +1,7 @@
 package com.java.calumjohnston;
 
+import com.java.calumjohnston.algorithms.LSB;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -20,6 +22,7 @@ public class decoder_GUI {
 
     private final JFileChooser openFileChooser;
     private BufferedImage stegoImage;
+    private String text;
 
 
     // ======= CONSTRUCTOR =======
@@ -56,7 +59,9 @@ public class decoder_GUI {
      * Determines which algorithm to apply when decoding the data
      */
     public void decodeData(){
-
+        LSB l = new LSB();
+        text = l.decode(stegoImage);
+        System.out.println(text);
     }
 
 
