@@ -2,7 +2,6 @@ package com.java.calumjohnston.algorithms;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.nio.Buffer;
 
 /**
  * The LSB class performs LSB encoding and decoding on images
@@ -13,16 +12,16 @@ public class LSB {
      * An integer that reserves n pixels used for communicating
      * parameters that are required for decoding
      */
-    private int reserved_endX;
-    private int reserved_endY;
+    private int param_endX_length;
+    private int param_endY_length;
 
     // ======= CONSTRUCTOR =======
     /**
      * Constructor for the class
      */
     public LSB(){
-        reserved_endY = 15;
-        reserved_endX = 15;
+        param_endX_length = 15;
+        param_endY_length = 15;
     }
 
     // ======= Encoding Functions =======
@@ -57,13 +56,13 @@ public class LSB {
      */
     public int[] encodeData(BufferedImage coverImage, StringBuilder binaryText){
         char data;
-        int x = (reserved_endX + reserved_endY) % coverImage.getWidth();
-        int y = (reserved_endX + reserved_endY) / coverImage.getWidth();
+        int x = (param_endX_length + param_endY_length) % coverImage.getWidth();
+        int y = (param_endX_length + param_endY_length) / coverImage.getWidth();
         int[] pixelData;
         for(int i = 0; i < binaryText.length(); i++){
             data = binaryText.charAt(i);
             pixelData = getPixelData(coverImage, x, y);
-            insertData(pixelData, data);
+            insertLSB(pixelData, data);
             writePixelData(coverImage, pixelData, x, y);
             x = (x + 1) % coverImage.getWidth();
             if(x == 0){
@@ -77,17 +76,18 @@ public class LSB {
      * Encodes the parameter data into the cover image
      *
      * @param coverImage    Image to be used
-     * @param endX          Parameter storing x coordinate of final data
-     * @param endY          Parameter storing y coordinate of final data
+     * @param finalX        Parameter storing x coordinate of final data
+     * @param finalY        Parameter storing y coordinate of final data
      */
-    public void encodeParameters(BufferedImage coverImage, int endX, int endY){
-        String xValue = Integer.toBinaryString(endX);
-        String xValue_form = ("000000000000000" + xValue).substring(xValue.length());
-        encodeIndividualParameter(coverImage, xValue_form, 0);
+    public void encodeParameters(BufferedImage coverImage, int finalX, int finalY){
+        // Encode x coordinate of final encoding
+        String param_finalX = Integer.toBinaryString(finalX);
+        param_finalX = ("000000000000000" + param_finalX).substring(param_finalX.length());
+        encodeIndividualParameter(coverImage, param_finalX, 0);
 
-        String yValue = Integer.toBinaryString(endY);
-        String yValue_form = ("000000000000000" + yValue).substring(yValue.length());
-        encodeIndividualParameter(coverImage, yValue_form, reserved_endX);
+        String param_finalY = Integer.toBinaryString(finalY);
+        param_finalY = ("000000000000000" + param_finalY).substring(param_finalY.length());
+        encodeIndividualParameter(coverImage, param_finalY, param_endX_length);
     }
 
     /**
@@ -105,7 +105,7 @@ public class LSB {
         for(int i = 0; i < parameter.length(); i++){
             data = parameter.charAt(i);
             pixelData = getPixelData(coverImage, x, y);
-            insertData(pixelData, data);
+            insertLSB(pixelData, data);
             writePixelData(coverImage, pixelData, x, y);
             x = (x + 1) % coverImage.getWidth();
             if(x == 0){
@@ -136,7 +136,7 @@ public class LSB {
      * @param pixelData     Tuple of RGB values
      * @param data          Data to be inserted
      */
-    public void insertData(int[] pixelData, char data){
+    public void insertLSB(int[] pixelData, char data){
         String binaryGreen = Integer.toBinaryString(pixelData[1]);
         String updatedGreen = binaryGreen.substring(0, binaryGreen.length() - 1) + data;
         pixelData[1] = Integer.parseInt(updatedGreen, 2);
@@ -204,9 +204,9 @@ public class LSB {
      * @return              Tuple of data storing parameter values
      */
     public int[] getParameterData(BufferedImage stegoImage){
-        String endX_String = getIndividualParameter(stegoImage, 0, reserved_endX);
+        String endX_String = getIndividualParameter(stegoImage, 0, param_endX_length);
         int endX = Integer.parseInt(endX_String, 2);
-        String endY_String = getIndividualParameter(stegoImage, reserved_endX, reserved_endY);
+        String endY_String = getIndividualParameter(stegoImage, param_endX_length, param_endY_length);
         int endY = Integer.parseInt(endY_String, 2);
         return new int[] {endX, endY};
     }
@@ -243,8 +243,8 @@ public class LSB {
      */
     public StringBuilder getBinaryText(BufferedImage stegoImage, int endX, int endY){
         StringBuilder binaryText = new StringBuilder();
-        int currentX = reserved_endX + reserved_endY;
-        int currentY = (reserved_endX + reserved_endY) / stegoImage.getWidth();
+        int currentX = param_endX_length + param_endY_length;
+        int currentY = (param_endX_length + param_endY_length) / stegoImage.getWidth();
         while(currentX != endX || currentY != endY){
             binaryText.append(getPixelLSB(stegoImage, currentX, currentY));
             currentX = (currentX + 1) % stegoImage.getWidth();
