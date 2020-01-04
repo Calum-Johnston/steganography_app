@@ -17,7 +17,11 @@ import java.util.stream.Collectors;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * The encoder_GUI class runs the GUI for the encoding page
+ */
 public class encoder_GUI {
+
     private JPanel rootPanel;
     private JButton selectImageButton;
     private JButton encodeButton;
@@ -31,16 +35,10 @@ public class encoder_GUI {
     private String coverImageName;
 
 
-
-
     // ======= CONSTRUCTOR =======
     /**
-     * FUNCTION: Constructor for Encoder GUI
-     * INPUT: None
-     * RETURN: None
-     *
-     * NOTES: Sets up all default variables, listeners, etc
-     * **/
+     * Constructor for the class
+     */
     public encoder_GUI() {
 
         encodeButton.setEnabled(false);
@@ -75,12 +73,8 @@ public class encoder_GUI {
 
     // ======= ENCODE FUNCTIONS =======
     /**
-     * FUNCTION: Determines which algorithm to apply when embedding the data
-     * INPUT: None
-     * RETURN: None
-     *
-     * NOTES: None
-     * **/
+     * Determines which algorithm to apply when encoding the data
+     */
     public void encodeData(){
         // Converts text to be hidden into it's binary equivalent
         StringBuilder binaryText = getBinaryText(textField.getText());
@@ -91,15 +85,11 @@ public class encoder_GUI {
 
     }
 
-
     /**
-     * FUNCTION: Performs the LSBM algorithm
-     * INPUT: BufferedImage coverImage: The image of which data will be hidden in
-     *        StringBuilder binaryText: The binary data to be hidden within the image
-     * RETURN: None
-     *
-     * NOTES: Algorithm detailed in LSBM.txt
-     * **/
+     * Performs the LSBM algorithm - detailed in LSBM.txt
+     * @param coverImage
+     * @param binaryText
+     */
     public void LSBM(BufferedImage coverImage, StringBuilder binaryText){
         // Initialise starting image pixel position
         int x = 0; int y = 0;
@@ -144,13 +134,10 @@ public class encoder_GUI {
     }
 
     /**
-     * FUNCTION: Performs the LSBMR algorithm
-     * INPUT: BufferedImage coverImage: The image of which data will be hidden in
-     *        StringBuilder binaryText: The binary data to be hidden within the image
-     * RETURN: None
-     *
-     * NOTES: Algorithm detailed in LSBMR.txt
-     * **/
+     * Performs the LSBMR algorithm - detailed in LSBMR.txt
+     * @param coverImage
+     * @param binaryText
+     */
     public void LSBMR(BufferedImage coverImage, StringBuilder binaryText){
         // Initialise starting image pixel position
         int x = 0; int y = 0;
@@ -239,12 +226,9 @@ public class encoder_GUI {
 
     // ======= PURPOSE FUNCTIONS =======
     /**
-     * FUNCTION: Reads in a image file from the file explorer
-     * INPUT: None
-     * RETURN: None
-     *
-     * NOTES: None
-     * **/
+     * Reads an image from file explorer
+     * (TYPE: .png)
+     */
     public void readImageFile(){
         // Sets the type of file to get
         openFileChooser.setFileFilter(new FileNameExtensionFilter("PNG images", "png"));
@@ -273,12 +257,9 @@ public class encoder_GUI {
     }
 
     /**
-     * FUNCTION: Reads in a text file from the file explorer
-     * INPUT: None
-     * RETURN: None
-     *
-     * NOTES: None
-     * **/
+     * Reads a text document from file explorer
+     * (TYPE: .txt)
+     */
     public void readTextFile(){
         // Sets the type of file to get
         openFileChooser.setFileFilter(new FileNameExtensionFilter("Text files", "txt"));
@@ -307,12 +288,11 @@ public class encoder_GUI {
     }
 
     /**
-     * FUNCTION: Converts input text string into binary
-     * INPUT: String text: The text the user wishes to convert
-     * RETURN: StringBuilder binary: The binary equivalent of the input text
+     * Converts input text string into binary
      *
-     * NOTES: Currently only uses 7 bit ASCII, can update at later stage
-     * **/
+     * @param text  The ASCII text to be converted to binary
+     * @return      Binary Equivalent of ASCII text
+     */
     public StringBuilder getBinaryText(String text){
         byte[] bytes = text.getBytes();
         StringBuilder binary = new StringBuilder();
@@ -325,12 +305,10 @@ public class encoder_GUI {
     }
 
     /**
-     * FUNCTION: Writes in a image file to the disk
-     * INPUT: BufferedImage image: Image to write to file
-     * RETURN: None
+     * Writes the image parameter to the disk
      *
-     * NOTES: None
-     * **/
+     * @param image     The image to be written to file
+     */
     public void writeImageFile(BufferedImage image){
         try{
             // Writes file to the disk (w/extension of algorithm used)
@@ -348,14 +326,12 @@ public class encoder_GUI {
 
 
 
-    // ======= MAIN METHOD =======
+
     /**
-     * FUNCTION: Main Method
-     * INPUT: String[] args: Any arguments passed in when originally run
-     * RETURN: None
+     * Main Method (to remove at some stage)
      *
-     * NOTES: Will remove later (only currently in use for testing)
-     * **/
+     * @param args      Arguments input when program is run
+     */
     public static void main(String[] args) {
         JFrame frame = new JFrame("Encoder");
         frame.setContentPane(new encoder_GUI().rootPanel);

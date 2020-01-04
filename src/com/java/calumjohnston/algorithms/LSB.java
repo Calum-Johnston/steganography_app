@@ -3,51 +3,56 @@ package com.java.calumjohnston.algorithms;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
+/**
+ * The LSB class performs LSB encoding and decoding on images
+ */
 public class LSB {
 
+    /**
+     * Constructor for the class
+     */
     public LSB(){
 
     }
 
+
     /**
-     * FUNCTION: Performs the LSB encoding algorithm
-     * INPUT: BufferedImage coverImage: The image of which data will be hidden in
-     *        StringBuilder binaryText: The binary data to be hidden within the image
-     * RETURN: None
+     * Performs the LSB encoding algorithm
+     * - Detailed in lsb.txt
      *
-     * NOTES: Algorithm detailed in LSB.txt
-     * **/
+     * @param coverImage    Image to be used (acting as the Cover)
+     * @param binaryText    Data to be inserted (acting as the Payload)
+     * @return              Image with data hidden within it (acting as the Stego Image)
+     */
     public BufferedImage encode(BufferedImage coverImage, StringBuilder binaryText){
 
-        // Initialise starting image pixel position
         int x = 0; int y = 0;
         char data;
         int[] pixelData = new int[3];
 
         for(int pos = 0; pos < binaryText.length(); pos++){
-            // Get message data from text at a specific point
             data = binaryText.charAt(pos);
-
-            // Get pixel data from image at a specific location
             pixelData = getPixelData(coverImage, x, y);
-
-            // Manipulate pixel data (only writes to Green LSB currently)
             insertData(pixelData, data);
-
-            // Write new pixel data to image at specified location
             writePixelData(coverImage, pixelData, x, y);
-
-            // Update position in image to manipulate pixel (serially)
             x += 1;
             if(x == coverImage.getWidth()){
                 x = 0; y += 1;
             }
         }
+
         return coverImage;
     }
 
-    // ENCODING FUNCTIONS
-    // Get pixel data from image at a specific location
+
+    /**
+     * Gets pixel data from an image at a specific location
+     *
+     * @param coverImage  Image to be used
+     * @param x           x coordinate of pixel
+     * @param y           y coordinate of pixel
+     * @return            Tuple of RGB values (representing the pixel)
+     */
     public int[] getPixelData(BufferedImage coverImage, int x, int y){
         int pixel = coverImage.getRGB(x, y);
         int red = (pixel & 0x00ff0000) >> 16;
@@ -56,14 +61,26 @@ public class LSB {
         return new int[] {red, green, blue};
     }
 
-    // Insert hidden data into pixel
+    /**
+     * Inserts data into pixel data (by LSB technique)
+     *
+     * @param pixelData     Tuple of RGB values
+     * @param data          Data to be inserted
+     */
     public void insertData(int[] pixelData, char data){
         String binaryGreen = Integer.toBinaryString(pixelData[1]);
         String updatedGreen = binaryGreen.substring(0, binaryGreen.length() - 1) + data;
         pixelData[1] = Integer.parseInt(updatedGreen, 2);
     }
 
-    // Write new pixel data to image at specified location
+    /**
+     * Writes pixel data to an image at a specific location
+     *
+     * @param coverImage    Image to be used
+     * @param pixelData     Typle of RGB values (representing the pixel)
+     * @param x             x coordinate of pixel
+     * @param y             y coordinate of pixel
+     */
     public void writePixelData(BufferedImage coverImage, int[] pixelData, int x, int y){
         Color newColour = new Color(pixelData[0], pixelData[1], pixelData[2]);
         int newRGB = newColour.getRGB();
@@ -71,8 +88,12 @@ public class LSB {
     }
 
 
-
-
+    /**
+     * Performs the LSB decoding algorithm
+     * (detailed in LSB.txt)
+     *
+     * @return
+     */
     public StringBuilder decode(){
         StringBuilder binaryText = new StringBuilder();
         return binaryText;

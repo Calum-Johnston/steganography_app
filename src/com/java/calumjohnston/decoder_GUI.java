@@ -6,10 +6,12 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * The decoder_GUI class runs the GUI for the decoding page
+ */
 public class decoder_GUI {
     private JPanel rootPanel;
     private JButton selectImageButtom;
@@ -22,12 +24,8 @@ public class decoder_GUI {
 
     // ======= CONSTRUCTOR =======
     /**
-     * FUNCTION: Constructor for Encoder GUI
-     * INPUT: None
-     * RETURN: None
-     *
-     * NOTES: Sets up all default variables, listeners, etc
-     * **/
+     * Constructor for this class
+     */
     public decoder_GUI(){
 
         decodeButton.setEnabled(false);
@@ -50,35 +48,25 @@ public class decoder_GUI {
         });
     }
 
+
+
+
     // ======= DECODE FUNCTIONS =======
     /**
-     * FUNCTION: Determines which algorithm to apply when retrieving the data
-     * INPUT: None
-     * RETURN: None
-     *
-     * NOTES: None
-     * **/
+     * Determines which algorithm to apply when decoding the data
+     */
     public void decodeData(){
-        // Calls algorithm to embed the data
-        LSB(stegoImage);
-    }
-
-    public void LSB(BufferedImage stegoImage){
-        StringBuilder binaryText;
-
 
     }
+
 
 
 
     // ======= PURPOSE FUNCTIONS =======
     /**
-     * FUNCTION: Reads in a image file from the file explorer
-     * INPUT: None
-     * RETURN: None
-     *
-     * NOTES: None
-     * **/
+     * Reads an image from file explorer
+     * (TYPE: .png)
+     */
     public void readImageFile(){
         // Sets the type of file to get
         openFileChooser.setFileFilter(new FileNameExtensionFilter("PNG images", "png"));
@@ -107,12 +95,10 @@ public class decoder_GUI {
 
     // ======= MAIN METHOD =======
     /**
-     * FUNCTION: Main Method
-     * INPUT: String[] args: Any arguments passed in when originally run
-     * RETURN: None
+     * Main Method (to remove at some stage)
      *
-     * NOTES: Will remove later (only currently in use for testing)
-     * **/
+     * @param args      Arguments input when program is run
+     */
     public static void main(String[] args) {
         JFrame frame = new JFrame("decoder_GUI");
         frame.setContentPane(new decoder_GUI().rootPanel);
