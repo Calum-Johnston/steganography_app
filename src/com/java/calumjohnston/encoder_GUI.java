@@ -76,13 +76,10 @@ public class encoder_GUI {
      * Determines which algorithm to apply when encoding the data
      */
     public void encodeData(){
-        // Converts text to be hidden into it's binary equivalent
-        StringBuilder binaryText = getBinaryText(textField.getText());
-
         // Calls algorithm to embed the data
         LSB l = new LSB();
-        writeImageFile(l.encode(coverImage, binaryText));
-
+        BufferedImage stegoImage = l.encode(coverImage, textField.getText());
+        writeImageFile(stegoImage);
     }
 
     /**
@@ -285,23 +282,6 @@ public class encoder_GUI {
                 System.out.println("Failed to read in text");
             }
         }
-    }
-
-    /**
-     * Converts input text string into binary
-     *
-     * @param text  The ASCII text to be converted to binary
-     * @return      Binary Equivalent of ASCII text
-     */
-    public StringBuilder getBinaryText(String text){
-        byte[] bytes = text.getBytes();
-        StringBuilder binary = new StringBuilder();
-        for(byte b : bytes){
-            String binaryData = Integer.toBinaryString(b);
-            String formatted = ("00000000" + binaryData).substring(binaryData.length());
-            binary.append(formatted);
-        }
-        return binary;
     }
 
     /**
