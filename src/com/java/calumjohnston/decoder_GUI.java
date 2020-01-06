@@ -60,8 +60,8 @@ public class decoder_GUI {
      */
     public void decodeData(){
         LSB l = new LSB();
-        text = l.decode(stegoImage);
-        System.out.println(text);
+        //text = l.decode(stegoImage);
+        //System.out.println(text);
     }
 
 
