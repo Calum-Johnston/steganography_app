@@ -83,16 +83,14 @@ public class LSB {
 
             // Get binary version of parameters
             StringBuilder binaryParameters = getBinaryParameters(coverImage, parameters);
-            System.out.println(param_lengths[0] + " " + param_lengths[1]);
-            System.out.println(binaryParameters);
+
             // Encode binary parameters into the image
             encodeData(coverImage, binaryParameters, coloursToConsider, 0, 0);
 
-            for(int i = 0;  i < 15; i++){
+            // ERROR BETWEEN ENCODE DATA AND HERE!!!
+            for(int i = 0;  i < 25; i++){
                 int[] pixelData = getPixelData(coverImage, i, 0);
-                System.out.println(Integer.toBinaryString(pixelData[0]).substring(Integer.toBinaryString(pixelData[0]).length() - 1));
                 System.out.println(Integer.toBinaryString(pixelData[1]).substring(Integer.toBinaryString(pixelData[1]).length() - 1));
-                System.out.println(Integer.toBinaryString(pixelData[2]).substring(Integer.toBinaryString(pixelData[2]).length() - 1));
             }
 
             return coverImage;
@@ -177,13 +175,13 @@ public class LSB {
         int[] pixelData;
         int endColour = coloursToConsider[coloursToConsider.length - 1];
         int x = startEncodingX ; int y = startEncodingY;
+        System.out.println(binary);
         for(int i = 0; i < binary.length(); i += coloursToConsider.length){
-
             // Get pixel data of current pixel
             pixelData = getPixelData(coverImage, x, y);
 
             // Encode data into LSBs of colours used
-            for(int j = 0; j < coloursToConsider.length; j++){
+            for(Integer j : coloursToConsider){
                 if(i + j >= binary.length()) {
                     endColour = j - 1;
                     writePixelData(coverImage, pixelData, x, y);
