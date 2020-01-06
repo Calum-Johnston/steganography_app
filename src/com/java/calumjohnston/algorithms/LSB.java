@@ -1,5 +1,7 @@
 package com.java.calumjohnston.algorithms;
 
+import com.java.calumjohnston.randomgenerators.pseudorandom;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
@@ -9,20 +11,32 @@ import java.awt.image.BufferedImage;
 public class LSB {
 
     /**
-     * An integer that reserves n pixels used for communicating
-     * parameters that are required for decoding
+     * PARAMETER VARIABLES
+     * Store the number of bits each parameter requires
      */
-    private int param_endX_length;
-    private int param_endY_length;
+    private int param_endX;
+    private int param_endY;
+    private int param_redUsed;
+    private int param_greenUsed;
+    private int param_blueUsed;
+    private int param_endColour;
 
-    // ======= CONSTRUCTOR =======
+
+    // ======= CONSTRUCTOR(S) =======
     /**
      * Constructor for the class
      */
     public LSB(){
-        param_endX_length = 15;
-        param_endY_length = 15;
+        param_endX = 15;
+        param_endY = 15;
+        param_redUsed = 1;
+        param_greenUsed = 1;
+        param_blueUsed = 1;
+        param_endColour = 2;
     }
+
+
+
 
     // ======= Encoding Functions =======
     /**
@@ -35,11 +49,22 @@ public class LSB {
      */
     public BufferedImage encode(BufferedImage coverImage, String text){
 
+        boolean red = true;
+        boolean blue = true;
+        boolean green = true;
+        boolean random = false;
+
+        // Determine the colours to consider when overwriting LSBs
+        int[] coloursToConsider = getColoursToConsider(red, green, blue);
+        int endColour = coloursToConsider[coloursToConsider.length - 1];
+
+        // Check here whether data will fit into image (or not)
+
         // Get binary text from ASCII text
         StringBuilder binaryText = getBinaryText(text);
 
         // Encode the binary text into the image
-        int[] endPoint = encodeData(coverImage, binaryText);
+        int[] endPoint = encodeData(coverImage, binaryText, coloursToConsider, endColour);
 
         // Encode the parameters into the image
         encodeParameters(coverImage, endPoint[0], endPoint[1]);
@@ -47,22 +72,59 @@ public class LSB {
         return coverImage;
     }
 
+
+    /**
+     * Gets the colours that will be used
+     *
+     * @param red       Boolean to whether red will be used
+     * @param green     Boolean to whether green will be used
+     * @param blue      Boolean to whether blue will be used
+     * @return          An int[] array storing only the colours it considers
+     */
+    public int[] getColoursToConsider(boolean red, boolean green, boolean blue){
+        if(red && green && blue){
+            return new int[] {0, 1, 2};
+        }else if(red && green){
+            return new int[] {0, 1};
+        }else if(red && blue){
+            return new int[] {0, 2};
+        }else if(blue && green){
+            return new int[] {1, 2};
+        }else if(red){
+            return new int[] {0};
+        }else if(green){
+            return new int[] {1};
+        } else if (blue){
+            return new int[] {2};
+        }
+        return new int[] {0, 1, 2};
+    }
+
     /**
      * Encodes the stream of binary data into the cover Image
      *
-     * @param coverImage    Image to be used
-     * @param binaryText    Binary data to be encoded
+     * @param coverImage            Image to be used
+     * @param binaryText            Binary data to be encoded
+     * @param coloursToConsider     List of colours we will encode data into
+     * @param endColour             Stores the final colour we encode on
      * @return              Tuple storing final insertion parameters
      */
-    public int[] encodeData(BufferedImage coverImage, StringBuilder binaryText){
-        char data;
-        int x = (param_endX_length + param_endY_length) % coverImage.getWidth();
-        int y = (param_endX_length + param_endY_length) / coverImage.getWidth();
+    public int[] encodeData(BufferedImage coverImage, StringBuilder binaryText, int[] coloursToConsider, int endColour){
         int[] pixelData;
-        for(int i = 0; i < binaryText.length(); i++){
-            data = binaryText.charAt(i);
+        int x = 0; int y = 0;
+        for(int i = 0; i < binaryText.length(); i += coloursToConsider.length){
             pixelData = getPixelData(coverImage, x, y);
-            insertLSB(pixelData, data);
+
+            // Encode data into LSBs of colours used
+            for(int j = 0; j < coloursToConsider.length; j++){
+                if(i + j >= binaryText.length()){
+                    endColour = j - 1;
+                    break;
+                }
+                char data = binaryText.charAt(i);
+                pixelData[i] = insertLSB(pixelData[i], data);
+            }
+
             writePixelData(coverImage, pixelData, x, y);
             x = (x + 1) % coverImage.getWidth();
             if(x == 0){
@@ -133,13 +195,17 @@ public class LSB {
     /**
      * Inserts data into pixel data (by LSB technique)
      *
-     * @param pixelData     Tuple of RGB values
+     * @param colour        Original colour to be manipulated
      * @param data          Data to be inserted
+     * @return              Updated colur
      */
-    public void insertLSB(int[] pixelData, char data){
-        String binaryGreen = Integer.toBinaryString(pixelData[1]);
-        String updatedGreen = binaryGreen.substring(0, binaryGreen.length() - 1) + data;
-        pixelData[1] = Integer.parseInt(updatedGreen, 2);
+    public int insertLSB(int colour, char data){
+        if(colour % 2 == 0 && data == '1'){
+            return colour + 1;
+        }else if(colour % 2 == 1 && data == '0') {
+            return colour - 1;
+        }
+        return colour;
     }
 
     /**
