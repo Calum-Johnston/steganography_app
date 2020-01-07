@@ -52,8 +52,13 @@ public class LSB {
      * Performs the LSB encoding algorithm
      * - Detailed in lsb.txt
      *
-     * @param coverImage Image to be used (acting as the Cover)
-     * @param text       Data to be inserted (acting as the Payload)
+     * @param coverImage    Image to be used (acting as the Cover)
+     * @param text          Data to be inserted (acting as the Payload)
+     * @param red           Determines whether the red colour channel will be used
+     * @param green         Determines whether the blue colour channel will be used
+     * @param blue          Determines whether the green colour channel will be used
+     * @param random        Determines whether the PRNG will be used
+     * @param seed          Acts as the seed for the PRNG
      * @return Image with data hidden within it (acting as the Stego Image)
      */
     public BufferedImage encode(BufferedImage coverImage, String text,
@@ -75,7 +80,7 @@ public class LSB {
         int dataImageCanStore = coverImage.getWidth() * coverImage.getHeight() * coloursToConsider.length;
         if (dataToInsert < dataImageCanStore) {
 
-            // Encode the binary text into the image
+            // Encode the data into the image
             int[] finalValues = encodeData(coverImage, binaryText, coloursToConsider, "normal", random);
 
             // Encode the parameters into the image
@@ -121,11 +126,14 @@ public class LSB {
      * Gets all the parameters and stores them with their corresponding number of bits
      * required to store
      *
-     * @param red         Boolean to whether red will be used
-     * @param green       Boolean to whether green will be used
-     * @param blue        Boolean to whether blue will be used
-     * @param finalValues Tuple storing final insertion parameters
-     * @return A map which stores parameters and their corresponding no. of bits required
+     *
+     * @param coverImage            The image to be used
+     * @param random                Determines whether the PRNG will be used
+     * @param coloursToConsider     List of colours we will encode data into
+     * @param red                   Boolean to whether red will be used
+     * @param green                 Boolean to whether green will be used
+     * @param blue                  Boolean to whether blue will be used
+     * @param finalValues           Tuple storing final insertion parameters
      */
     public void encodeParameters(BufferedImage coverImage, boolean random, int[] coloursToConsider,
                                  boolean red, boolean green, boolean blue, int[] finalValues) {
@@ -150,8 +158,7 @@ public class LSB {
      * @param coverImage        Image to be used
      * @param binary            Binary data to be encoded
      * @param coloursToConsider List of colours we will encode data into
-     * @param startEncodingX    Position to start the encoding from (x)
-     * @param startEncodingY    Position to start the encoding from (y)
+     * @param dataType          Defines the type of data being inserted
      * @param random            Boolean to determine whether a PRNG will be used
      * @return Tuple storing final insertion parameters
      */
@@ -191,29 +198,45 @@ public class LSB {
         return new int[]{currentPosition[0], currentPosition[1], endColour};
     }
 
+    /**
+     * Gets the position to start encoding data from (in encodeData() method)
+     *
+     * @param coverImage            The image to be used
+     * @param random                Determines whether the PRNG is used
+     * @param dataType              Defines the type of data being inserted
+     * @param coloursToConsider     List of colours we will encode data into
+     * @return                      The starting position
+     */
     public int[] getStartingPosition(BufferedImage coverImage, boolean random, String dataType, int[] coloursToConsider){
-
+        // We always insert what colours we're using into the first pixel
+        // (since this is needed to decode everything else
         if(dataType.equals("colour")){
             return new int[] {0, 0};
         }
 
+        // Define starting position when random LSB replacement
         if(random){
             if(dataType.equals("normal")){
+                // Set position for payload data insertion
                 int newPosition = (int) Math.ceil((IntStream.of(param_lengths).sum() / coloursToConsider.length));
                 generator.setPosition(newPosition);
             }else{
+                // Set position for parameter data insertion
                 generator.setPosition(0);
             }
             int position = generator.getNextElement();
             return new int[] {position % coverImage.getWidth(), position / coverImage.getWidth()};
         }
 
-        if(!random){
+        // Define starting positions when linear LSB replacement
+        if(!(random)){
             if(dataType.equals("normal")){
+                // Set position for payload data insertion
                 int startX = (int) Math.ceil(((double) IntStream.of(param_lengths).sum() % coverImage.getWidth()) / 3);
                 int startY = (IntStream.of(param_lengths).sum() / coverImage.getWidth()) / 3;
                 return new int[] {startX, startY};
             }else{
+                // Set position for payload data insertion
                 return new int[] {1, 0};
             }
         }
@@ -310,12 +333,11 @@ public class LSB {
     }
 
     /**
-     * Converts input parameters into binary equivalent
-     * (Parameters represented by int[][]
+     * Converts input parameter into binary equivalent
      *
-     * @param coverImage Image to be used
-     * @param parameters Parameters to be inserted into the image (with number of bits to use)
-     * @return The binary equivalent of the input parameters (correct to number of bits)
+     * @param parameter         Parameter to be converted
+     * @param parameter_length  Required length of parameter (in bits)
+     * @return The binary equivalent of the input parameter (correct to number of bits)
      */
     public String getBinaryParameters(int parameter, int parameter_length) {
         String binaryParameter = Integer.toBinaryString(parameter);
