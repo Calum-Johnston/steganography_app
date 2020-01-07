@@ -78,7 +78,8 @@ public class encoder_GUI {
     public void encodeData(){
         // Calls algorithm to embed the data
         LSB l = new LSB();
-        BufferedImage stegoImage = l.encode(coverImage, textField.getText(), false, true, true, false);
+        BufferedImage stegoImage = l.encode(coverImage, textField.getText(), true, true, true,
+                true, "temp");
         writeImageFile(stegoImage);
     }
 

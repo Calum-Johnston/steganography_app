@@ -43,7 +43,8 @@ public class pseudorandom{
         this.width = width;
         this.seed = seed;
         orderSequence = new ArrayList<Integer>();
-        position = -1;
+        position = 0;
+        generateRandomList();
     }
 
     /**
@@ -64,7 +65,26 @@ public class pseudorandom{
      * @return      the next element in the sequence
      */
     public int getNextElement(){
+        int element = orderSequence.get(position);
         position += 1;
-        return orderSequence.get(position);
+        return element;
+    }
+
+    /**
+     * SETTER method for variable position
+     *
+     * @param position      The new position
+     */
+    public void setPosition(int position){
+        this.position = position;
+    }
+
+    /**
+     * GETTER method for variable position
+     *
+     * @return      The position of the current random number being accessed
+     */
+    public int getPosition(){
+        return position;
     }
 }
