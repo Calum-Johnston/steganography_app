@@ -23,27 +23,28 @@ public class LSB {
      */
     private int[] param_lengths;
 
-
-
+    /**
+     * Holds the PRNG class and all it's funcions
+     */
+    private pseudorandom generator;
 
 
     // ======= CONSTRUCTOR(S) =======
+
     /**
      * Constructor for the class
      */
-    public LSB(){
+    public LSB() {
         // Default values
         param_number = 6;
         param_lengths = new int[param_number];
-        param_lengths[0] = 15;  // Length for endX
-        param_lengths[1] = 15;  // Length for endY
-        param_lengths[2] = 2;  // Length for endColour
-        param_lengths[3] = 1;  // Length for red
-        param_lengths[4] = 1;  // Length for green
-        param_lengths[5] = 1;  // Length for blue
+        param_lengths[0] = 1;  // Length for red
+        param_lengths[1] = 1;  // Length for green
+        param_lengths[2] = 1;  // Length for blue
+        param_lengths[3] = 2;  // Length for end colour
+        param_lengths[4] = 15;  // Length for end x
+        param_lengths[5] = 15;  // Length for end y
     }
-
-
 
 
     // ======= Encoding Functions =======
@@ -51,13 +52,12 @@ public class LSB {
      * Performs the LSB encoding algorithm
      * - Detailed in lsb.txt
      *
-     * @param coverImage    Image to be used (acting as the Cover)
-     * @param text          Data to be inserted (acting as the Payload)
-     * @return              Image with data hidden within it (acting as the Stego Image)
+     * @param coverImage Image to be used (acting as the Cover)
+     * @param text       Data to be inserted (acting as the Payload)
+     * @return Image with data hidden within it (acting as the Stego Image)
      */
     public BufferedImage encode(BufferedImage coverImage, String text,
-                                boolean red, boolean green, boolean blue, boolean random, String seed){
-
+                                boolean red, boolean green, boolean blue, boolean random, String seed) {
         // SETUP STUFF
         // Determine the colours to consider when overwriting LSBs
         int[] coloursToConsider = getColoursToConsider(red, green, blue);
@@ -65,33 +65,21 @@ public class LSB {
         // Get binary text from ASCII text
         StringBuilder binaryText = getBinaryText(text);
 
-        // Determine optimal parameter lengths
-        determineOptimalParameterLength(coverImage);
-
         // Initialise pseudo random number generator
-        pseudorandom generator = null;
-        if(random){
+        if (random) {
             generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed);
         }
 
         // Check whether text will fit into image
         int dataToInsert = (int) ((double) binaryText.length() / coloursToConsider.length) + IntStream.of(param_lengths).sum();
         int dataImageCanStore = coverImage.getWidth() * coverImage.getHeight() * coloursToConsider.length;
-        if(dataToInsert < dataImageCanStore){
+        if (dataToInsert < dataImageCanStore) {
 
             // Encode the binary text into the image
-            int startX = (int) Math.ceil(((double) IntStream.of(param_lengths).sum() % coverImage.getWidth()) / 3);
-            int startY = (IntStream.of(param_lengths).sum() / coverImage.getWidth()) / 3;
-            int[] finalValues = encodeData(coverImage, binaryText, coloursToConsider, startX, startY, random, generator);
+            int[] finalValues = encodeData(coverImage, binaryText, coloursToConsider, "normal", random);
 
-            // Get all the parameters and number of bits they use
-            ArrayList<Integer> parameters = getParameters(red, green, blue, finalValues);
-
-            // Get binary version of parameters
-            StringBuilder binaryParameters = getBinaryParameters(coverImage, parameters);
-
-            // Encode binary parameters into the image
-            encodeData(coverImage, binaryParameters, coloursToConsider, 0, 0, random, generator);
+            // Encode the parameters into the image
+            encodeParameters(coverImage, random, coloursToConsider, red, green, blue, finalValues);
 
             return coverImage;
         }
@@ -101,107 +89,93 @@ public class LSB {
 
     // SETUP FUNCTIONS FOR ENCODING
     /**
-     * Determines optimal parameter length based on image size
-     *
-     * @param coverImage    Image to be used
-     */
-    public void determineOptimalParameterLength(BufferedImage coverImage){
-            param_lengths[0] = Integer.toBinaryString(coverImage.getWidth()).length();
-            param_lengths[1] = Integer.toBinaryString(coverImage.getWidth()).length();
-    }
-
-    /**
      * Gets the colours that will be used
      *
-     * @param red       Boolean to whether red will be used
-     * @param green     Boolean to whether green will be used
-     * @param blue      Boolean to whether blue will be used
-     * @return          An int[] array storing only the colours it considers
+     * @param red   Boolean to whether red will be used
+     * @param green Boolean to whether green will be used
+     * @param blue  Boolean to whether blue will be used
+     * @return An int[] array storing only the colours it considers
      */
-    public int[] getColoursToConsider(boolean red, boolean green, boolean blue){
-        if(red && green && blue){
-            return new int[] {0, 1, 2};
-        }else if(red && green){
-            return new int[] {0, 1};
-        }else if(red && blue){
-            return new int[] {0, 2};
-        }else if(blue && green){
-            return new int[] {1, 2};
-        }else if(red){
-            return new int[] {0};
-        }else if(green){
-            return new int[] {1};
-        } else if (blue){
-            return new int[] {2};
+    public int[] getColoursToConsider(boolean red, boolean green, boolean blue) {
+        if (red && green && blue) {
+            return new int[]{0, 1, 2};
+        } else if (red && green) {
+            return new int[]{0, 1};
+        } else if (red && blue) {
+            return new int[]{0, 2};
+        } else if (blue && green) {
+            return new int[]{1, 2};
+        } else if (red) {
+            return new int[]{0};
+        } else if (green) {
+            return new int[]{1};
+        } else if (blue) {
+            return new int[]{2};
         }
-        return new int[] {0, 1, 2};
-    }
-
-    /**
-     * Gets all the parameters and stores them with their corresponding number of bits
-     * required to store
-     *
-     * @param red           Boolean to whether red will be used
-     * @param green         Boolean to whether green will be used
-     * @param blue          Boolean to whether blue will be used
-     * @param finalValues   Tuple storing final insertion parameters
-     * @return              A map which stores parameters and their corresponding no. of bits required
-     */
-    public ArrayList<Integer> getParameters(boolean red, boolean green, boolean blue, int[] finalValues){
-        ArrayList<Integer> parameters = new ArrayList<Integer>();
-        parameters.add(finalValues[0]);
-        parameters.add(finalValues[1]);
-        parameters.add(finalValues[2]);
-        parameters.add(red ? 1 : 0);
-        parameters.add(green ? 1 : 0);
-        parameters.add(blue ? 1 : 0);
-        return parameters;
+        return new int[]{0, 1, 2};
     }
 
 
     // ENCODING FUNCTIONS
     /**
+     * Gets all the parameters and stores them with their corresponding number of bits
+     * required to store
+     *
+     * @param red         Boolean to whether red will be used
+     * @param green       Boolean to whether green will be used
+     * @param blue        Boolean to whether blue will be used
+     * @param finalValues Tuple storing final insertion parameters
+     * @return A map which stores parameters and their corresponding no. of bits required
+     */
+    public void encodeParameters(BufferedImage coverImage, boolean random, int[] coloursToConsider,
+                                 boolean red, boolean green, boolean blue, int[] finalValues) {
+        // Encode colours used in first bit
+        StringBuilder parameters = new StringBuilder();
+        parameters.append(getBinaryParameters(red ? 1 : 0, param_lengths[1]));
+        parameters.append(getBinaryParameters(green ? 1 : 0, param_lengths[1]));
+        parameters.append(getBinaryParameters(blue ? 1 : 0, param_lengths[1]));
+        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "colour", false);
+
+        // Encode all other parameters as you would with data
+        parameters = new StringBuilder();
+        parameters.append(getBinaryParameters(finalValues[2], param_lengths[3]));
+        parameters.append(getBinaryParameters(finalValues[0], param_lengths[4]));
+        parameters.append(getBinaryParameters(finalValues[1], param_lengths[5]));
+        encodeData(coverImage, parameters, coloursToConsider, "parameter", random);
+    }
+
+    /**
      * Encodes the stream of binary data into the cover Image
      *
-     * @param coverImage            Image to be used
+     * @param coverImage        Image to be used
      * @param binary            Binary data to be encoded
-     * @param coloursToConsider     List of colours we will encode data into
-     * @param startEncodingX        Position to start the encoding from (x)
-     * @param startEncodingY        Position to start the encoding from (y)
-     * @param random                Boolean to determine whether a PRNG will be used
-     * @return                      Tuple storing final insertion parameters
+     * @param coloursToConsider List of colours we will encode data into
+     * @param startEncodingX    Position to start the encoding from (x)
+     * @param startEncodingY    Position to start the encoding from (y)
+     * @param random            Boolean to determine whether a PRNG will be used
+     * @return Tuple storing final insertion parameters
      */
     public int[] encodeData(BufferedImage coverImage, StringBuilder binary,
-                            int[] coloursToConsider, int startEncodingX, int startEncodingY, boolean random,
-                            pseudorandom generator){
+                            int[] coloursToConsider, String dataType, boolean random) {
         int[] pixelData;
-        int[] currentPosition = new int[2];
         int endColour = coloursToConsider[coloursToConsider.length - 1];
         int imageWidth = coverImage.getWidth();
 
-        // Define starting position
-        currentPosition[0] = startEncodingX; currentPosition[1] = startEncodingY;
+        // Get starting Position
+        int[] currentPosition = getStartingPosition(coverImage, random, dataType, coloursToConsider);
 
-        // If random, need to determine where to start generating random numbers from
-        if(random && startEncodingX != 0){
-            if(startEncodingX != 0) {   // Encoding data
-                int position = (int) Math.ceil((double) IntStream.of(param_lengths).sum() / coloursToConsider.length);
-                generator.setPosition(position);
-            }else{      // Encoding parameters
-                generator.setPosition(0);
-            }
-        }
+        // Loop through binary data to be inserted
+        for (int i = 0; i < binary.length(); i += coloursToConsider.length) {
 
-        for(int i = 0; i < binary.length(); i += coloursToConsider.length){
             // Get pixel data of current pixel
             pixelData = getPixelData(coverImage, currentPosition[0], currentPosition[1]);
 
             // Encode data into LSBs of colours used
-            for(int j = 0; j < coloursToConsider.length; j++){
-                if(i + j >= binary.length()) {
+            for (int j = 0; j < coloursToConsider.length; j++) {
+                if (i + j >= binary.length()) {
                     endColour = j - 1;
                     writePixelData(coverImage, pixelData, currentPosition[0], currentPosition[1]);
-                    return new int[] {currentPosition[0], currentPosition[1], endColour};
+                    return new int[]{currentPosition[0], currentPosition[1], endColour};
                 }
                 char data = binary.charAt(i + j);
                 pixelData[coloursToConsider[j]] = insertLSB(pixelData[coloursToConsider[j]], data);
@@ -211,27 +185,55 @@ public class LSB {
             writePixelData(coverImage, pixelData, currentPosition[0], currentPosition[1]);
 
             // Increment coordinates
-            currentPosition = generateNextPosition(imageWidth, currentPosition, random, generator);
+            currentPosition = generateNextPosition(imageWidth, currentPosition, random);
         }
         // Returns data (acting as parameter data)
-        return new int[] {currentPosition[0], currentPosition[1], endColour};
+        return new int[]{currentPosition[0], currentPosition[1], endColour};
+    }
+
+    public int[] getStartingPosition(BufferedImage coverImage, boolean random, String dataType, int[] coloursToConsider){
+
+        if(dataType.equals("colour")){
+            return new int[] {0, 0};
+        }
+
+        if(random){
+            if(dataType.equals("normal")){
+                int newPosition = (int) Math.ceil((IntStream.of(param_lengths).sum() / coloursToConsider.length));
+                generator.setPosition(newPosition);
+            }else{
+                generator.setPosition(0);
+            }
+            int position = generator.getNextElement();
+            return new int[] {position % coverImage.getWidth(), position / coverImage.getWidth()};
+        }
+
+        if(!random){
+            if(dataType.equals("normal")){
+                int startX = (int) Math.ceil(((double) IntStream.of(param_lengths).sum() % coverImage.getWidth()) / 3);
+                int startY = (IntStream.of(param_lengths).sum() / coverImage.getWidth()) / 3;
+                return new int[] {startX, startY};
+            }else{
+                return new int[] {1, 0};
+            }
+        }
+        return null;
     }
 
     /**
      * Generates next position in image to encode data into
      *
-     * @param imageWidth            The width of the image being used
-     * @param currentPosition       The position which data has just been encoded
-     * @param random                Boolean determining whether PRNG is being used
-     * @param generator             The corresponding generator for PRNG
-     * @return                      The new position to consider
+     * @param imageWidth      The width of the image being used
+     * @param currentPosition The position which data has just been encoded
+     * @param random          Boolean determining whether PRNG is being used
+     * @return The new position to consider
      */
-    public int[] generateNextPosition(int imageWidth, int[] currentPosition, boolean random, pseudorandom generator){
-        if(random){
+    public int[] generateNextPosition(int imageWidth, int[] currentPosition, boolean random) {
+        if (random) {
             int position = generator.getNextElement();
             currentPosition[0] = position % imageWidth;
             currentPosition[1] = position / imageWidth;
-        }else {
+        } else {
             currentPosition[0] = (currentPosition[0] + 1) % imageWidth;
             if (currentPosition[0] == 0) {
                 currentPosition[1] += 1;
@@ -245,30 +247,30 @@ public class LSB {
     /**
      * Gets pixel data from an image at a specific location
      *
-     * @param coverImage  Image to be used
-     * @param x           x coordinate of pixel
-     * @param y           y coordinate of pixel
-     * @return            Tuple of RGB values (representing the pixel)
+     * @param coverImage Image to be used
+     * @param x          x coordinate of pixel
+     * @param y          y coordinate of pixel
+     * @return Tuple of RGB values (representing the pixel)
      */
-    public int[] getPixelData(BufferedImage coverImage, int x, int y){
+    public int[] getPixelData(BufferedImage coverImage, int x, int y) {
         int pixel = coverImage.getRGB(x, y);
         int red = (pixel & 0x00ff0000) >> 16;
         int green = (pixel & 0x0000ff00) >> 8;
         int blue = pixel & 0x000000ff;
-        return new int[] {red, green, blue};
+        return new int[]{red, green, blue};
     }
 
     /**
      * Inserts data into pixel data (by LSB technique)
      *
-     * @param colour        Original colour to be manipulated
-     * @param data          Data to be inserted
-     * @return              Updated colur
+     * @param colour Original colour to be manipulated
+     * @param data   Data to be inserted
+     * @return Updated colur
      */
-    public int insertLSB(int colour, char data){
-        if(colour % 2 == 0 && data == '1'){
+    public int insertLSB(int colour, char data) {
+        if (colour % 2 == 0 && data == '1') {
             return colour + 1;
-        }else if(colour % 2 == 1 && data == '0') {
+        } else if (colour % 2 == 1 && data == '0') {
             return colour - 1;
         }
         return colour;
@@ -277,12 +279,12 @@ public class LSB {
     /**
      * Writes pixel data to an image at a specific location
      *
-     * @param coverImage    Image to be used
-     * @param pixelData     Typle of RGB values (representing the pixel)
-     * @param x             x coordinate of pixel
-     * @param y             y coordinate of pixel
+     * @param coverImage Image to be used
+     * @param pixelData  Typle of RGB values (representing the pixel)
+     * @param x          x coordinate of pixel
+     * @param y          y coordinate of pixel
      */
-    public void writePixelData(BufferedImage coverImage, int[] pixelData, int x, int y){
+    public void writePixelData(BufferedImage coverImage, int[] pixelData, int x, int y) {
         Color newColour = new Color(pixelData[0], pixelData[1], pixelData[2]);
         int newRGB = newColour.getRGB();
         coverImage.setRGB(x, y, newRGB);
@@ -293,13 +295,13 @@ public class LSB {
     /**
      * Converts input text into binary equivalent
      *
-     * @param text  The ASCII text to be converted to binary
-     * @return      Binary Equivalent of ASCII text
+     * @param text The ASCII text to be converted to binary
+     * @return Binary Equivalent of ASCII text
      */
-    public StringBuilder getBinaryText(String text){
+    public StringBuilder getBinaryText(String text) {
         byte[] bytes = text.getBytes();
         StringBuilder binary = new StringBuilder();
-        for(byte b : bytes){
+        for (byte b : bytes) {
             String binaryData = Integer.toBinaryString(b);
             String formatted = ("00000000" + binaryData).substring(binaryData.length());
             binary.append(formatted);
@@ -311,30 +313,28 @@ public class LSB {
      * Converts input parameters into binary equivalent
      * (Parameters represented by int[][]
      *
-     * @param coverImage    Image to be used
-     * @param parameters    Parameters to be inserted into the image (with number of bits to use)
-     * @return              The binary equivalent of the input parameters (correct to number of bits)
+     * @param coverImage Image to be used
+     * @param parameters Parameters to be inserted into the image (with number of bits to use)
+     * @return The binary equivalent of the input parameters (correct to number of bits)
      */
-    public StringBuilder getBinaryParameters(BufferedImage coverImage, ArrayList<Integer> parameters){
-        StringBuilder binaryParameters = new StringBuilder();
-        for(int i = 0; i < parameters.size(); i++){
-            String binaryParameter = Integer.toBinaryString(parameters.get(i));
-            binaryParameters.append((StringUtils.repeat('0', param_lengths[i]) + binaryParameter).substring(binaryParameter.length()));
-        }
-        return binaryParameters;
+    public String getBinaryParameters(int parameter, int parameter_length) {
+        String binaryParameter = Integer.toBinaryString(parameter);
+        binaryParameter = (StringUtils.repeat('0', parameter_length) + binaryParameter).substring(binaryParameter.length());
+        return binaryParameter;
     }
+}
 
 
 
 
 
-    // ======= Decoding Functions =======
-    /**
+  /*  // ======= Decoding Functions =======
+    *//**
      * Performs the LSB decoding algorithm
      * (detailed in LSB.txt)
      *
      * @return
-     */
+     *//*
     public String decode(BufferedImage stegoImage){
 
         // Setup functions
@@ -360,13 +360,14 @@ public class LSB {
 
     }
 
-    /**
+    *//**
      * Gets the parameter data from the stego image
      *
      * @param stegoImage    Image to be used
      * @return              Tuple of data storing parameter values
-     */
+     *//*
     public int[] getParameterData(BufferedImage stegoImage){
+        String binary = getParametersBinary(stegoImage, 0, IntStream.of(param_lengths).sum());
         String endX_String = getIndividualParameter(stegoImage, 0, param_lengths[0]);
         int endX = Integer.parseInt(endX_String, 2);
         String endY_String = getIndividualParameter(stegoImage, param_lengths[0], param_lengths[1]);
@@ -382,15 +383,15 @@ public class LSB {
         return new int[] {endX, endY, endColour, red, green, blue};
     }
 
-    /**
+    *//**
      * Gets an individual parameter from the stego image
      *
      * @param stegoImage        Image to be used
      * @param reserved_start    Value used to determine starting position of parameter in image
      * @param reserved_length   Length of parameter (number of bits)
      * @return                  String parameter (in binary)
-     */
-    public String getIndividualParameter(BufferedImage stegoImage, int reserved_start, int reserved_length){
+     *//*
+    public String getParametersBinary(BufferedImage stegoImage, int reserved_start, int reserved_length){
         StringBuilder value = new StringBuilder();
         int x = reserved_start % stegoImage.getWidth();
         int y = reserved_start / stegoImage.getWidth();
@@ -404,14 +405,14 @@ public class LSB {
         return value.toString();
     }
 
-    /**
+    *//**
      * Gets the stream of binary data hidden within the stego Image
      *
      * @param stegoImage    Image to be used
      * @param endX          x coordinate for final data (in image)
      * @param endY          y coordinate for final data (in image)
      * @return              Binary stream of data
-     */
+     *//*
     public StringBuilder getBinaryText(BufferedImage stegoImage, int endX, int endY){
         StringBuilder binaryText = new StringBuilder();
 
@@ -435,12 +436,12 @@ public class LSB {
         return binaryText;
     }
 
-    /**
+    *//**
      * Converts the binary stream of data to it's ASCII equivalent
      *
      * @param binaryText    Binary stream of data
      * @return
-     */
+     *//*
     public StringBuilder getText(StringBuilder binaryText){
         StringBuilder text = new StringBuilder();
 
@@ -458,14 +459,14 @@ public class LSB {
         return text;
     }
 
-    /**
+    *//**
      * Gets the LSB of a pixel from an image at a specific location
      *
      * @param stegoImage    Image to be used
      * @param x             x coordinate of pixel
      * @param y             y coordinate of pixel
      * @return              Least significant bit of pixel
-     */
+     *//*
 
     public String getPixelLSB(BufferedImage stegoImage, int x, int y) {
         int pixel = stegoImage.getRGB(x, y);
@@ -478,3 +479,19 @@ public class LSB {
         return binaryGreen.substring(binaryGreen.length() - 1);
     }
 }
+*/
+
+
+/**
+ * UNUSED FUNCTIONS
+ *
+ *     /**
+ *      * Determines optimal parameter length based on image size
+ *      *
+ *      * @param coverImage    Image to be used
+ *      *
+ *      *public void determineOptimalParameterLength(BufferedImage coverImage){
+        *   param_lengths[0]=Integer.toBinaryString(coverImage.getWidth()).length();
+        *   param_lengths[1]=Integer.toBinaryString(coverImage.getWidth()).length();
+        *}
+ */
