@@ -36,14 +36,15 @@ public class LSB {
      */
     public LSB() {
         // Default values
-        param_number = 6;
+        param_number = 7;
         param_lengths = new int[param_number];
-        param_lengths[0] = 1;  // Length for red
-        param_lengths[1] = 1;  // Length for green
-        param_lengths[2] = 1;  // Length for blue
-        param_lengths[3] = 2;  // Length for end colour
-        param_lengths[4] = 15;  // Length for end x
-        param_lengths[5] = 15;  // Length for end y
+        param_lengths[0] = 1;  // Length for red (Bool)
+        param_lengths[1] = 1;  // Length for green (Bool)
+        param_lengths[2] = 1;  // Length for blue (Bool)
+        param_lengths[3] = 2;  // Length for end colour (Max 3)
+        param_lengths[4] = 15;  // Length for end x (Int)
+        param_lengths[5] = 15;  // Length for end y (Int)
+        param_lengths[6] = 1;  // Length for random (bool)
     }
 
 
@@ -86,7 +87,7 @@ public class LSB {
             // Encode the parameters into the image
             encodeParameters(coverImage, random, coloursToConsider, red, green, blue, finalValues);
 
-            System.out.println(Integer.toBinaryString(finalValues[0]) + " " + Integer.toBinaryString(finalValues[1]) + " " + finalValues[2]);
+            System.out.println(finalValues[0] + " " + finalValues[1] + " " + finalValues[2]);
 
             return coverImage;
         }
@@ -118,11 +119,16 @@ public class LSB {
         parameters.append(getBinaryParameters(blue ? 1 : 0, param_lengths[1]));
         encodeData(coverImage, parameters, new int[]{0, 1, 2}, "colour", false);
 
+        parameters = new StringBuilder();
+        parameters.append(getBinaryParameters(random ? 1 : 0, param_lengths[6]));
+        encodeData(coverImage, parameters, coloursToConsider, "random", random);
+
         // Encode all other parameters as you would with data
         parameters = new StringBuilder();
         parameters.append(getBinaryParameters(finalValues[2], param_lengths[3]));
         parameters.append(getBinaryParameters(finalValues[0], param_lengths[4]));
         parameters.append(getBinaryParameters(finalValues[1], param_lengths[5]));
+        parameters.append(getBinaryParameters(random ? 1 : 0, param_lengths[6]));
         encodeData(coverImage, parameters, coloursToConsider, "parameter", random);
     }
 
@@ -132,8 +138,8 @@ public class LSB {
      * @param coverImage        Image to be used
      * @param binary            Binary data to be encoded
      * @param coloursToConsider List of colours we will encode data into
-     * @param dataType          Defines the type of data being inserted
-     * @param random            Boolean to determine whether a PRNG will be used
+     * @param dataType          Defines the type of data being embedded
+     * @param random            Determines
      * @return Tuple storing final insertion parameters
      */
     public int[] encodeData(BufferedImage coverImage, StringBuilder binary,
@@ -188,6 +194,10 @@ public class LSB {
             return new int[] {0, 0};
         }
 
+        if(dataType.equals("random")){
+            return new int[] {1, 0};
+        }
+
         // Define starting position when random LSB replacement
         if(random){
             if(dataType.equals("normal")){
@@ -211,7 +221,7 @@ public class LSB {
                 return new int[] {startX, startY};
             }else{
                 // Set position for payload data insertion
-                return new int[] {1, 0};
+                return new int[] {2, 0};
             }
         }
         return null;
@@ -222,7 +232,7 @@ public class LSB {
      *
      * @param imageWidth      The width of the image being used
      * @param currentPosition The position which data has just been encoded
-     * @param random          Boolean determining whether PRNG is being used
+     * @param random          Determines whether random embedding should be used
      * @return The new position to consider
      */
     public int[] generateNextPosition(int imageWidth, int[] currentPosition, boolean random) {
@@ -355,15 +365,10 @@ public class LSB {
      * (detailed in LSB.txt)
      *
      * @param stegoImage        Image to be used
-     * @param random            Determines whether random encoding has been used
-     * @return
+     * @param seed              Seed used to initialise PRNG
+     * @return                  Text hidden within the image
      */
-    public String decode(BufferedImage stegoImage, boolean random, String seed){
-
-        // Initialise pseudo random number generator
-        if (random) {
-            generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed);
-        }
+    public String decode(BufferedImage stegoImage, String seed){
 
         // Gets the colours to consider when reading LSBs
         int[] pixelData = getPixelData(stegoImage, 0, 0);
@@ -372,21 +377,27 @@ public class LSB {
         boolean blue = getColourParameter(pixelData[2]);
         int[] coloursToConsider = getColoursToConsider(red, green, blue);
 
+        // Determine whether the random embedding was used
+        pixelData = getPixelData(stegoImage, 1, 0);
+        boolean random = getColourParameter(pixelData[0]);
+
+        // Initialise pseudo random number generator
+        if (random) {
+            generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed);
+        }
+
         // Get all other parameter data
         int[] parameters = getParameterData(stegoImage, random, coloursToConsider);
-
-        System.out.println(coloursToConsider[0] + " " + coloursToConsider[1] + " " + coloursToConsider[2]);
-        System.out.println(parameters[0] + " " + parameters[1] + " " + parameters[2]);
 
         return "";
 
     }
 
     /**
-     * Determines whether a colour channel was used for encoding
+     * Determines whether an LSB is 1 or 0
      *
-     * @param colour            The colour to check against
-     * @return                  Whether the colour channel was used
+     * @param colour            The colour whose LSB will be used
+     * @return                  False = 0; True = 1;
      */
     public boolean getColourParameter(int colour){
         String binary = Integer.toBinaryString(colour);
@@ -401,11 +412,13 @@ public class LSB {
     /**
      * Gets the parameter data from the stego image
      *
-     * @param stegoImage    Image to be used
-     * @return              Tuple of data storing parameter values
+     * @param stegoImage            Image to be used
+     * @param random                Determines whether random embedding was used
+     * @param coloursToConsider     List of colours that data was embedded into
+     * @return                      Tuple of data storing parameter values
      */
     public int[] getParameterData(BufferedImage stegoImage, boolean random, int[] coloursToConsider){
-        int paramLen = IntStream.of(param_lengths).sum() - 3;
+        int paramLen = IntStream.of(param_lengths).sum() - 4;
         String binary = getParameterBinary(stegoImage, paramLen, random, coloursToConsider, "Parameter");
 
         int startParameterPos = 0;
@@ -417,12 +430,14 @@ public class LSB {
     }
 
     /**
-     * Gets an binary equivalent of parameter data from the image
+     * Gets the binary equivalent of the parameters needed for decoding
      *
-     * @param stegoImage        Image to be used
-     * @param reserved_length   Length of parameter (number of bits)
-     * @param random            Determines whether the PRNG has been used in encoding
-     * @return                  String parameter (in binary)
+     * @param stegoImage            Image to be used
+     * @param reserved_length       Total bit length of parameters to be retrieved
+     * @param random                Determines whether random embedding was used
+     * @param coloursToConsider     List of colours that data was embedded into
+     * @param dataType              Defines the type of data being retrieved
+     * @return                      String parameter (in binary)
      */
     public String getParameterBinary(BufferedImage stegoImage, int reserved_length, boolean random, int[] coloursToConsider,
                                       String dataType){
@@ -453,6 +468,16 @@ public class LSB {
         return value.toString();
     }
 
+    /**
+     * Gets the position to start decoding data from
+     * (HOPEFULLY USE ONE FUNCTION FOR ENCODING AND DECODING EVENTUALLY!!)
+     *
+     * @param stegoImage            The image to be used
+     * @param random                Determines whether random embedding was used
+     * @param coloursToConsider     List of colours that data was embedded into
+     * @param dataType              Defines the type of data being retrieved
+     * @return
+     */
     public int[] getDecodeStartingPosition(BufferedImage stegoImage, boolean random, int[] coloursToConsider, String dataType){
         if(random){
             if(dataType.equals("normal")){
@@ -475,11 +500,13 @@ public class LSB {
                 return new int[] {startX, startY};
             }else{
                 // Set position for parameter data insertion
-                return new int[] {1, 0};
+                return new int[] {2, 0};
             }
         }
         return null;
     }
+
+
 
 
     /**
