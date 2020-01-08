@@ -2,7 +2,7 @@
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.java.calumjohnston.encoder_GUI">
   <grid id="27dc6" binding="rootPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
     <constraints>
-      <xy x="20" y="20" width="500" height="400"/>
+      <xy x="20" y="20" width="713" height="400"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -16,8 +16,14 @@
       <component id="2e80b" class="javax.swing.JTextField" binding="textField">
         <constraints/>
         <properties>
-          <columns value="30"/>
+          <columns value="35"/>
           <horizontalAlignment value="0"/>
+        </properties>
+      </component>
+      <component id="2807d" class="javax.swing.JButton" binding="encodeButton">
+        <constraints/>
+        <properties>
+          <text value="Encode!"/>
         </properties>
       </component>
       <component id="dc78a" class="javax.swing.JButton" binding="selectImageButton">
@@ -26,11 +32,33 @@
           <text value="Select Image"/>
         </properties>
       </component>
-      <component id="2807d" class="javax.swing.JButton" binding="encodeButton">
+      <component id="dbc56" class="javax.swing.JCheckBox" binding="redCheckBox">
         <constraints/>
         <properties>
-          <text value="Encode!"/>
+          <text value="Red?"/>
         </properties>
+      </component>
+      <component id="50738" class="javax.swing.JCheckBox" binding="greenCheckBox">
+        <constraints/>
+        <properties>
+          <text value="Green?"/>
+        </properties>
+      </component>
+      <component id="96dd4" class="javax.swing.JCheckBox" binding="blueCheckBox">
+        <constraints/>
+        <properties>
+          <text value="Blue?"/>
+        </properties>
+      </component>
+      <component id="88802" class="javax.swing.JCheckBox" binding="randomCheckBox">
+        <constraints/>
+        <properties>
+          <text value="Random?"/>
+        </properties>
+      </component>
+      <component id="feef8" class="javax.swing.JComboBox" binding="algorithmComboBox">
+        <constraints/>
+        <properties/>
       </component>
     </children>
   </grid>

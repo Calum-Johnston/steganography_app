@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -27,12 +28,23 @@ public class encoder_GUI {
     private JButton encodeButton;
     private JTextField textField;
     private JButton textButton;
+    private JCheckBox redCheckBox;
+    private JCheckBox greenCheckBox;
+    private JCheckBox blueCheckBox;
+    private JCheckBox randomCheckBox;
+    private JComboBox algorithmComboBox;
 
     private final JFileChooser openFileChooser;
     private BufferedImage coverImage;
     private BufferedReader textFile;
     private String text;
     private String coverImageName;
+
+    private boolean red;
+    private boolean green;
+    private boolean blue;
+    private boolean random;
+    private String seed;
 
 
     // ======= CONSTRUCTOR =======
@@ -41,10 +53,16 @@ public class encoder_GUI {
      */
     public encoder_GUI() {
 
+        red = false; green = false; blue = false; random = false; seed = "";
+
         encodeButton.setEnabled(false);
 
         openFileChooser = new JFileChooser();
         openFileChooser.setCurrentDirectory(new File("C:\\"));
+
+        algorithmComboBox.addItem("LSB");
+        algorithmComboBox.addItem("LSBM");
+        algorithmComboBox.addItem("LSBMR");
 
         selectImageButton.addActionListener(new ActionListener() {
             @Override
@@ -66,6 +84,37 @@ public class encoder_GUI {
                 encodeData();
             }
         });
+
+        redCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                red = !red;
+            }
+        });
+
+        greenCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                green = !green;
+            }
+        });
+
+        blueCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                blue = !blue;
+            }
+        });
+
+        randomCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                random = !random;
+            }
+        });
+
+
+
     }
 
 
@@ -76,10 +125,21 @@ public class encoder_GUI {
      * Determines which algorithm to apply when encoding the data
      */
     public void encodeData(){
+        // Check enough options have been selected
+
         // Calls algorithm to embed the data
-        LSB l = new LSB();
-        BufferedImage stegoImage = l.encode(coverImage, textField.getText(), true, true, true,
-                true, "temp");
+        BufferedImage stegoImage = null;
+        int algorithm = algorithmComboBox.getSelectedIndex();
+        if(algorithm == 0) {
+            LSB lsb = new LSB();
+            stegoImage = lsb.encode(coverImage, textField.getText(), red, green, blue, random, seed);
+        }else if(algorithm == 1){
+            //LSBM lsbm = new LSBM();
+            //BufferedImage stegoImage = lsbm.encode(coverImage, textField.getText(), red, green, blue, random, seed);
+        }else{
+            //LSBMR lsbmr = new LSBMR();
+            //BufferedImage stegoImage = lsbmr.encode(coverImage, textField.getText(), red, green, blue, random, seed);
+        }
         writeImageFile(stegoImage);
     }
 
@@ -308,6 +368,19 @@ public class encoder_GUI {
 
 
 
+    // ======= GETTER METHODS =======
+    /**
+     * Gets the panel used in the encoder_GUI form
+     *
+     * @return The panel
+     */
+    public JPanel getPanel(){
+        return rootPanel;
+    }
+
+
+
+
     /**
      * Main Method (to remove at some stage)
      *
@@ -315,6 +388,7 @@ public class encoder_GUI {
      */
     public static void main(String[] args) {
         JFrame frame = new JFrame("Encoder");
+        frame.setLocationRelativeTo(null);
         frame.setContentPane(new encoder_GUI().rootPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
@@ -322,4 +396,5 @@ public class encoder_GUI {
         frame.setSize(500, 500);
         frame.setVisible(true);
     }
+
 }
