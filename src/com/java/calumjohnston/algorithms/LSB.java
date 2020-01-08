@@ -162,6 +162,7 @@ public class LSB {
                 if (i + j >= binary.length()) {
                     endColour = j - 1;
                     writePixelData(coverImage, pixelData, currentPosition[0], currentPosition[1]);
+                    currentPosition = generateNextPosition(imageWidth, currentPosition, random);
                     return new int[]{currentPosition[0], currentPosition[1], endColour};
                 }
                 char data = binary.charAt(i + j);
@@ -389,7 +390,11 @@ public class LSB {
         // Get all other parameter data
         int[] parameters = getParameterData(stegoImage, random, coloursToConsider);
 
-        return "";
+        StringBuilder binaryData = getHiddenData(stegoImage, random, coloursToConsider, parameters);
+
+        StringBuilder text = getText(binaryData);
+
+        return text.toString();
 
     }
 
@@ -452,7 +457,7 @@ public class LSB {
             // Get the pixel data
             pixelData = getPixelData(stegoImage, currentPosition[0], currentPosition[1]);
 
-            // Encode data into LSBs of colours used
+            // Read data from LSBs of colours used
             for (int j = 0; j < coloursToConsider.length; j++) {
                 if (i + j >= reserved_length) {
                     break;
@@ -506,7 +511,41 @@ public class LSB {
         return null;
     }
 
+    /**
+     * Gets the binary equivalent of the hidden data in the image
+     *
+     * @param stegoImage            The image to be used
+     * @param random                Determines whether random embedding was used
+     * @param coloursToConsider     List of colours that data was embedded into
+     * @param parameters            List of parameters used for determining when to stop decoding
+     * @return
+     */
+    public StringBuilder getHiddenData(BufferedImage stegoImage, boolean random, int[] coloursToConsider, int[] parameters){
+        StringBuilder data = new StringBuilder();
+        int[] pixelData;
 
+        // Get starting position
+        int[] currentPosition = getDecodeStartingPosition(stegoImage, random, coloursToConsider, "normal");
+
+        while(currentPosition[0] != parameters[0] || currentPosition[1] != parameters[1]){
+
+            // Get the pixel data
+            pixelData = getPixelData(stegoImage, currentPosition[0], currentPosition[1]);
+
+            // Read data from LSBs of colours used
+            for (int j = 0; j < coloursToConsider.length; j++) {
+                String LSB = Integer.toBinaryString(pixelData[coloursToConsider[j]]);
+                LSB = LSB.substring(LSB.length() - 1);
+                data.append(LSB);
+            }
+
+            // Update position
+            currentPosition = generateNextPosition(stegoImage.getWidth(), currentPosition, random);
+        }
+
+        return data;
+
+    }
 
 
     /**
@@ -517,20 +556,18 @@ public class LSB {
      */
     public StringBuilder getText(StringBuilder binaryText){
         StringBuilder text = new StringBuilder();
-
-        // Check if binaryText length is a multiple of 8
-        // (if not then it has not been encoded with our algorithm)
-        if(binaryText.length() % 8 != 0){
-            return null;
-        }
-
         for(int i = 0; i < binaryText.length(); i += 8){
-            String binaryData = binaryText.substring(i, i + 8);
-            char characterData = (char) Integer.parseInt(binaryData, 2);
-            text.append(characterData);
+            try {
+                String binaryData = binaryText.substring(i, i + 8);
+                char characterData = (char) Integer.parseInt(binaryData, 2);
+                text.append(characterData);
+            }catch(Exception e){}
         }
         return text;
     }
+
+
+    // Reused getStartingPosition, generateNextPosition, getPixelData
 }
 
 
