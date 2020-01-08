@@ -95,22 +95,4 @@ public class decoder_GUI {
         }
     }
 
-
-
-
-    // ======= MAIN METHOD =======
-    /**
-     * Main Method (to remove at some stage)
-     *
-     * @param args      Arguments input when program is run
-     */
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("decoder_GUI");
-        frame.setContentPane(new decoder_GUI().rootPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(false);
-        frame.setTitle("Steganography - Decode Menu");
-        frame.setSize(500, 500);
-        frame.setVisible(true);
-    }
 }

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.java.calumjohnston.main_GUI">
-  <grid id="27dc6" binding="mainPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+  <grid id="27dc6" binding="rootPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
     <constraints>
       <xy x="129" y="59" width="500" height="400"/>
     </constraints>
     <properties/>
     <border type="none"/>
     <children>
-      <component id="e387b" class="javax.swing.JButton" binding="encodeButton">
+      <component id="db00" class="javax.swing.JButton" binding="encodeButton">
         <constraints/>
         <properties>
           <text value="Encode"/>
         </properties>
       </component>
-      <component id="e8528" class="javax.swing.JButton" binding="decodeButton">
+      <component id="f9f5d" class="javax.swing.JButton" binding="decodeButton">
         <constraints/>
         <properties>
           <text value="Decode"/>
