@@ -5,6 +5,7 @@ import com.java.calumjohnston.algorithms.LSB;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -26,10 +27,11 @@ public class decoder_GUI {
 
 
     // ======= CONSTRUCTOR =======
+
     /**
      * Constructor for this class
      */
-    public decoder_GUI(){
+    public decoder_GUI() {
 
         decodeButton.setEnabled(false);
 
@@ -52,33 +54,31 @@ public class decoder_GUI {
     }
 
 
-
-
     // ======= DECODE FUNCTIONS =======
+
     /**
      * Determines which algorithm to apply when decoding the data
      */
-    public void decodeData(){
+    public void decodeData() {
         LSB l = new LSB();
         text = l.decode(stegoImage, "temp");
         System.out.println(text);
     }
 
 
-
-
     // ======= PURPOSE FUNCTIONS =======
+
     /**
      * Reads an image from file explorer
      * (TYPE: .png)
      */
-    public void readImageFile(){
+    public void readImageFile() {
         // Sets the type of file to get
         openFileChooser.setFileFilter(new FileNameExtensionFilter("PNG images", "png"));
         int returnValue = openFileChooser.showOpenDialog(null);
 
-        if(returnValue == JFileChooser.APPROVE_OPTION){
-            try{
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            try {
                 // Get image based from file explorer
                 stegoImage = ImageIO.read(openFileChooser.getSelectedFile());
 
@@ -88,7 +88,7 @@ public class decoder_GUI {
                 // Debugging purposes
                 System.out.println("Successfully read in image");
 
-            }catch(IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
                 System.out.println("Failed to read in image");
             }

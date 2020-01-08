@@ -21,7 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * The encoder_GUI class runs the GUI for the encoding page
  */
-public class encoder_GUI {
+public class encoder {
 
     private JPanel rootPanel;
     private JButton selectImageButton;
@@ -33,6 +33,7 @@ public class encoder_GUI {
     private JCheckBox blueCheckBox;
     private JCheckBox randomCheckBox;
     private JComboBox algorithmComboBox;
+    private JPanel designPanel;
 
     private final JFileChooser openFileChooser;
     private BufferedImage coverImage;
@@ -52,7 +53,7 @@ public class encoder_GUI {
     /**
      * Constructor for the class
      */
-    public encoder_GUI() {
+    public encoder() {
 
         red = false;
         green = false;
@@ -372,4 +373,8 @@ public class encoder_GUI {
         }
     }
 
+
+    public JPanel getPanel(){
+        return rootPanel;
+    }
 }

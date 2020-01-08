@@ -1,5 +1,6 @@
 package com.java.calumjohnston;
 
+import javax.smartcardio.Card;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,24 +17,16 @@ public class main_GUI{
     /**
      * Constructor for this class
      */
-    public main_GUI(){
-        encodeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
+    public main_GUI() {
 
-            }
-        });
     }
 
+    public void setActionListener(ActionListener action){
+        encodeButton.addActionListener(action);
+    }
 
-    public static void main(String[] args){
-        JFrame frame = new JFrame("Main");
-        frame.setContentPane(new main_GUI().rootPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(false);
-        frame.setTitle("Steganography - MAIN MENU");
-        frame.setSize(500, 500);
-        frame.setVisible(true);
+    public JPanel getPanel(){
+        return rootPanel;
     }
 
 }
