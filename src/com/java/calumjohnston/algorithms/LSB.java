@@ -480,7 +480,7 @@ public class LSB {
      * @param random                Determines whether random embedding was used
      * @param coloursToConsider     List of colours that data was embedded into
      * @param dataType              Defines the type of data being retrieved
-     * @return
+     * @return                      Position to start decoding (dependent on what we're decoding)
      */
     public int[] getDecodeStartingPosition(BufferedImage stegoImage, boolean random, int[] coloursToConsider, String dataType){
         if(random){
@@ -517,7 +517,7 @@ public class LSB {
      * @param random                Determines whether random embedding was used
      * @param coloursToConsider     List of colours that data was embedded into
      * @param parameters            List of parameters used for determining when to stop decoding
-     * @return
+     * @return                      The text hidden within the image
      */
     public StringBuilder getHiddenData(BufferedImage stegoImage, boolean random, int[] coloursToConsider, int[] parameters){
         StringBuilder data = new StringBuilder();
@@ -551,7 +551,7 @@ public class LSB {
      * Converts the binary stream of data to it's ASCII equivalent
      *
      * @param binaryText    Binary stream of data
-     * @return
+     * @return              ASCII representation of binary data
      */
     public StringBuilder getText(StringBuilder binaryText){
         StringBuilder text = new StringBuilder();
