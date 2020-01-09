@@ -1,9 +1,8 @@
-package com.java.calumjohnston.algorithms;
+package com.java.calumjohnston.algorithms.unused;
 
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.stream.IntStream;
@@ -28,6 +27,11 @@ public class LSB {
      */
     private pseudorandom generator;
 
+    /**
+     * Defines the algorithm index (0 = LSB)
+     */
+    int algorithm = 0;
+
 
     // ======= CONSTRUCTOR(S) =======
     /**
@@ -35,14 +39,15 @@ public class LSB {
      */
     public LSB() {
         // Default values
-        param_number = 6;
+        param_number = 7;
         param_lengths = new int[param_number];
         param_lengths[0] = 1;  // Length for red (Bool)
         param_lengths[1] = 1;  // Length for green (Bool)
         param_lengths[2] = 1;  // Length for blue (Bool)
         param_lengths[3] = 1;  // Length for random (bool)
-        param_lengths[4] = 15;  // Length for end x (Int)
-        param_lengths[5] = 15;  // Length for end y (Int)
+        param_lengths[4] = 2;  // Length for which algorithm is in use
+        param_lengths[5] = 15;  // Length for end x (Int)
+        param_lengths[6] = 15;  // Length for end y (Int)
     }
 
 
@@ -79,11 +84,12 @@ public class LSB {
         // Check whether text will fit into image
         int dataToInsert = (int) ((double) binaryText.length() / coloursToConsider.length) + IntStream.of(param_lengths).sum();
         int dataImageCanStore = coverImage.getWidth() * coverImage.getHeight() * coloursToConsider.length;
-        System.out.println(dataToInsert + " " + dataImageCanStore);
         if (dataToInsert < dataImageCanStore) {
 
             // Encode the data into the image
             int[] endPosition = encodeData(coverImage, binaryText, coloursToConsider, "normal", random);
+
+            System.out.println(endPosition[0] + " " + endPosition[1]);
 
             // Encode the parameters into the image
             encodeParameters(coverImage, random, coloursToConsider, red, green, blue, endPosition);
@@ -120,12 +126,13 @@ public class LSB {
 
         parameters = new StringBuilder();
         parameters.append(getBinaryParameters(random ? 1 : 0, param_lengths[3]));
+        parameters.append(getBinaryParameters(algorithm, param_lengths[4]));
         encodeData(coverImage, parameters, new int[]{0, 1, 2}, "random", random);
 
         // Encode all other parameters as you would with data
         parameters = new StringBuilder();
-        parameters.append(getBinaryParameters(finalValues[0], param_lengths[4]));
-        parameters.append(getBinaryParameters(finalValues[1], param_lengths[5]));
+        parameters.append(getBinaryParameters(finalValues[0], param_lengths[5]));
+        parameters.append(getBinaryParameters(finalValues[1], param_lengths[6]));
         encodeData(coverImage, parameters, coloursToConsider, "parameter", random);
     }
 
@@ -240,33 +247,6 @@ public class LSB {
         return binaryParameter;
     }
 
-    /**
-     * Gets the colours that will be used
-     *
-     * @param red   Boolean to whether red will be used
-     * @param green Boolean to whether green will be used
-     * @param blue  Boolean to whether blue will be used
-     * @return An int[] array storing only the colours it considers
-     */
-    public int[] getColoursToConsider(boolean red, boolean green, boolean blue) {
-        if (red && green && blue) {
-            return new int[]{0, 1, 2};
-        } else if (red && green) {
-            return new int[]{0, 1};
-        } else if (red && blue) {
-            return new int[]{0, 2};
-        } else if (blue && green) {
-            return new int[]{1, 2};
-        } else if (red) {
-            return new int[]{0};
-        } else if (green) {
-            return new int[]{1};
-        } else if (blue) {
-            return new int[]{2};
-        }
-        return new int[]{0, 1, 2};
-    }
-
 
 
 
@@ -276,9 +256,10 @@ public class LSB {
      * (detailed in LSB.txt)
      *
      * @param stegoImage        Image to be used
+     * @param random            Determines whether random embedding was used
      * @return                  Text hidden within the image
      */
-    public String decode(BufferedImage stegoImage){
+    public String decode(BufferedImage stegoImage, boolean random, String seed){
 
         // Gets the colours to consider when reading LSBs
         int[] pixelData = getPixelData(stegoImage, 0, 0);
@@ -287,19 +268,15 @@ public class LSB {
         boolean blue = getColourParameter(pixelData[2]);
         int[] coloursToConsider = getColoursToConsider(red, green, blue);
 
-        // Determine whether the random embedding was used
-        pixelData = getPixelData(stegoImage, 1, 0);
-        boolean random = getColourParameter(pixelData[0]);
-
         // Initialise pseudo random number generator
         if (random) {
-            String seed = JOptionPane.showInputDialog("Please select a password for the data");
-            if(seed == null){ seed = ""; }
             generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed);
         }
 
         // Get remaining parameter data (simply the end position of data encoding)
         int[] endPosition = getParameterData(stegoImage, random, coloursToConsider);
+
+        System.out.println(endPosition[0] + " " + endPosition[1]);
 
         // Get binary version of hidden data
         StringBuilder binaryData = getHiddenData(stegoImage, random, coloursToConsider, endPosition);
@@ -336,12 +313,12 @@ public class LSB {
      * @return                      Tuple of data storing parameter values
      */
     public int[] getParameterData(BufferedImage stegoImage, boolean random, int[] coloursToConsider){
-        int paramLen = IntStream.of(param_lengths).sum() - 4;
+        int paramLen = param_lengths[5] + param_lengths[6];
         String binary = getParameterBinary(stegoImage, paramLen, random, coloursToConsider, "Parameter");
 
         int startParameterPos = 0;
-        int endX = Integer.parseInt(binary.substring(startParameterPos, param_lengths[4]), 2);
-        int endY = Integer.parseInt(binary.substring(startParameterPos + param_lengths[5]), 2);
+        int endX = Integer.parseInt(binary.substring(startParameterPos, param_lengths[5]), 2);
+        int endY = Integer.parseInt(binary.substring(startParameterPos + param_lengths[6]), 2);
 
         return new int[] {endX, endY};
     }
@@ -527,7 +504,31 @@ public class LSB {
         }
         return null;
     }
-
-
-
+    
+    /**
+     * Gets the colours that will be used
+     *
+     * @param red   Boolean to whether red will be used
+     * @param green Boolean to whether green will be used
+     * @param blue  Boolean to whether blue will be used
+     * @return An int[] array storing only the colours it considers
+     */
+    public int[] getColoursToConsider(boolean red, boolean green, boolean blue) {
+        if (red && green && blue) {
+            return new int[]{0, 1, 2};
+        } else if (red && green) {
+            return new int[]{0, 1};
+        } else if (red && blue) {
+            return new int[]{0, 2};
+        } else if (blue && green) {
+            return new int[]{1, 2};
+        } else if (red) {
+            return new int[]{0};
+        } else if (green) {
+            return new int[]{1};
+        } else if (blue) {
+            return new int[]{2};
+        }
+        return new int[]{0, 1, 2};
+    }
 }

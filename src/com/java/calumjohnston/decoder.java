@@ -1,11 +1,10 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.LSB;
+import com.java.calumjohnston.algorithms.decode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -26,12 +25,17 @@ public class decoder {
     private BufferedImage stegoImage;
     private String text;
 
+    private decode decoder;
+
+
 
     // ======= CONSTRUCTOR =======
     /**
      * Constructor for this class
      */
     public decoder() {
+
+        decoder = new decode();
 
         decodeButton.setEnabled(false);
 
@@ -60,10 +64,10 @@ public class decoder {
      * Determines which algorithm to apply when decoding the data
      */
     public void decodeData() {
-        LSB l = new LSB();
-        text = l.decode(stegoImage);
+        String seed = "";
+
+        String text = decoder.decodeImage(stegoImage);
         textField.setText(text);
-        System.out.println(text);
     }
 
 

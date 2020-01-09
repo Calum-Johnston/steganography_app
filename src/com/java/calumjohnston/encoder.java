@@ -1,7 +1,6 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.LSB;
-import jdk.nashorn.internal.scripts.JD;
+import com.java.calumjohnston.algorithms.encode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -10,7 +9,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -48,6 +46,8 @@ public class encoder {
     private boolean random;
     private String seed;
 
+    private encode encoder;
+
 
     // ======= CONSTRUCTOR =======
 
@@ -55,6 +55,8 @@ public class encoder {
      * Constructor for the class
      */
     public encoder() {
+
+        encoder = new encode();
 
         red = false;
         green = false;
@@ -137,14 +139,12 @@ public class encoder {
     public void encodeData() {
         // Check enough options have been selected
 
-        // Calls algorithm to embed the data
-        BufferedImage stegoImage = null;
+        // Get algorithm to be used
         int algorithm = algorithmComboBox.getSelectedIndex();
-        if (algorithm == 0) {
-            LSB lsb = new LSB();
-            System.out.println("Embedding text: " +textField.getText());
-            stegoImage = lsb.encode(coverImage, textField.getText(), red, green, blue, random, seed);
-        }
+
+        // Calls algorithm to embed the data
+        BufferedImage stegoImage = encoder.encodeImage(coverImage, textField.getText(),
+                red, green, blue, random, seed, algorithm);
 
         if(stegoImage == null){
             String message = "Input text too large - try increasing number of colours components to use!";
@@ -152,57 +152,6 @@ public class encoder {
         }else{
             writeImageFile(stegoImage);
         }
-    }
-
-    /**
-     * Performs the LSBM algorithm - detailed in LSBM.txt
-     *
-     * @param coverImage
-     * @param binaryText
-     */
-    public void LSBM(BufferedImage coverImage, StringBuilder binaryText) {
-        // Initialise starting image pixel position
-        int x = 0;
-        int y = 0;
-        char data;
-
-        for (int pos = 0; pos < binaryText.length(); pos++) {
-            // Get message data from text at a specific point
-            data = binaryText.charAt(pos);
-
-            // Get pixel data from image at a specific location
-            int pixel = coverImage.getRGB(x, y);
-            int red = (pixel & 0x00ff0000) >> 16;
-            int green = (pixel & 0x0000ff00) >> 8;
-            int blue = pixel & 0x000000ff;
-
-            // Manipulate pixel data (only writes to Green LSB currently)
-            String binaryGreen = Integer.toBinaryString(green);
-            // If the bit to be embedded is not equal to the LSB of the pixel (Green)
-            if (!(binaryGreen.substring(binaryGreen.length() - 1).equals(Character.toString(data)))) {
-                if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
-                    green -= 1;
-                } else {
-                    green += 1;
-                }
-            }
-
-            // Write new pixel data to image at specified location
-            Color newColour = new Color(red, green, blue);
-            int newRGB = newColour.getRGB();
-            coverImage.setRGB(x, y, newRGB);
-
-            // Update position in image to manipulate pixel
-            x += 1;
-            if (x == coverImage.getWidth()) {
-                x = 0;
-                y += 1;
-            }
-        }
-
-        // Call a function to write image to disk
-        writeImageFile(coverImage);
-
     }
 
     /**
