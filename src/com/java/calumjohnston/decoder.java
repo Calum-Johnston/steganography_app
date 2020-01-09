@@ -36,7 +36,8 @@ public class decoder {
         decodeButton.setEnabled(false);
 
         openFileChooser = new JFileChooser();
-        openFileChooser.setCurrentDirectory(new File("C:\\"));
+        // Directory is for testing - change for release
+        openFileChooser.setCurrentDirectory(new File("C:\\Users\\Calum\\Documents\\3rd year - Dissertation\\Steganography Desktop App\\rsts"));
 
         selectImageButtom.addActionListener(new ActionListener() {
             @Override
@@ -60,7 +61,7 @@ public class decoder {
      */
     public void decodeData() {
         LSB l = new LSB();
-        text = l.decode(stegoImage, "temp");
+        text = l.decode(stegoImage);
         textField.setText(text);
         System.out.println(text);
     }

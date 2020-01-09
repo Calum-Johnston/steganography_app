@@ -29,18 +29,15 @@ public class steganography extends JFrame{
         JPanel card2 = new decoder().getPanel();
 
         // Update ActionListeners of buttons in each card
-        updateActionListeneres(card0);
-        updateActionListeneres(card1);
-        updateActionListeneres(card2);
+        updateActionListeners(card0);
+        updateActionListeners(card1);
+        updateActionListeners(card2);
 
         // Create panel that contains the "cards"
         cards = new JPanel(new CardLayout());
         cards.add(card0, "main");
         cards.add(card1, "encode");
         cards.add(card2, "decode");
-
-        CardLayout cardLayout = (CardLayout) cards.getLayout();
-
 
         // Display default panel (i.e. the first one in cards)
         getContentPane().add(cards);
@@ -52,14 +49,13 @@ public class steganography extends JFrame{
      *
      * @param card      The panel for which buttons will have ActionListeners implemented
      */
-    public void updateActionListeneres(JPanel card){
+    public void updateActionListeners(JPanel card){
         // https://stackoverflow.com/questions/29751414/search-for-buttons-in-jpanel-and-get-the-buttons-text
         // https://stackoverflow.com/questions/36283545/how-to-switch-between-panels-in-cardlayout-from-actionlisteners-in-external-clas
         Component[] mainComponents = card.getComponents();
         for(Object component : mainComponents){
             if(component instanceof JButton){
                 String type = ((JButton) component).getText();
-                System.out.println(type);
                 if(type.equals("Encode Menu")){
                     ((JButton) component).addActionListener(new ActionListener() {
                         @Override
@@ -88,6 +84,7 @@ public class steganography extends JFrame{
             }
         }
     }
+
 
     public static void main(String[] args) {
         new steganography();

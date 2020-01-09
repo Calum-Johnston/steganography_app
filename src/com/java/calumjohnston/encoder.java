@@ -64,7 +64,8 @@ public class encoder {
         encodeButton.setEnabled(false);
 
         openFileChooser = new JFileChooser();
-        openFileChooser.setCurrentDirectory(new File("C:\\"));
+        // Directory is for testing - change for release
+        openFileChooser.setCurrentDirectory(new File("C:\\Users\\Calum\\Documents\\3rd year - Dissertation\\Steganography Desktop App\\rsts"));
 
         algorithmComboBox.addItem("LSB");
         algorithmComboBox.addItem("LSBM");
@@ -116,6 +117,12 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 random = !random;
+                if(randomCheckBox.isSelected()) {
+                    seed = getSeed();
+                }
+                if(seed == null){
+                    randomCheckBox.setSelected(false);
+                }
             }
         });
     }
@@ -135,6 +142,7 @@ public class encoder {
         if (algorithm == 0) {
             LSB lsb = new LSB();
             stegoImage = lsb.encode(coverImage, textField.getText(), red, green, blue, random, seed);
+            System.out.println(textField.getText());
         } else if (algorithm == 1) {
             //LSBM lsbm = new LSBM();
             //BufferedImage stegoImage = lsbm.encode(coverImage, textField.getText(), red, green, blue, random, seed);
@@ -371,6 +379,11 @@ public class encoder {
             e.printStackTrace();
             System.out.println("Failed to write file to disk");
         }
+    }
+
+    public String getSeed(){
+        String seed = JOptionPane.showInputDialog("Please select a password for the data");
+        return seed;
     }
 
     /**
