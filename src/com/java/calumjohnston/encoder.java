@@ -33,8 +33,7 @@ public class encoder {
     private JCheckBox blueCheckBox;
     private JCheckBox randomCheckBox;
     private JComboBox algorithmComboBox;
-    private JPanel designPanel;
-    private JButton button1;
+    private JButton mainMenuButton;
 
     private final JFileChooser openFileChooser;
     private BufferedImage coverImage;

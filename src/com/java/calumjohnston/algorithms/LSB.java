@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.stream.IntStream;
 
 /**
@@ -569,46 +568,3 @@ public class LSB {
 
     // Reused getStartingPosition, generateNextPosition, getPixelData
 }
-
-
-
-
-/**
- * UNUSED FUNCTIONS
- *
- *     /**
- *      * Determines optimal parameter length based on image size
- *      *
- *      * @param coverImage    Image to be used
- *      *
- *      *public void determineOptimalParameterLength(BufferedImage coverImage){
-        *   param_lengths[0]=Integer.toBinaryString(coverImage.getWidth()).length();
-        *   param_lengths[1]=Integer.toBinaryString(coverImage.getWidth()).length();
-        *}
- *
- *     /**
- *      * Gets the LSB of a pixel from an image at a specific location
- *      *
- *      * @param stegoImage    Image to be used
- *      * @param x             x coordinate of pixel
- *      * @param y             y coordinate of pixel
- *      * @param colour        Colour channel to be selected
- *      * @return              Least significant bit of a particular colour channel of a pixel
- *      */
- /**public String getPixelLSB(BufferedImage stegoImage,int x,int y,int colour){
-        *int pixel=stegoImage.getRGB(x,y);
-        *if(colour==0){
-        *int red=(pixel&0x00ff0000)>>16;
-        *String red_binary=Integer.toBinaryString(red);
-        *return red_binary.substring(red_binary.length()-1);
-        *}else if(colour==1){
-        *int green=(pixel&0x00ff0000)>>16;
-        *String green_binary=Integer.toBinaryString(green);
-        *return green_binary.substring(green_binary.length()-1);
-        *}else{
-        *int blue=(pixel&0x00ff0000)>>16;
-        *String blue_binary=Integer.toBinaryString(blue);
-        *return blue_binary.substring(blue_binary.length()-1);
-        *}
-        *}
-*/

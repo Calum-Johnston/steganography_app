@@ -58,9 +58,9 @@ public class steganography extends JFrame{
         Component[] mainComponents = card.getComponents();
         for(Object component : mainComponents){
             if(component instanceof JButton){
-                String type = ((JButton) component).getUIClassID();
+                String type = ((JButton) component).getText();
                 System.out.println(type);
-                if(type.equals("encodeMenuButton")){
+                if(type.equals("Encode Menu")){
                     ((JButton) component).addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -68,7 +68,7 @@ public class steganography extends JFrame{
                             cardLayout.show(cards, "encode");
                         }
                     });
-                }else if(type.equals("decodeMenuButton")){
+                }else if(type.equals("Decode Menu")){
                     ((JButton) component).addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -76,7 +76,7 @@ public class steganography extends JFrame{
                             cardLayout.show(cards, "decode");
                         }
                     });
-                }else if(type.equals("mainMenuButton")){
+                }else if(type.equals("Main Menu")){
                     ((JButton) component).addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {

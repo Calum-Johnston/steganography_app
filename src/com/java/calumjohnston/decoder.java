@@ -20,6 +20,7 @@ public class decoder {
     private JButton selectImageButtom;
     private JTextField textField;
     private JButton decodeButton;
+    private JButton mainMenuButton;
 
     private final JFileChooser openFileChooser;
     private BufferedImage stegoImage;
@@ -27,7 +28,6 @@ public class decoder {
 
 
     // ======= CONSTRUCTOR =======
-
     /**
      * Constructor for this class
      */
@@ -55,19 +55,18 @@ public class decoder {
 
 
     // ======= DECODE FUNCTIONS =======
-
     /**
      * Determines which algorithm to apply when decoding the data
      */
     public void decodeData() {
         LSB l = new LSB();
         text = l.decode(stegoImage, "temp");
+        textField.setText(text);
         System.out.println(text);
     }
 
 
     // ======= PURPOSE FUNCTIONS =======
-
     /**
      * Reads an image from file explorer
      * (TYPE: .png)
