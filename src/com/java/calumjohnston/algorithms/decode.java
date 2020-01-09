@@ -227,7 +227,7 @@ public class decode {
 
     /**
      * Determines whether a particular colour channel was used in image encoding
-     * (Stored in the red, green & blue LSB of the pixel at (0, 0))
+     * (Stored in the red, green and blue LSB of the pixel at (0, 0))
      *
      * @param colour        The colour channel (red, green or blue)
      * @return              Whether the colour was used or not

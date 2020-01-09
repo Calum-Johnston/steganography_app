@@ -117,7 +117,8 @@ public class encode {
      * @param binary            Binary data to be encoded
      * @param coloursToConsider List of colours we will encode data into
      * @param dataType          Defines the type of data being embedded
-     * @param random            Determines
+     * @param random            Determines whether the PRNG will be used
+     * @param algorithm         The algorithm being used to decode
      * @return Tuple storing final insertion parameters
      */
     public int[] encodeData(BufferedImage coverImage, StringBuilder binary,
@@ -276,6 +277,7 @@ public class encode {
      * @param green                 Boolean to whether green will be used
      * @param blue                  Boolean to whether blue will be used
      * @param finalValues           Tuple storing final insertion parameters
+     * @param algorithm             The algorithm being used to encode
      */
     public void encodeParameters(BufferedImage coverImage, boolean random, int[] coloursToConsider,
                                  boolean red, boolean green, boolean blue, int[] finalValues,
