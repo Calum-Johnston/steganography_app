@@ -116,7 +116,7 @@ public class LSB {
         parameters.append(getBinaryParameters(red ? 1 : 0, param_lengths[0]));
         parameters.append(getBinaryParameters(green ? 1 : 0, param_lengths[1]));
         parameters.append(getBinaryParameters(blue ? 1 : 0, param_lengths[2]));
-        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "colour", false);
+        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "colour", random);
 
         parameters = new StringBuilder();
         parameters.append(getBinaryParameters(random ? 1 : 0, param_lengths[3]));
