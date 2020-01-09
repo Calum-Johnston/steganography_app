@@ -374,7 +374,10 @@ public class encoder {
         }
     }
 
-
+    /**
+     *
+     * @return The JPanel of the current form
+     */
     public JPanel getPanel(){
         return rootPanel;
     }

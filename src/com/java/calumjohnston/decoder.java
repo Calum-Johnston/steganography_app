@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * The decoder_GUI class runs the GUI for the decoding page
  */
-public class decoder_GUI {
+public class decoder {
     private JPanel rootPanel;
     private JButton selectImageButtom;
     private JTextField textField;
@@ -31,7 +31,7 @@ public class decoder_GUI {
     /**
      * Constructor for this class
      */
-    public decoder_GUI() {
+    public decoder() {
 
         decodeButton.setEnabled(false);
 
@@ -93,6 +93,14 @@ public class decoder_GUI {
                 System.out.println("Failed to read in image");
             }
         }
+    }
+
+    /**
+     *
+     * @return The JPanel of the current form
+     */
+    public JPanel getPanel(){
+        return rootPanel;
     }
 
 }
