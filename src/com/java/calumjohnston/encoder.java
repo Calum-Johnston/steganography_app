@@ -1,6 +1,7 @@
 package com.java.calumjohnston;
 
 import com.java.calumjohnston.algorithms.LSB;
+import jdk.nashorn.internal.scripts.JD;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -141,16 +142,16 @@ public class encoder {
         int algorithm = algorithmComboBox.getSelectedIndex();
         if (algorithm == 0) {
             LSB lsb = new LSB();
+            System.out.println("Embedding text: " +textField.getText());
             stegoImage = lsb.encode(coverImage, textField.getText(), red, green, blue, random, seed);
-            System.out.println(textField.getText());
-        } else if (algorithm == 1) {
-            //LSBM lsbm = new LSBM();
-            //BufferedImage stegoImage = lsbm.encode(coverImage, textField.getText(), red, green, blue, random, seed);
-        } else {
-            //LSBMR lsbmr = new LSBMR();
-            //BufferedImage stegoImage = lsbmr.encode(coverImage, textField.getText(), red, green, blue, random, seed);
         }
-        writeImageFile(stegoImage);
+
+        if(stegoImage == null){
+            String message = "Input text too large - try increasing number of colours components to use!";
+            JOptionPane.showMessageDialog(null, message);
+        }else{
+            writeImageFile(stegoImage);
+        }
     }
 
     /**

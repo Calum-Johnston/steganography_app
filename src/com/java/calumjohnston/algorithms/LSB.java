@@ -30,7 +30,6 @@ public class LSB {
 
 
     // ======= CONSTRUCTOR(S) =======
-
     /**
      * Constructor for the class
      */
@@ -45,6 +44,8 @@ public class LSB {
         param_lengths[4] = 15;  // Length for end x (Int)
         param_lengths[5] = 15;  // Length for end y (Int)
     }
+
+
 
 
     // ======= Encoding Functions =======
@@ -78,6 +79,7 @@ public class LSB {
         // Check whether text will fit into image
         int dataToInsert = (int) ((double) binaryText.length() / coloursToConsider.length) + IntStream.of(param_lengths).sum();
         int dataImageCanStore = coverImage.getWidth() * coverImage.getHeight() * coloursToConsider.length;
+        System.out.println(dataToInsert + " " + dataImageCanStore);
         if (dataToInsert < dataImageCanStore) {
 
             // Encode the data into the image
@@ -85,10 +87,6 @@ public class LSB {
 
             // Encode the parameters into the image
             encodeParameters(coverImage, random, coloursToConsider, red, green, blue, endPosition);
-
-            System.out.println("Red: " + red + ", Green: " + green + ", Blue: " + blue);
-            System.out.println("Random: " + random);
-            System.out.println("End x: " + endPosition[0] + ", End y: " + endPosition[1]);
 
             return coverImage;
         }
@@ -122,7 +120,7 @@ public class LSB {
 
         parameters = new StringBuilder();
         parameters.append(getBinaryParameters(random ? 1 : 0, param_lengths[3]));
-        encodeData(coverImage, parameters, coloursToConsider, "random", random);
+        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "random", random);
 
         // Encode all other parameters as you would with data
         parameters = new StringBuilder();
@@ -148,7 +146,7 @@ public class LSB {
         int imageWidth = coverImage.getWidth();
 
         // Get starting Position
-        int[] currentPosition = getStartingPosition(coverImage, random, dataType, coloursToConsider);
+        int[] currentPosition = getStartPosition(coverImage, random, coloursToConsider, dataType);
 
         // Loop through binary data to be inserted
         for (int i = 0; i < binary.length(); i += coloursToConsider.length) {
@@ -178,95 +176,8 @@ public class LSB {
         return new int[]{currentPosition[0], currentPosition[1], endColour};
     }
 
-    /**
-     * Gets the position to start encoding data from (in encodeData() method)
-     *
-     * @param coverImage            The image to be used
-     * @param random                Determines whether the PRNG is used
-     * @param dataType              Defines the type of data being inserted
-     * @param coloursToConsider     List of colours we will encode data into
-     * @return                      The starting position
-     */
-    public int[] getStartingPosition(BufferedImage coverImage, boolean random, String dataType, int[] coloursToConsider){
-        // We always insert what colours we're using into the first pixel
-        // (since this is needed to decode everything else
-        if(dataType.equals("colour")){
-            return new int[] {0, 0};
-        }
 
-        if(dataType.equals("random")){
-            return new int[] {1, 0};
-        }
-
-        // Define starting position when random LSB replacement
-        if(random){
-            if(dataType.equals("normal")){
-                // Set position for payload data insertion
-                int newPosition = (int) Math.ceil((IntStream.of(param_lengths).sum() / coloursToConsider.length));
-                generator.setPosition(newPosition);
-            }else{
-                // Set position for parameter data insertion
-                generator.setPosition(0);
-            }
-            int position = generator.getNextElement();
-            return new int[] {position % coverImage.getWidth(), position / coverImage.getWidth()};
-        }
-
-        // Define starting positions when linear LSB replacement
-        if(!(random)){
-            if(dataType.equals("normal")){
-                // Set position for payload data insertion
-                int startX = (int) Math.ceil(((double) IntStream.of(param_lengths).sum() % coverImage.getWidth()) / coloursToConsider.length);
-                int startY = (IntStream.of(param_lengths).sum() / coverImage.getWidth()) / coloursToConsider.length;
-                return new int[] {startX, startY};
-            }else{
-                // Set position for parameter data insertion
-                return new int[] {2, 0};
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Generates next position in image to encode data into
-     *
-     * @param imageWidth      The width of the image being used
-     * @param currentPosition The position which data has just been encoded
-     * @param random          Determines whether random embedding should be used
-     * @return The new position to consider
-     */
-    public int[] generateNextPosition(int imageWidth, int[] currentPosition, boolean random) {
-        if (random) {
-            int position = generator.getNextElement();
-            currentPosition[0] = position % imageWidth;
-            currentPosition[1] = position / imageWidth;
-        } else {
-            currentPosition[0] = (currentPosition[0] + 1) % imageWidth;
-            if (currentPosition[0] == 0) {
-                currentPosition[1] += 1;
-            }
-        }
-        return currentPosition;
-    }
-
-
-    // PIXEL MANIPULATION FUNCTIONS
-    /**
-     * Gets pixel data from an image at a specific location
-     *
-     * @param coverImage Image to be used
-     * @param x          x coordinate of pixel
-     * @param y          y coordinate of pixel
-     * @return Tuple of RGB values (representing the pixel)
-     */
-    public int[] getPixelData(BufferedImage coverImage, int x, int y) {
-        int pixel = coverImage.getRGB(x, y);
-        int red = (pixel & 0x00ff0000) >> 16;
-        int green = (pixel & 0x0000ff00) >> 8;
-        int blue = pixel & 0x000000ff;
-        return new int[]{red, green, blue};
-    }
-
+    // LSB MANIPULATION FUNCTIONS
     /**
      * Inserts data into pixel data (by LSB technique)
      *
@@ -390,12 +301,10 @@ public class LSB {
         // Get remaining parameter data (simply the end position of data encoding)
         int[] endPosition = getParameterData(stegoImage, random, coloursToConsider);
 
-        //System.out.println("Red: " + red + ", Green: " + green + ", Blue: " + blue);
-        //System.out.println("Random: " + random);
-        //System.out.println("End x: " + endPosition[0] + ", End y: " + endPosition[1]);
-
+        // Get binary version of hidden data
         StringBuilder binaryData = getHiddenData(stegoImage, random, coloursToConsider, endPosition);
 
+        // Convert to ASCII equivalent
         StringBuilder text = getText(binaryData);
 
         return text.toString();
@@ -453,8 +362,7 @@ public class LSB {
         int[] pixelData;
 
         // Get starting position
-        int[] currentPosition = getDecodeStartingPosition(stegoImage, random, coloursToConsider, dataType);
-        System.out.println(currentPosition[0] + " " + currentPosition[1]);
+        int[] currentPosition = getStartPosition(stegoImage, random, coloursToConsider, dataType);
 
         for(int i = 0; i < reserved_length; i += coloursToConsider.length){
 
@@ -478,44 +386,6 @@ public class LSB {
     }
 
     /**
-     * Gets the position to start decoding data from
-     * (HOPEFULLY USE ONE FUNCTION FOR ENCODING AND DECODING EVENTUALLY!!)
-     *
-     * @param stegoImage            The image to be used
-     * @param random                Determines whether random embedding was used
-     * @param coloursToConsider     List of colours that data was embedded into
-     * @param dataType              Defines the type of data being retrieved
-     * @return                      Position to start decoding (dependent on what we're decoding)
-     */
-    public int[] getDecodeStartingPosition(BufferedImage stegoImage, boolean random, int[] coloursToConsider, String dataType){
-        if(random){
-            if(dataType.equals("normal")){
-                // Set position for payload data decoding
-                int newPosition = (int) Math.ceil((IntStream.of(param_lengths).sum() / coloursToConsider.length));
-                generator.setPosition(newPosition);
-            }else{
-                // Set position for parameter data insertion
-                generator.setPosition(0);
-            }
-            int position = generator.getNextElement();
-            return new int[] {position % stegoImage.getWidth(), position / stegoImage.getWidth()};
-        }
-
-        if(!random) {
-            if(dataType.equals("normal")){
-                // Set position for payload data insertion
-                int startX = (int) Math.ceil(((double) IntStream.of(param_lengths).sum() % stegoImage.getWidth()) / coloursToConsider.length);
-                int startY = (IntStream.of(param_lengths).sum() / stegoImage.getWidth()) / coloursToConsider.length;
-                return new int[] {startX, startY};
-            }else{
-                // Set position for parameter data insertion
-                return new int[] {2, 0};
-            }
-        }
-        return null;
-    }
-
-    /**
      * Gets the binary equivalent of the hidden data in the image
      *
      * @param stegoImage            The image to be used
@@ -529,7 +399,7 @@ public class LSB {
         int[] pixelData;
 
         // Get starting position
-        int[] currentPosition = getDecodeStartingPosition(stegoImage, random, coloursToConsider, "normal");
+        int[] currentPosition = getStartPosition(stegoImage, random, coloursToConsider, "normal");
 
         while(currentPosition[0] != parameters[0] || currentPosition[1] != parameters[1]){
 
@@ -551,7 +421,6 @@ public class LSB {
 
     }
 
-
     /**
      * Converts the binary stream of data to it's ASCII equivalent
      *
@@ -571,5 +440,94 @@ public class LSB {
     }
 
 
-    // Reused getStartingPosition, generateNextPosition, getPixelData
+
+
+    // ======= Shared Functions =======
+    /**
+     * Gets pixel data from an image at a specific location
+     *
+     * @param coverImage Image to be used
+     * @param x          x coordinate of pixel
+     * @param y          y coordinate of pixel
+     * @return Tuple of RGB values (representing the pixel)
+     */
+    public int[] getPixelData(BufferedImage coverImage, int x, int y) {
+        int pixel = coverImage.getRGB(x, y);
+        int red = (pixel & 0x00ff0000) >> 16;
+        int green = (pixel & 0x0000ff00) >> 8;
+        int blue = pixel & 0x000000ff;
+        return new int[]{red, green, blue};
+    }
+
+    /**
+     * Generates next position of the data within image
+     *
+     * @param imageWidth      The width of the image being used
+     * @param currentPosition The position which data has just been encoded
+     * @param random          Determines whether random embedding should be used
+     * @return The new position to consider
+     */
+    public int[] generateNextPosition(int imageWidth, int[] currentPosition, boolean random) {
+        if (random) {
+            int position = generator.getNextElement();
+            currentPosition[0] = position % imageWidth;
+            currentPosition[1] = position / imageWidth;
+        } else {
+            currentPosition[0] = (currentPosition[0] + 1) % imageWidth;
+            if (currentPosition[0] == 0) {
+                currentPosition[1] += 1;
+            }
+        }
+        return currentPosition;
+    }
+
+    /**
+     * Gets the position to start decoding data from
+     * (HOPEFULLY USE ONE FUNCTION FOR ENCODING AND DECODING EVENTUALLY!!)
+     *
+     * @param image                 The image to be used
+     * @param random                Determines whether random embedding was used
+     * @param coloursToConsider     List of colours that data was embedded into
+     * @param dataType              Defines the type of data being retrieved
+     * @return                      Position to start decoding (dependent on what we're decoding)
+     */
+    public int[] getStartPosition(BufferedImage image, boolean random, int[] coloursToConsider, String dataType){
+
+        if(dataType.equals("colour")){
+            return new int[] {0, 0};
+        }
+
+        if(dataType.equals("random")){
+            return new int[] {1, 0};
+        }
+
+        if(random){
+            if(dataType.equals("normal")){
+                // Set position for payload data decoding
+                int newPosition = (int) Math.ceil((IntStream.of(param_lengths).sum() / coloursToConsider.length));
+                generator.setPosition(newPosition);
+            }else{
+                // Set position for parameter data insertion
+                generator.setPosition(0);
+            }
+            int position = generator.getNextElement();
+            return new int[] {position % image.getWidth(), position / image.getWidth()};
+        }
+
+        if(!random) {
+            if(dataType.equals("normal")){
+                // Set position for payload data insertion
+                int startX = (int) Math.ceil(((double) IntStream.of(param_lengths).sum() % image.getWidth()) / coloursToConsider.length);
+                int startY = (IntStream.of(param_lengths).sum() / image.getWidth()) / coloursToConsider.length;
+                return new int[] {startX, startY};
+            }else{
+                // Set position for parameter data insertion
+                return new int[] {2, 0};
+            }
+        }
+        return null;
+    }
+
+
+
 }
