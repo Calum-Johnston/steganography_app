@@ -96,6 +96,8 @@ public class encode {
             // Encode the data into the image
             int[] endPosition = encodeData(coverImage, binaryText, coloursToConsider, "normal", random, algorithm);
 
+            System.out.println(endPosition[0] + " " +endPosition[1]);
+
             // Encode the parameters into the image
             encodeParameters(coverImage, random, coloursToConsider, red, green, blue, endPosition, algorithm);
 
@@ -122,8 +124,6 @@ public class encode {
                             int[] coloursToConsider, String dataType, boolean random,
                             int algorithm) {
         int[] pixelData;
-        int endColour = coloursToConsider[coloursToConsider.length - 1];
-        int imageWidth = coverImage.getWidth();
 
         // Get starting Position
         int[] currentPosition = getStartPosition(coverImage, random, coloursToConsider, dataType);
@@ -137,10 +137,9 @@ public class encode {
             // Encode data into LSBs of colours used
             for (int j = 0; j < coloursToConsider.length; j++) {
                 if (i + j >= binary.length()) {
-                    endColour = j - 1;
                     writePixelData(coverImage, pixelData, currentPosition[0], currentPosition[1]);
-                    currentPosition = generateNextPosition(imageWidth, currentPosition, random);
-                    return new int[]{currentPosition[0], currentPosition[1], endColour};
+                    currentPosition = generateNextPosition(coverImage, currentPosition, random);
+                    return new int[]{currentPosition[0], currentPosition[1]};
                 }
                 char data = binary.charAt(i + j);
                 pixelData[coloursToConsider[j]] = updateLSB(pixelData[coloursToConsider[j]], data, algorithm);
@@ -150,10 +149,10 @@ public class encode {
             writePixelData(coverImage, pixelData, currentPosition[0], currentPosition[1]);
 
             // Increment coordinates
-            currentPosition = generateNextPosition(imageWidth, currentPosition, random);
+            currentPosition = generateNextPosition(coverImage, currentPosition, random);
         }
         // Returns data (acting as parameter data)
-        return new int[]{currentPosition[0], currentPosition[1], endColour};
+        return new int[]{currentPosition[0], currentPosition[1]};
     }
 
     /**
@@ -174,6 +173,10 @@ public class encode {
 
         if(dataType.equals("random")){
             return new int[] {1, 0};
+        }
+
+        if(dataType.equals("position")){
+            return new int[] {2, 0};
         }
 
         if(random){
@@ -197,7 +200,7 @@ public class encode {
                 return new int[] {startX, startY};
             }else{
                 // Set position for parameter data insertion
-                return new int[] {2, 0};
+                return new int[] {12, 0};
             }
         }
         return null;
@@ -206,12 +209,13 @@ public class encode {
     /**
      * Generates next position of the data within image
      *
-     * @param imageWidth      The width of the image being used
+     * @param coverImage           The image to be used
      * @param currentPosition The position which data has just been encoded
      * @param random          Determines whether random embedding should be used
      * @return The new position to consider
      */
-    public int[] generateNextPosition(int imageWidth, int[] currentPosition, boolean random) {
+    public int[] generateNextPosition(BufferedImage coverImage, int[] currentPosition, boolean random) {
+        int imageWidth = coverImage.getWidth();
         if (random) {
             int position = generator.getNextElement();
             currentPosition[0] = position % imageWidth;
@@ -281,18 +285,18 @@ public class encode {
         parameters.append(getBinaryParameters(red ? 1 : 0, param_lengths[0]));
         parameters.append(getBinaryParameters(green ? 1 : 0, param_lengths[1]));
         parameters.append(getBinaryParameters(blue ? 1 : 0, param_lengths[2]));
-        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "colour", random, algorithm);
+        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "colour", false, algorithm);
 
         parameters = new StringBuilder();
         parameters.append(getBinaryParameters(random ? 1 : 0, param_lengths[3]));
         parameters.append(getBinaryParameters(algorithm, param_lengths[4]));
-        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "random", random, algorithm);
+        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "random", false, algorithm);
 
         // Encode all other parameters as you would with data
         parameters = new StringBuilder();
         parameters.append(getBinaryParameters(finalValues[0], param_lengths[5]));
         parameters.append(getBinaryParameters(finalValues[1], param_lengths[6]));
-        encodeData(coverImage, parameters, coloursToConsider, "parameter", random, algorithm);
+        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "position", false, algorithm);
     }
 
 

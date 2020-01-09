@@ -124,45 +124,6 @@ public class decode {
     }
 
     /**
-     * Gets the binary equivalent of the parameters needed for decoding
-     *
-     * @param stegoImage            Image to be used
-     * @param reserved_length       Total bit length of parameters to be retrieved
-     * @param random                Determines whether random embedding was used
-     * @param coloursToConsider     List of colours that data was embedded into
-     * @param dataType              Defines the type of data being retrieved
-     * @return                      String parameter (in binary)
-     */
-    public String decodeParameterData(BufferedImage stegoImage, int reserved_length, boolean random, int[] coloursToConsider,
-                                     String dataType){
-        StringBuilder value = new StringBuilder();
-        int[] pixelData;
-
-        // Get starting position
-        int[] currentPosition = getStartPosition(stegoImage, random, coloursToConsider, dataType);
-
-        for(int i = 0; i < reserved_length; i += coloursToConsider.length){
-
-            // Get the pixel data
-            pixelData = getPixelData(stegoImage, currentPosition[0], currentPosition[1]);
-
-            // Read data from LSBs of colours used
-            for (int j = 0; j < coloursToConsider.length; j++) {
-                if (i + j >= reserved_length) {
-                    break;
-                }
-                String LSB = Integer.toBinaryString(pixelData[coloursToConsider[j]]);
-                LSB = LSB.substring(LSB.length() - 1);
-                value.append(LSB);
-            }
-
-            // Update position
-            currentPosition = generateNextPosition(stegoImage.getWidth(), currentPosition, random);
-        }
-        return value.toString();
-    }
-
-    /**
      * Gets the position to start decoding data from
      * (HOPEFULLY USE ONE FUNCTION FOR ENCODING AND DECODING EVENTUALLY!!)
      *
@@ -331,10 +292,34 @@ public class decode {
      * @return                      The position encoding finished
      */
     public int[] getEndPosition(BufferedImage stegoImage, int[] coloursToConsider){
-        int paramLen = param_lengths[5] + param_lengths[6];
-        String binary = decodeParameterData(stegoImage, paramLen, random, coloursToConsider, "Parameter");
-        int endX = Integer.parseInt(binary.substring(0, param_lengths[5]), 2);
-        int endY = Integer.parseInt(binary.substring(param_lengths[6]), 2);
+        StringBuilder position = new StringBuilder();
+        for(int i = 0; i < param_lengths[5] / 3; i++){
+            int[] pixelData = getPixelData(stegoImage,i + 2, 0);
+            String redBinary = Integer.toBinaryString(pixelData[0]);
+            String redBinaryLSB = redBinary.substring(redBinary.length() - 1);
+            String greenBinary = Integer.toBinaryString(pixelData[1]);
+            String greenBinaryLSB = greenBinary.substring(greenBinary.length() - 1);
+            String blueBinary = Integer.toBinaryString(pixelData[2]);
+            String blueBinaryLSB = blueBinary.substring(blueBinary.length() - 1);
+            position.append(redBinaryLSB + greenBinaryLSB + blueBinaryLSB);
+        }
+        System.out.println(position);
+        int endX = Integer.parseInt(position.toString(), 2);
+
+        position = new StringBuilder();
+        for(int i = 0; i < param_lengths[5] / 3; i++){
+            int[] pixelData = getPixelData(stegoImage,i + 7, 0);
+            String redBinary = Integer.toBinaryString(pixelData[0]);
+            String redBinaryLSB = redBinary.substring(redBinary.length() - 1);
+            String greenBinary = Integer.toBinaryString(pixelData[1]);
+            String greenBinaryLSB = greenBinary.substring(greenBinary.length() - 1);
+            String blueBinary = Integer.toBinaryString(pixelData[2]);
+            String blueBinaryLSB = blueBinary.substring(blueBinary.length() - 1);
+            position.append(redBinaryLSB + greenBinaryLSB + blueBinaryLSB);
+        }
+        System.out.println(position);
+        int endY = Integer.parseInt(position.toString(), 2);
+
         return new int[] {endX, endY};
     }
 
