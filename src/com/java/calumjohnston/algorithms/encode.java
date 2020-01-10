@@ -28,6 +28,11 @@ public class encode {
      */
     private pseudorandom generator;
 
+    /**
+     * The image to be manipulated
+     */
+    private BufferedImage coverImage;
+
     boolean red;
     boolean green;
     boolean blue;
@@ -60,6 +65,8 @@ public class encode {
         algorithm = 0;
         endPosition = new int[2];
         coloursToConsider = new int[3];
+
+        coverImage = null;
     }
 
 
@@ -82,8 +89,11 @@ public class encode {
                                 boolean red, boolean green, boolean blue, boolean random, String seed,
                                      int algorithm) {
 
+        // Define image
+        this.coverImage = coverImage;
+
         //Set parameter data
-        setupParameterData(coverImage, red, green, blue, random, seed, algorithm);
+        setupParameterData(red, green, blue, random, seed, algorithm);
 
         // Convert ASCII text to binary equivalent
         StringBuilder binaryText = getBinaryText(text);
@@ -94,10 +104,10 @@ public class encode {
         if (dataToInsert < dataImageCanStore) {
 
             // Encode the data into the image
-            int[] endPosition = encodeData(coverImage, binaryText, coloursToConsider, "normal", random, algorithm);
+            int[] endPosition = encodeData(binaryText, coloursToConsider, "normal", random, algorithm);
 
             // Encode the parameters into the image
-            encodeParameters(coverImage, random, coloursToConsider, red, green, blue, endPosition, algorithm);
+            encodeParameters(random, coloursToConsider, red, green, blue, endPosition, algorithm);
 
             return coverImage;
         }
@@ -111,7 +121,6 @@ public class encode {
     /**
      * Encodes the stream of binary data into the cover Image
      *
-     * @param coverImage        Image to be used
      * @param binary            Binary data to be encoded
      * @param coloursToConsider List of colours we will encode data into
      * @param dataType          Defines the type of data being embedded
@@ -119,12 +128,12 @@ public class encode {
      * @param algorithm         The algorithm being used to decode
      * @return Tuple storing final insertion parameters
      */
-    public int[] encodeData(BufferedImage coverImage, StringBuilder binary,
+    public int[] encodeData(StringBuilder binary,
                             int[] coloursToConsider, String dataType, boolean random,
                             int algorithm) {
 
         if(algorithm == 0 || algorithm == 1){
-            return encodeLSB(coverImage, binary, coloursToConsider, dataType, random);
+            return encodeLSB(binary, coloursToConsider, dataType, random);
         }
 
         if(algorithm == 2){
@@ -137,14 +146,12 @@ public class encode {
      * Gets the position to start decoding data from
      * (HOPEFULLY USE ONE FUNCTION FOR ENCODING AND DECODING EVENTUALLY!!)
      *
-     * @param image                 The image to be used
      * @param random                Determines whether random embedding was used
      * @param coloursToConsider     List of colours that data was embedded into
      * @param dataType              Defines the type of data being retrieved
      * @return                      Position to start decoding (dependent on what we're decoding)
      */
-    public int[] getStartPosition(BufferedImage image, boolean random, int[] coloursToConsider, String dataType){
-
+    public int[] getStartPosition(boolean random, int[] coloursToConsider, String dataType){
         if(dataType.equals("colour")){
             return new int[] {0, 0};
         }
@@ -158,41 +165,21 @@ public class encode {
         }
 
         if(random){
-            if(dataType.equals("normal")){
-                // Set position for payload data decoding
-                int newPosition = (int) Math.ceil((IntStream.of(param_lengths).sum() / coloursToConsider.length));
-                generator.setPosition(newPosition);
-            }else{
-                // Set position for parameter data insertion
-                generator.setPosition(0);
-            }
             int position = generator.getNextElement();
-            return new int[] {position % image.getWidth(), position / image.getWidth()};
+            return new int[]{position % coverImage.getWidth(), position / coverImage.getWidth()};
+        }else{
+            return new int[] {12, 0};
         }
-
-        if(!random) {
-            if(dataType.equals("normal")){
-                // Set position for payload data insertion
-                int startX = (int) Math.ceil(((double) IntStream.of(param_lengths).sum() % image.getWidth()) / coloursToConsider.length);
-                int startY = (IntStream.of(param_lengths).sum() / image.getWidth()) / coloursToConsider.length;
-                return new int[] {startX, startY};
-            }else{
-                // Set position for parameter data insertion
-                return new int[] {12, 0};
-            }
-        }
-        return null;
     }
 
     /**
      * Generates next position of the data within image
      *
-     * @param coverImage           The image to be used
      * @param currentPosition The position which data has just been encoded
      * @param random          Determines whether random embedding should be used
      * @return The new position to consider
      */
-    public int[] generateNextPosition(BufferedImage coverImage, int[] currentPosition, boolean random) {
+    public int[] generateNextPosition(int[] currentPosition, boolean random) {
         int imageWidth = coverImage.getWidth();
         if (random) {
             int position = generator.getNextElement();
@@ -210,36 +197,40 @@ public class encode {
 
 
     // LSB / LSBM ENCODING FUNCTIONS
-    public int[] encodeLSB(BufferedImage coverImage, StringBuilder binary,
+    public int[] encodeLSB(StringBuilder binary,
                           int[] coloursToConsider, String dataType, boolean random){
 
         // Initialise starting variables
-        int[] pixelData = new int[3];
-        int[] currentPosition = getStartPosition(coverImage, random, coloursToConsider, dataType);
+        int[] currentPosition = getStartPosition(random, coloursToConsider, dataType);
+        int[] pixelData = getPixelData(currentPosition[0], currentPosition[1]);
+
+        // Represents current position (+1) in coloursToConsider (i.e. the colour being considered)
+        // It's +1 due to difficulty with the MOD function
+        int currentColour = 1;
 
         // Loop through binary data to be inserted
-        for (int i = 0; i < binary.length(); i += coloursToConsider.length) {
+        for (int i = 0; i < binary.length(); i += 1) {
 
             // Get pixel data of current pixel
-            pixelData = getPixelData(coverImage, currentPosition[0], currentPosition[1]);
-
-            // Encode data into LSBs of colours used
-            for (int j = 0; j < coloursToConsider.length; j++) {
-                if (i + j >= binary.length()) {
-                    writePixelData(coverImage, pixelData, currentPosition[0], currentPosition[1]);
-                    currentPosition = generateNextPosition(coverImage, currentPosition, random);
-                    return new int[]{currentPosition[0], currentPosition[1]};
-                }
-                char data = binary.charAt(i + j);
-                pixelData[coloursToConsider[j]] = updateLSB(pixelData[coloursToConsider[j]], data, algorithm);
+            if(currentColour % (coloursToConsider.length + 1) == 0){
+                currentColour = 1;
+                currentPosition = generateNextPosition(currentPosition, random);
+                pixelData = getPixelData(currentPosition[0], currentPosition[1]);
             }
 
-            // Write data t current pixel
-            writePixelData(coverImage, pixelData, currentPosition[0], currentPosition[1]);
+            // Update current pixel data
+            char data = binary.charAt(i);
+            pixelData[coloursToConsider[currentColour - 1]] = updateLSB(pixelData[coloursToConsider[currentColour - 1]], data, algorithm);
 
-            // Increment coordinates
-            currentPosition = generateNextPosition(coverImage, currentPosition, random);
+            // Write data to current pixel
+            writePixelData(pixelData, currentPosition[0], currentPosition[1]);
+
+            // Update current colour
+            currentColour += 1;
         }
+
+        // Return next position
+        currentPosition = generateNextPosition(currentPosition, random);
         return new int[]{currentPosition[0], currentPosition[1]};
     }
 
@@ -340,7 +331,6 @@ public class encode {
     /**
      * Sets the parameter data for the cover image
      *
-     * @param coverImage    The image to be used
      * @param red           Determines whether the red colour channel will be used
      * @param green         Determines whether the blue colour channel will be used
      * @param blue          Determines whether the green colour channel will be used
@@ -348,7 +338,7 @@ public class encode {
      * @param seed          Acts as the seed for the PRNG
      * @param algorithm     The algorithm being used to decode
      */
-    public void setupParameterData(BufferedImage coverImage, boolean red, boolean green, boolean blue,
+    public void setupParameterData(boolean red, boolean green, boolean blue,
                                    boolean random, String seed, int algorithm){
 
         // Set colours used
@@ -374,7 +364,6 @@ public class encode {
      * required to store
      *
      *
-     * @param coverImage            The image to be used
      * @param random                Determines whether the PRNG will be used
      * @param coloursToConsider     List of colours we will encode data into
      * @param red                   Boolean to whether red will be used
@@ -383,7 +372,7 @@ public class encode {
      * @param finalValues           Tuple storing final insertion parameters
      * @param algorithm             The algorithm being used to encode
      */
-    public void encodeParameters(BufferedImage coverImage, boolean random, int[] coloursToConsider,
+    public void encodeParameters(boolean random, int[] coloursToConsider,
                                  boolean red, boolean green, boolean blue, int[] finalValues,
                                  int algorithm) {
         // Encode colours used in first bit
@@ -391,18 +380,18 @@ public class encode {
         parameters.append(getBinaryParameters(red ? 1 : 0, param_lengths[0]));
         parameters.append(getBinaryParameters(green ? 1 : 0, param_lengths[1]));
         parameters.append(getBinaryParameters(blue ? 1 : 0, param_lengths[2]));
-        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "colour", false, 0);
+        encodeData(parameters, new int[]{0, 1, 2}, "colour", false, 0);
 
         parameters = new StringBuilder();
         parameters.append(getBinaryParameters(random ? 1 : 0, param_lengths[3]));
         parameters.append(getBinaryParameters(algorithm, param_lengths[4]));
-        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "random", false, 0);
+        encodeData(parameters, new int[]{0, 1, 2}, "random", false, 0);
 
         // Encode all other parameters as you would with data
         parameters = new StringBuilder();
         parameters.append(getBinaryParameters(finalValues[0], param_lengths[5]));
         parameters.append(getBinaryParameters(finalValues[1], param_lengths[6]));
-        encodeData(coverImage, parameters, new int[]{0, 1, 2}, "position", false, 0);
+        encodeData(parameters, new int[]{0, 1, 2}, "position", false, 0);
     }
 
 
@@ -410,12 +399,11 @@ public class encode {
     /**
      * Gets pixel data from an image at a specific location
      *
-     * @param coverImage Image to be used
      * @param x          x coordinate of pixel
      * @param y          y coordinate of pixel
      * @return Tuple of RGB values (representing the pixel)
      */
-    public int[] getPixelData(BufferedImage coverImage, int x, int y) {
+    public int[] getPixelData(int x, int y) {
         int pixel = coverImage.getRGB(x, y);
         int red = (pixel & 0x00ff0000) >> 16;
         int green = (pixel & 0x0000ff00) >> 8;
@@ -455,12 +443,11 @@ public class encode {
     /**
      * Writes pixel data to an image at a specific location
      *
-     * @param coverImage Image to be used
      * @param pixelData  Typle of RGB values (representing the pixel)
      * @param x          x coordinate of pixel
      * @param y          y coordinate of pixel
      */
-    public void writePixelData(BufferedImage coverImage, int[] pixelData, int x, int y) {
+    public void writePixelData(int[] pixelData, int x, int y) {
         Color newColour = new Color(pixelData[0], pixelData[1], pixelData[2]);
         int newRGB = newColour.getRGB();
         coverImage.setRGB(x, y, newRGB);

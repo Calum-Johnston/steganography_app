@@ -134,40 +134,12 @@ public class decode {
      * @return                      Position to start decoding (dependent on what we're decoding)
      */
     public int[] getStartPosition(BufferedImage image, boolean random, int[] coloursToConsider, String dataType){
-
-        if(dataType.equals("colour")){
-            return new int[] {0, 0};
-        }
-
-        if(dataType.equals("random")){
-            return new int[] {1, 0};
-        }
-
         if(random){
-            if(dataType.equals("normal")){
-                // Set position for payload data decoding
-                int newPosition = (int) Math.ceil((IntStream.of(param_lengths).sum() / coloursToConsider.length));
-                generator.setPosition(newPosition);
-            }else{
-                // Set position for parameter data insertion
-                generator.setPosition(0);
-            }
             int position = generator.getNextElement();
             return new int[] {position % image.getWidth(), position / image.getWidth()};
+        }else{
+            return new int[] {12, 0};
         }
-
-        if(!random) {
-            if(dataType.equals("normal")){
-                // Set position for payload data insertion
-                int startX = (int) Math.ceil(((double) IntStream.of(param_lengths).sum() % image.getWidth()) / coloursToConsider.length);
-                int startY = (IntStream.of(param_lengths).sum() / image.getWidth()) / coloursToConsider.length;
-                return new int[] {startX, startY};
-            }else{
-                // Set position for parameter data insertion
-                return new int[] {2, 0};
-            }
-        }
-        return null;
     }
 
     /**
