@@ -76,7 +76,7 @@ public class decode {
 
         // Get binary version of hidden data
         StringBuilder binaryData = decodeData(stegoImage, random, coloursToConsider, endPosition);
-
+        System.out.println(binaryData);
         // Convert binary text to ASCII equivalent
         StringBuilder text = getText(binaryData);
 
@@ -187,7 +187,6 @@ public class decode {
             String seed = JOptionPane.showInputDialog("Please select a password for the data");
             if(seed == null){ seed = ""; }
             generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed);
-
         }
 
         // Get algorithm

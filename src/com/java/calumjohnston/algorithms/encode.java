@@ -107,7 +107,7 @@ public class encode {
             int[] endPosition = encodeData(binaryText, coloursToConsider, "normal", random, algorithm);
 
             // Encode the parameters into the image
-            encodeParameters(random, coloursToConsider, red, green, blue, endPosition, algorithm);
+            encodeParameters(endPosition);
 
             return coverImage;
         }
@@ -133,11 +133,11 @@ public class encode {
                             int algorithm) {
 
         if(algorithm == 0 || algorithm == 1){
-            return encodeLSB(binary, coloursToConsider, dataType, random);
+            return encodeLSB(binary, coloursToConsider, dataType, random, algorithm);
         }
 
         if(algorithm == 2){
-            //return encodeLSBMR(coverImage, binary, coloursToConsider, dataType, random);
+            return encodeLSBMR(binary, coloursToConsider, dataType, random);
         }
         return  null;
     }
@@ -198,7 +198,8 @@ public class encode {
 
     // LSB / LSBM ENCODING FUNCTIONS
     public int[] encodeLSB(StringBuilder binary,
-                          int[] coloursToConsider, String dataType, boolean random){
+                          int[] coloursToConsider, String dataType, boolean random,
+                           int algorithm){
 
         // Initialise starting variables
         int[] currentPosition = getStartPosition(random, coloursToConsider, dataType);
@@ -235,15 +236,20 @@ public class encode {
 
 
     // LSBMR ENCODING FUNCTIONS
-    public int[] encodeLSBMR(BufferedImage coverImage, StringBuilder binary,
-                            int[] coloursToConsider, String dataType, boolean random){
+    public int[] encodeLSBMR(StringBuilder binary, int[] coloursToConsider, String dataType, boolean random){
+
+        StringBuilder binaryData = new StringBuilder();
 
         // Initialise starting variables
         int[] currentPosition = getStartPosition(random, coloursToConsider, dataType);
         int[] pixelData = getPixelData(currentPosition[0], currentPosition[1]);
+        int firstColour = 0;
+        int secondColour = 0;
 
-        int[] previousPosition = currentPosition;
-        int[] previousPixelData = pixelData;
+        int[] firstColourInfo = new int[3];
+        int[] secondColourInfo = new int[3];
+        int[] firstColourPixelData = new int[3];
+        int[] secondColourPixelData = new int[3];
 
         // Represents current position (+1) in coloursToConsider (i.e. the colour being considered)
         // It's +1 due to difficulty with the MOD function
@@ -257,23 +263,29 @@ public class encode {
             char data_2 = binary.charAt(i + 1);
 
             // Get first colour to consider
-            int firstColour;
-            if(currentColour % coloursToConsider.length == 0){
-                currentColour = 0;
-                pixelData = getPixelData(currentPosition[0], currentPosition[1]);
+            if(currentColour % (coloursToConsider.length + 1) == 0){
+                currentColour = 1;
                 currentPosition = generateNextPosition(currentPosition, random);
             }
-            firstColour = pixelData[coloursToConsider[currentColour]];
+            pixelData = getPixelData(currentPosition[0], currentPosition[1]);
+            firstColour = pixelData[coloursToConsider[currentColour - 1]];
+            firstColourInfo[0] = currentPosition[0];
+            firstColourInfo[1] = currentPosition[1];
+            firstColourInfo[2] = currentColour;
+            firstColourPixelData = pixelData;
 
             // Get second colour to consider (done cleverly)
             currentColour += 1;
-            int secondColour;
-            if(currentColour % coloursToConsider.length == 0){
-                currentColour = 0;
+            if(currentColour % (coloursToConsider.length + 1) == 0){
+                currentColour = 1;
                 currentPosition = generateNextPosition(currentPosition, random);
-                pixelData = getPixelData(currentPosition[0], currentPosition[1]);
             }
-            secondColour = pixelData[coloursToConsider[currentColour]];
+            pixelData = getPixelData(currentPosition[0], currentPosition[1]);
+            secondColour = pixelData[coloursToConsider[currentColour - 1]];
+            secondColourInfo[0] = currentPosition[0];
+            secondColourInfo[1] = currentPosition[1];
+            secondColourInfo[2] = currentColour;
+            secondColourPixelData = pixelData;
 
             // Increment position in coloursToConsider again
             currentColour += 1;
@@ -296,6 +308,8 @@ public class encode {
                 } else {
                     secondColour += 1;
                 }
+                secondColourPixelData[coloursToConsider[secondColourInfo[2]]] += 1;
+                writePixelData(secondColourPixelData, secondColourInfo[0], secondColourInfo[1]);
             // Case 2: firstColour NORMAL, secondColour NORMAL
             }else if (Character.toString(data_1).equals(firstColourLSB) &&
                         Character.toString(data_2).equals(LSB_Relationship)) {
@@ -303,16 +317,18 @@ public class encode {
             } else if (!(Character.toString(data_1).equals(firstColourLSB)) &&
                         Character.toString(data_2).equals(LSB_Relationship_2)) {
                 firstColour -= 1;
-            // Case 4: firstColour NORMAL, secondColour +1
+                firstColourPixelData[coloursToConsider[firstColourInfo[2] - 1]] += 1;
+                writePixelData(firstColourPixelData, firstColourInfo[0], firstColourInfo[1]);
+            // Case 4: firstColour +1, secondColour NORMAL
             } else {
-                secondColour += 1;
+                firstColourPixelData[coloursToConsider[firstColourInfo[2] - 1]] += 1;
+                writePixelData(firstColourPixelData, firstColourInfo[0], firstColourInfo[1]);
             }
-
-            // Write the data
-
-
         }
-        return new int[] {12};
+
+        // Return next position
+        currentPosition = generateNextPosition(currentPosition, random);
+        return new int[]{currentPosition[0], currentPosition[1]};
     }
 
     public String getBinaryLSB(int number){
@@ -360,18 +376,9 @@ public class encode {
      * Gets all the parameters and stores them with their corresponding number of bits
      * required to store
      *
-     *
-     * @param random                Determines whether the PRNG will be used
-     * @param coloursToConsider     List of colours we will encode data into
-     * @param red                   Boolean to whether red will be used
-     * @param green                 Boolean to whether green will be used
-     * @param blue                  Boolean to whether blue will be used
-     * @param finalValues           Tuple storing final insertion parameters
-     * @param algorithm             The algorithm being used to encode
+     * @param endPosition           Tuple storing final insertion parameters
      */
-    public void encodeParameters(boolean random, int[] coloursToConsider,
-                                 boolean red, boolean green, boolean blue, int[] finalValues,
-                                 int algorithm) {
+    public void encodeParameters(int[] endPosition) {
         // Encode colours used in first bit
         StringBuilder parameters = new StringBuilder();
         parameters.append(getBinaryParameters(red ? 1 : 0, param_lengths[0]));
@@ -386,8 +393,8 @@ public class encode {
 
         // Encode all other parameters as you would with data
         parameters = new StringBuilder();
-        parameters.append(getBinaryParameters(finalValues[0], param_lengths[5]));
-        parameters.append(getBinaryParameters(finalValues[1], param_lengths[6]));
+        parameters.append(getBinaryParameters(endPosition[0], param_lengths[5]));
+        parameters.append(getBinaryParameters(endPosition[1], param_lengths[6]));
         encodeData(parameters, new int[]{0, 1, 2}, "position", false, 0);
     }
 
