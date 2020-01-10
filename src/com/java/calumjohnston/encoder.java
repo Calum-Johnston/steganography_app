@@ -331,6 +331,11 @@ public class encoder {
         }
     }
 
+    /**
+     * Gets the password from the user - to act as the seed for PRNG
+     *
+     * @return The user's input (from a dialog box)
+     */
     public String getSeed(){
         String seed = JOptionPane.showInputDialog("Please select a password for the data");
         return seed;
