@@ -224,7 +224,7 @@ public class decode {
             int position = generator.getNextElement();
             return new int[] {position % image.getWidth(), position / image.getWidth()};
         }else{
-            return new int[] {12, 0};
+            return new int[] {17, 0};
         }
     }
 
