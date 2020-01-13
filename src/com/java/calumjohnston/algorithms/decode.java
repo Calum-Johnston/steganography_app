@@ -28,13 +28,11 @@ public class decode {
      */
     private pseudorandom generator;
 
-    boolean red;
-    boolean green;
-    boolean blue;
     boolean random;
     int algorithm;
-    int[] endPosition;
+    int[] endPositionData;
     int[] coloursToConsider;
+    int[] lsbToConsider;
 
 
 
@@ -44,7 +42,7 @@ public class decode {
      */
     public decode() {
         // Default values
-        param_number = 7;
+        param_number = 11;
         param_lengths = new int[param_number];
         param_lengths[0] = 1;  // Length for red (Bool)
         param_lengths[1] = 1;  // Length for green (Bool)
@@ -53,14 +51,6 @@ public class decode {
         param_lengths[4] = 2;  // Length for which algorithm is in use
         param_lengths[5] = 15;  // Length for end x (Int)
         param_lengths[6] = 15;  // Length for end y (Int)
-
-        red = false;
-        green = false;
-        blue = false;
-        random = false;
-        algorithm = 0;
-        endPosition = new int[2];
-        coloursToConsider = new int[3];
     }
 
 
@@ -77,7 +67,7 @@ public class decode {
         getParameterData(stegoImage);
 
         // Get binary version of hidden data
-        StringBuilder binaryData = decodeData(stegoImage, random, coloursToConsider, endPosition);
+        StringBuilder binaryData = decodeData(stegoImage, random, coloursToConsider, endPositionData);
 
         // Convert binary text to ASCII equivalent
         StringBuilder text = getText(binaryData);
@@ -273,9 +263,9 @@ public class decode {
 
         // Get colours used
         int[] pixelData = getPixelData(stegoImage, 0, 0);
-        red = getColour(pixelData[0]);
-        green = getColour(pixelData[1]);
-        blue = getColour(pixelData[2]);
+        boolean red = getColour(pixelData[0]);
+        boolean green = getColour(pixelData[1]);
+        boolean blue = getColour(pixelData[2]);
         coloursToConsider = getColoursToConsider(red, green, blue);
 
         // Get random
@@ -290,7 +280,16 @@ public class decode {
         algorithm = getAlgorithm(stegoImage);
 
         // Get end position
-        endPosition = getEndPosition(stegoImage, coloursToConsider);
+        endPositionData = getEndPosition(stegoImage);
+
+        // Get number of LSBs used per colour
+        int redBits = getLSBBits(getPixelData(stegoImage, 12, 0));
+        int greenBits = getLSBBits(getPixelData(stegoImage, 13, 0));
+        int blueBits = getLSBBits(getPixelData(stegoImage, 14, 0));
+        lsbToConsider = getLSBsToConsider(redBits, greenBits, blueBits);
+
+        // Get end LSB position
+        endPositionData[2] = getEndLSBPosition(stegoImage);
     }
 
     /**
@@ -353,13 +352,32 @@ public class decode {
     }
 
     /**
+     * Determines how many bits were used in a colour channel
+     *
+     * @param pixelData     The data of the pixel storing this information
+     * @return              The number of bits used in the colour channel
+     */
+    public int getLSBBits(int[] pixelData){
+        String redBinary = Integer.toBinaryString(pixelData[0]);
+        String greenBinary = Integer.toBinaryString(pixelData[1]);
+        String blueBinary = Integer.toBinaryString(pixelData[2]);
+
+        String redBinaryLSB = redBinary.substring(redBinary.length() - 1);
+        String greenBinaryLSB = greenBinary.substring(greenBinary.length() - 1);
+        String blueBinaryLSB = blueBinary.substring(blueBinary.length() - 1);
+
+        String finalValue = redBinaryLSB + "" + greenBinaryLSB + "" + blueBinaryLSB;
+
+        return Integer.parseInt(finalValue, 2);
+    }
+
+    /**
      * Determines at what position data encoding finished
      *
      * @param stegoImage            The image to be used
-     * @param coloursToConsider     List of colours that data was embedded into
      * @return                      The position encoding finished
      */
-    public int[] getEndPosition(BufferedImage stegoImage, int[] coloursToConsider){
+    public int[] getEndPosition(BufferedImage stegoImage){
         StringBuilder position = new StringBuilder();
         for(int i = 0; i < param_lengths[5] / 3; i++){
             int[] pixelData = getPixelData(stegoImage,i + 2, 0);
@@ -374,7 +392,7 @@ public class decode {
         int endX = Integer.parseInt(position.toString(), 2);
 
         position = new StringBuilder();
-        for(int i = 0; i < param_lengths[5] / 3; i++){
+        for(int i = 0; i < param_lengths[6] / 3; i++){
             int[] pixelData = getPixelData(stegoImage,i + 7, 0);
             String redBinary = Integer.toBinaryString(pixelData[0]);
             String redBinaryLSB = redBinary.substring(redBinary.length() - 1);
@@ -386,7 +404,29 @@ public class decode {
         }
         int endY = Integer.parseInt(position.toString(), 2);
 
-        return new int[] {endX, endY};
+        return new int[] {endX, endY, 0};
+    }
+
+    /**
+     * Determines what LSB in what colour data encoding finished
+     *
+     * @param stegoImage        The image to be used
+     * @return                  The position of the LSB where encoding finished
+     */
+    public int getEndLSBPosition(BufferedImage stegoImage){
+        StringBuilder position = new StringBuilder();
+        for(int i = 0; i < 2; i++){
+            int[] pixelData = getPixelData(stegoImage,i + 15, 0);
+            String redBinary = Integer.toBinaryString(pixelData[0]);
+            String redBinaryLSB = redBinary.substring(redBinary.length() - 1);
+            String greenBinary = Integer.toBinaryString(pixelData[1]);
+            String greenBinaryLSB = greenBinary.substring(greenBinary.length() - 1);
+            String blueBinary = Integer.toBinaryString(pixelData[2]);
+            String blueBinaryLSB = blueBinary.substring(blueBinary.length() - 1);
+            position.append(redBinaryLSB + greenBinaryLSB + blueBinaryLSB);
+        }
+        int endLSB = Integer.parseInt(position.toString().substring(0, position.toString().length() - 1), 2);
+        return endLSB;
     }
 
 
@@ -470,5 +510,33 @@ public class decode {
             return new int[]{2};
         }
         return new int[]{0, 1, 2};
+    }
+
+    /**
+     * Gets the LSBs that will be used for each colour
+     *
+     * @param redBits       Determines whether the red colour channel will be used
+     * @param greenBits     Determines whether the green colour channel will be used
+     * @param blueBits      Determines whether the blue colour channel will be used
+     * @return              The LSBs that will be considered for each colour (same order as coloursToConsider)
+     */
+    public int[] getLSBsToConsider(int redBits, int greenBits, int blueBits){
+        int[] lsbToConsider = new int[redBits + greenBits + blueBits];
+        int count = 0;
+        for(int i = 0; i < redBits; i++){
+            lsbToConsider[i] = count;
+            count += 1;
+        }
+        count = 0;
+        for(int i = redBits; i < greenBits + redBits; i++){
+            lsbToConsider[i] = count;
+            count += 1;
+        }
+        count = 0;
+        for(int i = redBits + greenBits; i < redBits + greenBits + blueBits; i++){
+            lsbToConsider[i] = count;
+            count += 1;
+        }
+        return lsbToConsider;
     }
 }

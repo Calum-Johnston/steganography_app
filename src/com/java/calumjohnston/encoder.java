@@ -142,7 +142,7 @@ public class encoder {
 
         // Calls algorithm to embed the data
         BufferedImage stegoImage = encoder.encodeImage(coverImage, textField.getText(),
-                red, green, blue, random, seed, algorithm);
+                red, green, blue, 1, 2, 3,random, seed, algorithm);
 
         if(stegoImage == null){
             String message = "Input text too large - try increasing number of colours components to use!";
