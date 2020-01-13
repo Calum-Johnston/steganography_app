@@ -33,6 +33,9 @@ public class encoder {
     private JCheckBox randomCheckBox;
     private JComboBox algorithmComboBox;
     private JButton mainMenuButton;
+    private JSpinner redSpinner;
+    private JSpinner greenSpinner;
+    private JSpinner blueSpinner;
 
     private final JFileChooser openFileChooser;
     private BufferedImage coverImage;
@@ -142,7 +145,8 @@ public class encoder {
 
         // Calls algorithm to embed the data
         BufferedImage stegoImage = encoder.encodeImage(coverImage, textField.getText(),
-                red, green, blue, 1, 2, 3,random, seed, algorithm);
+                red, green, blue, (Integer) redSpinner.getValue(), (Integer) greenSpinner.getValue(),
+                (Integer) blueSpinner.getValue(), random, seed, algorithm);
 
         if(stegoImage == null){
             String message = "Input text too large - try increasing number of colours components to use!";
