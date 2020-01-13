@@ -4,6 +4,8 @@ import com.java.calumjohnston.randomgenerators.pseudorandom;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 /**
@@ -76,7 +78,7 @@ public class decode {
 
         // Get binary version of hidden data
         StringBuilder binaryData = decodeData(stegoImage, random, coloursToConsider, endPosition);
-        System.out.println(binaryData);
+
         // Convert binary text to ASCII equivalent
         StringBuilder text = getText(binaryData);
 
@@ -97,6 +99,16 @@ public class decode {
      * @return                      The text hidden within the image
      */
     public StringBuilder decodeData(BufferedImage stegoImage, boolean random, int[] coloursToConsider, int[] parameters){
+        if(algorithm == 0 || algorithm == 1){
+            return decodeLSB(stegoImage, random, coloursToConsider, parameters);
+        }
+        if(algorithm == 2){
+            return decodeLSBMR(stegoImage, random, coloursToConsider, parameters);
+        }
+        return new StringBuilder();
+    }
+
+    public StringBuilder decodeLSB(BufferedImage stegoImage, boolean random, int[] coloursToConsider, int[] parameters){
         StringBuilder data = new StringBuilder();
         int[] pixelData;
 
@@ -120,8 +132,71 @@ public class decode {
         }
 
         return data;
-
     }
+
+    public StringBuilder decodeLSBMR(BufferedImage stegoImage, boolean random, int[] coloursToConsider, int[] parameters){
+
+        // Initialise starting variables
+        StringBuilder data = new StringBuilder();
+        int[] currentPosition = getStartPosition(stegoImage, random, coloursToConsider, "normal");
+
+        // Represents current position (+1) in coloursToConsider (i.e. the colour being considered)
+        // It's +1 due to difficulty with the MOD function
+        int currentColour = 0;
+
+        // Gets the pixel order we will consider
+        ArrayList<ArrayList<Integer>> order = new ArrayList<>();
+        while(currentPosition[0] != parameters[0] || currentPosition[1] != parameters[1]){
+            if((currentColour + 1) % (coloursToConsider.length + 1) == 0){
+                currentColour = 0;
+                currentPosition = generateNextPosition(stegoImage.getWidth(), currentPosition, random);
+            }
+            ArrayList<Integer> current = new ArrayList<>();
+            current.add(currentPosition[0]);
+            current.add(currentPosition[1]);
+            current.add(currentColour);
+            currentColour += 1;
+            order.add(current);
+        }
+
+
+        // Define variables to store the pixel data of each colour being accessed
+        int[] firstColourPixelData;
+        int[] secondColourPixelData;
+
+        // Define lists to store data about colours
+        ArrayList<Integer> firstColourData;
+        ArrayList<Integer> secondColourData;
+
+        // Define variables to store exact data of colour channel being accessed
+        int firstColour;
+        int secondColour;
+
+        for(int i = 0; i < order.size(); i += 2){
+
+            // Get the next two positional information to consider
+            firstColourData = order.get(i);
+            secondColourData = order.get(i + 1);
+
+            // Get the pixel information for each colour
+            firstColourPixelData = getPixelData(stegoImage, firstColourData.get(0), firstColourData.get(1));
+            secondColourPixelData = getPixelData(stegoImage, secondColourData.get(0), secondColourData.get(1));
+
+            // Get the colours from each pixel
+            firstColour = firstColourPixelData[firstColourData.get(2)];
+            secondColour = secondColourPixelData[secondColourData.get(2)];
+
+            // Get data from first colour
+            data.append(getBinaryLSB(firstColour));
+
+            // Get hidden data from second colour
+            data.append(getBinaryLSB((firstColour / 2) + secondColour));
+        }
+        System.out.println(data);
+
+        return data;
+    }
+
 
     /**
      * Gets the position to start decoding data from
@@ -162,6 +237,12 @@ public class decode {
             }
         }
         return currentPosition;
+    }
+
+    public String getBinaryLSB(int number){
+        String binary = Integer.toBinaryString(number);
+        String LSB = binary.substring(binary.length() - 1);
+        return LSB;
     }
 
 
@@ -252,7 +333,7 @@ public class decode {
         String blueBinary = Integer.toBinaryString(green);
         String blueBinaryLSB = blueBinary.substring(blueBinary.length() - 1);
 
-        return Integer.parseInt(greenBinaryLSB + blueBinaryLSB, 2);
+        return Integer.parseInt(greenBinaryLSB) + Integer.parseInt(blueBinaryLSB);
     }
 
     /**
@@ -274,7 +355,6 @@ public class decode {
             String blueBinaryLSB = blueBinary.substring(blueBinary.length() - 1);
             position.append(redBinaryLSB + greenBinaryLSB + blueBinaryLSB);
         }
-        System.out.println(position);
         int endX = Integer.parseInt(position.toString(), 2);
 
         position = new StringBuilder();
@@ -288,7 +368,6 @@ public class decode {
             String blueBinaryLSB = blueBinary.substring(blueBinary.length() - 1);
             position.append(redBinaryLSB + greenBinaryLSB + blueBinaryLSB);
         }
-        System.out.println(position);
         int endY = Integer.parseInt(position.toString(), 2);
 
         return new int[] {endX, endY};
@@ -326,12 +405,13 @@ public class decode {
      */
     public StringBuilder getText(StringBuilder binaryText){
         StringBuilder text = new StringBuilder();
-        for(int i = 0; i < binaryText.length(); i += 8){
+        for (int i = 0; i < binaryText.length(); i += 8) {
             try {
                 String binaryData = binaryText.substring(i, i + 8);
                 char characterData = (char) Integer.parseInt(binaryData, 2);
                 text.append(characterData);
-            }catch(Exception e){}
+            } catch (Exception e) {
+            }
         }
         return text;
     }

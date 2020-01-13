@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
@@ -238,22 +239,41 @@ public class encode {
     // LSBMR ENCODING FUNCTIONS
     public int[] encodeLSBMR(StringBuilder binary, int[] coloursToConsider, String dataType, boolean random){
 
-        StringBuilder binaryData = new StringBuilder();
-
         // Initialise starting variables
         int[] currentPosition = getStartPosition(random, coloursToConsider, dataType);
-        int[] pixelData = getPixelData(currentPosition[0], currentPosition[1]);
-        int firstColour = 0;
-        int secondColour = 0;
-
-        int[] firstColourInfo = new int[3];
-        int[] secondColourInfo = new int[3];
-        int[] firstColourPixelData = new int[3];
-        int[] secondColourPixelData = new int[3];
 
         // Represents current position (+1) in coloursToConsider (i.e. the colour being considered)
         // It's +1 due to difficulty with the MOD function
-        int currentColour = 1;
+        int currentColour = 0;
+
+        // Gets the pixel order we will consider
+        ArrayList<ArrayList<Integer>> order = new ArrayList<>();
+        for(int i = 0; i < binary.length(); i++){
+            if((currentColour + 1) % (coloursToConsider.length + 1) == 0){
+                currentColour = 0;
+                currentPosition = generateNextPosition(currentPosition, random);
+            }
+            ArrayList<Integer> current = new ArrayList<>();
+            current.add(currentPosition[0]);
+            current.add(currentPosition[1]);
+            current.add(currentColour);
+            currentColour += 1;
+            order.add(current);
+        }
+
+        // Define variables to store the pixel data of each colour being accessed
+        int[] firstColourPixelData;
+        int[] secondColourPixelData;
+
+        // Define lists to store data about colours
+        ArrayList<Integer> firstColourData;
+        ArrayList<Integer> secondColourData;
+
+        // Define variables to store exact data of colour channel being accessed
+        int firstColour;
+        int secondColour;
+
+        System.out.println(binary);
 
         // Loop through binary data to be inserted
         for (int i = 0; i < binary.length(); i += 2) {
@@ -262,33 +282,17 @@ public class encode {
             char data_1 = binary.charAt(i);
             char data_2 = binary.charAt(i + 1);
 
-            // Get first colour to consider
-            if(currentColour % (coloursToConsider.length + 1) == 0){
-                currentColour = 1;
-                currentPosition = generateNextPosition(currentPosition, random);
-            }
-            pixelData = getPixelData(currentPosition[0], currentPosition[1]);
-            firstColour = pixelData[coloursToConsider[currentColour - 1]];
-            firstColourInfo[0] = currentPosition[0];
-            firstColourInfo[1] = currentPosition[1];
-            firstColourInfo[2] = currentColour;
-            firstColourPixelData = pixelData;
+            // Get the next two positional information to consider
+            firstColourData = order.get(i);
+            secondColourData = order.get(i + 1);
 
-            // Get second colour to consider (done cleverly)
-            currentColour += 1;
-            if(currentColour % (coloursToConsider.length + 1) == 0){
-                currentColour = 1;
-                currentPosition = generateNextPosition(currentPosition, random);
-            }
-            pixelData = getPixelData(currentPosition[0], currentPosition[1]);
-            secondColour = pixelData[coloursToConsider[currentColour - 1]];
-            secondColourInfo[0] = currentPosition[0];
-            secondColourInfo[1] = currentPosition[1];
-            secondColourInfo[2] = currentColour;
-            secondColourPixelData = pixelData;
+            // Get the pixel information for each colour
+            firstColourPixelData = getPixelData(firstColourData.get(0), firstColourData.get(1));
+            secondColourPixelData = getPixelData(secondColourData.get(0), secondColourData.get(1));
 
-            // Increment position in coloursToConsider again
-            currentColour += 1;
+            // Get the colours from each pixel
+            firstColour = firstColourPixelData[firstColourData.get(2)];
+            secondColour = secondColourPixelData[secondColourData.get(2)];
 
             // Get the binary relationships between the firstColour and secondColour
             int pixel_Relationship = (int) Math.floor(firstColour / 2) + secondColour;
@@ -298,31 +302,25 @@ public class encode {
 
             // Get LSBs of pixel colour
             String firstColourLSB = getBinaryLSB(firstColour);
-            String secondColourLSB = getBinaryLSB(secondColour);
 
-            // Case 1: firstColour NORMAL, secondColour +-1
-            if (Character.toString(data_1).equals(firstColourLSB) &&
-                        !(Character.toString(data_2).equals(LSB_Relationship))) {
-                if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
-                    secondColour -= 1;
-                } else {
-                    secondColour += 1;
+            // Determines what to embed based on LSBss and relationship between them
+            if (Character.toString(data_1).equals(firstColourLSB)) {
+                if(!(Character.toString(data_2).equals(LSB_Relationship))) {
+                    if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
+                        secondColourPixelData[secondColourData.get(2)] -= 1;
+                    } else {
+                        secondColourPixelData[secondColourData.get(2)] += 1;
+                    }
+                    writePixelData(secondColourPixelData, secondColourData.get(0), secondColourData.get(1));
                 }
-                secondColourPixelData[coloursToConsider[secondColourInfo[2]]] += 1;
-                writePixelData(secondColourPixelData, secondColourInfo[0], secondColourInfo[1]);
-            // Case 2: firstColour NORMAL, secondColour NORMAL
-            }else if (Character.toString(data_1).equals(firstColourLSB) &&
-                        Character.toString(data_2).equals(LSB_Relationship)) {
-            // Case 3: firstColour -1, secondColour NORMAL
-            } else if (!(Character.toString(data_1).equals(firstColourLSB)) &&
-                        Character.toString(data_2).equals(LSB_Relationship_2)) {
-                firstColour -= 1;
-                firstColourPixelData[coloursToConsider[firstColourInfo[2] - 1]] += 1;
-                writePixelData(firstColourPixelData, firstColourInfo[0], firstColourInfo[1]);
-            // Case 4: firstColour +1, secondColour NORMAL
-            } else {
-                firstColourPixelData[coloursToConsider[firstColourInfo[2] - 1]] += 1;
-                writePixelData(firstColourPixelData, firstColourInfo[0], firstColourInfo[1]);
+            } else if (!(Character.toString(data_1).equals(firstColourLSB))) {
+                if (Character.toString(data_2).equals(LSB_Relationship_2)) {
+                    firstColourPixelData[firstColourData.get(2)] -= 1;
+                    writePixelData(firstColourPixelData, firstColourData.get(0), firstColourData.get(1));
+                } else {
+                    firstColourPixelData[firstColourData.get(2)] += 1;
+                    writePixelData(firstColourPixelData, firstColourData.get(0), firstColourData.get(1));
+                }
             }
         }
 
