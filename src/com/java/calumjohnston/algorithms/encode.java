@@ -226,7 +226,6 @@ public class encode {
         if(currentLSB == lsbToConsider.length){
             currentLSB = 0;
         }
-        currentPosition = generateNextPosition(currentPosition, random);
         return new int[]{currentPosition[0], currentPosition[1], currentLSB};
     }
 
@@ -489,7 +488,7 @@ public class encode {
      *
      * @param colour        Original colour to be manipulated
      * @param data          Data to be inserted
-     * @param position           The position in the colour's 8 bit representation we are considering
+     * @param position      The position in the colour's 8 bit representation we are considering
      * @param algorithm     The algorithm being used (0-2)
      * @return              Updated colour
      */

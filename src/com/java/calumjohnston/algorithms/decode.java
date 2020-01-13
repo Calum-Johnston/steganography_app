@@ -1,6 +1,7 @@
 package com.java.calumjohnston.algorithms;
 
 import com.java.calumjohnston.randomgenerators.pseudorandom;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -108,26 +109,62 @@ public class decode {
      * @return                      The binary data encoded within the image
      */
     public StringBuilder decodeLSB(BufferedImage stegoImage, boolean random, int[] coloursToConsider, int[] parameters){
+
+        // Initialise starting variables
+        int[] currentPosition = getStartPosition(stegoImage, random);
         StringBuilder data = new StringBuilder();
         int[] pixelData;
 
-        // Get starting position
-        int[] currentPosition = getStartPosition(stegoImage, random, coloursToConsider, "normal");
+        // Represents current colour being considered (pointing to position in coloursToConsider)
+        int currentColour = 0;
 
-        while(currentPosition[0] != parameters[0] || currentPosition[1] != parameters[1]){
+        // Represents current LSB being considered (pointing to position in lsbToConsider)
+        int currentLSB = 0;
 
-            // Get the pixel data
-            pixelData = getPixelData(stegoImage, currentPosition[0], currentPosition[1]);
+        // Gets the pixel order we will consider
+        ArrayList<ArrayList<Integer>> order = new ArrayList<>();
+        while(currentPosition[0] != parameters[0] || currentPosition[1] != parameters[1] || parameters[2] != currentLSB){
+            ArrayList<Integer> current = new ArrayList<>();
+            current.add(currentPosition[0]);
+            current.add(currentPosition[1]);
+            current.add(currentColour);
+            current.add(currentLSB);
+            order.add(current);
+            currentLSB += 1;
 
-            // Read data from LSBs of colours used
-            for (int j = 0; j < coloursToConsider.length; j++) {
-                String LSB = Integer.toBinaryString(pixelData[coloursToConsider[j]]);
-                LSB = LSB.substring(LSB.length() - 1);
-                data.append(LSB);
+            if(currentLSB == lsbToConsider.length){
+                currentLSB = 0;
             }
+            if(lsbToConsider[currentLSB] == 0) {
+                currentColour += 1;
+                if ((currentColour + 1) % (coloursToConsider.length + 1) == 0) {
+                    currentColour = 0;
+                    currentPosition = generateNextPosition(stegoImage.getWidth(), currentPosition, random);
+                }
+            }
+        }
 
-            // Update position
-            currentPosition = generateNextPosition(stegoImage.getWidth(), currentPosition, random);
+        // Define lists to store data about colours
+        ArrayList<Integer> colourData;
+
+        // Define variables to store exact data of colour channel being accessed
+        int colour;
+
+        for(int i = 0; i < order.size(); i++){
+
+            // Get the next positional information to consider
+            colourData = order.get(i);
+
+            // Get the pixel information for each colour
+            pixelData = getPixelData(stegoImage, colourData.get(0), colourData.get(1));
+
+            // Get the colours from each pixel
+            colour = pixelData[colourData.get(2)];
+
+            // Get data from first colour
+            data.append(getBinaryLSB(colour, lsbToConsider[colourData.get(3)]));
+
+            // Could improve efficiency by only writing / getting new pixel data when position changes
         }
 
         return data;
@@ -146,7 +183,7 @@ public class decode {
 
         // Initialise starting variables
         StringBuilder data = new StringBuilder();
-        int[] currentPosition = getStartPosition(stegoImage, random, coloursToConsider, "normal");
+        int[] currentPosition = getStartPosition(stegoImage, random);
 
         // Represents current position (+1) in coloursToConsider (i.e. the colour being considered)
         // It's +1 due to difficulty with the MOD function
@@ -199,10 +236,10 @@ public class decode {
             secondColour = secondColourPixelData[secondColourData.get(2)];
 
             // Get data from first colour
-            data.append(getBinaryLSB(firstColour));
+            data.append(getBinaryLSB(firstColour, 0));
 
             // Get hidden data from second colour
-            data.append(getBinaryLSB((firstColour / 2) + secondColour));
+            data.append(getBinaryLSB((firstColour / 2) + secondColour, 0));
         }
 
         // Return the binary data
@@ -215,11 +252,9 @@ public class decode {
      *
      * @param image                 The image to be used
      * @param random                Determines whether random embedding was used
-     * @param coloursToConsider     List of colours that data was embedded into
-     * @param dataType              Defines the type of data being retrieved
      * @return                      Position to start decoding (dependent on what we're decoding)
      */
-    public int[] getStartPosition(BufferedImage image, boolean random, int[] coloursToConsider, String dataType){
+    public int[] getStartPosition(BufferedImage image, boolean random){
         if(random){
             int position = generator.getNextElement();
             return new int[] {position % image.getWidth(), position / image.getWidth()};
@@ -452,12 +487,14 @@ public class decode {
      * Gets the least significant bit of some number
      *
      * @param number        The number to use
+     * @param LSB           The LSB we are considering
      * @return              The LSB of the number (in binary)
      */
-    public String getBinaryLSB(int number){
-        String binary = Integer.toBinaryString(number);
-        String LSB = binary.substring(binary.length() - 1);
-        return LSB;
+    public char getBinaryLSB(int number, int LSB){
+        StringBuilder binaryColour = new StringBuilder();
+        binaryColour.append(getBinaryParameters(number, 8));
+        int lsb_Position = 7 - LSB;
+        return binaryColour.charAt(lsb_Position);
     }
 
 
@@ -480,6 +517,19 @@ public class decode {
             }
         }
         return text;
+    }
+
+    /**
+     * Converts input parameter into binary equivalent
+     *
+     * @param parameter         Parameter to be converted
+     * @param parameter_length  Required length of parameter (in bits)
+     * @return The binary equivalent of the input parameter (correct to number of bits)
+     */
+    public String getBinaryParameters(int parameter, int parameter_length) {
+        String binaryParameter = Integer.toBinaryString(parameter);
+        binaryParameter = (StringUtils.repeat('0', parameter_length) + binaryParameter).substring(binaryParameter.length());
+        return binaryParameter;
     }
 
 
