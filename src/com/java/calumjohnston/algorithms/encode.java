@@ -126,11 +126,10 @@ public class encode {
      * @param coloursToConsider List of colours we will encode data into
      * @param dataType          Defines the type of data being embedded
      * @param random            Determines whether the PRNG will be used
-     * @param algorithm         The algorithm being used to decode
-     * @return Tuple storing final insertion parameters
+     * @param algorithm         The algorithm being used to encode data
+     * @return                  Position where data embedding stops
      */
-    public int[] encodeData(StringBuilder binary,
-                            int[] coloursToConsider, String dataType, boolean random,
+    public int[] encodeData(StringBuilder binary, int[] coloursToConsider, String dataType, boolean random,
                             int algorithm) {
 
         if(algorithm == 0 || algorithm == 1){
@@ -144,62 +143,16 @@ public class encode {
     }
 
     /**
-     * Gets the position to start decoding data from
-     * (HOPEFULLY USE ONE FUNCTION FOR ENCODING AND DECODING EVENTUALLY!!)
+     * Performs the embedding of data into the cover image using LSB / LSBM
      *
-     * @param random                Determines whether random embedding was used
+     * @param binary                The binary data to be embedded
      * @param coloursToConsider     List of colours that data was embedded into
      * @param dataType              Defines the type of data being retrieved
-     * @return                      Position to start decoding (dependent on what we're decoding)
+     * @param random                Determines whether the PRNG will be used
+     * @param algorithm             The algorithm being used to encode data
+     * @return                      Position where data embedding stops
      */
-    public int[] getStartPosition(boolean random, int[] coloursToConsider, String dataType){
-        if(dataType.equals("colour")){
-            return new int[] {0, 0};
-        }
-
-        if(dataType.equals("random")){
-            return new int[] {1, 0};
-        }
-
-        if(dataType.equals("position")){
-            return new int[] {2, 0};
-        }
-
-        if(random){
-            int position = generator.getNextElement();
-            return new int[]{position % coverImage.getWidth(), position / coverImage.getWidth()};
-        }else{
-            return new int[] {12, 0};
-        }
-    }
-
-    /**
-     * Generates next position of the data within image
-     *
-     * @param currentPosition The position which data has just been encoded
-     * @param random          Determines whether random embedding should be used
-     * @return The new position to consider
-     */
-    public int[] generateNextPosition(int[] currentPosition, boolean random) {
-        int imageWidth = coverImage.getWidth();
-        if (random) {
-            int position = generator.getNextElement();
-            currentPosition[0] = position % imageWidth;
-            currentPosition[1] = position / imageWidth;
-        } else {
-            currentPosition[0] = (currentPosition[0] + 1) % imageWidth;
-            if (currentPosition[0] == 0) {
-                currentPosition[1] += 1;
-            }
-        }
-        return currentPosition;
-    }
-
-
-
-    // LSB / LSBM ENCODING FUNCTIONS
-    public int[] encodeLSB(StringBuilder binary,
-                          int[] coloursToConsider, String dataType, boolean random,
+    public int[] encodeLSB(StringBuilder binary,  int[] coloursToConsider, String dataType, boolean random,
                            int algorithm){
 
         // Initialise starting variables
@@ -235,8 +188,15 @@ public class encode {
         return new int[]{currentPosition[0], currentPosition[1]};
     }
 
-
-    // LSBMR ENCODING FUNCTIONS
+    /**
+     * Performs the embedding of data into the cover image using LSBMR
+     *
+     * @param binary                The binary data to be embedded
+     * @param coloursToConsider     List of colours that data was embedded into
+     * @param dataType              Defines the type of data being retrieved
+     * @param random                Determines whether the PRNG will be used
+     * @return                      Position where data embedding stops
+     */
     public int[] encodeLSBMR(StringBuilder binary, int[] coloursToConsider, String dataType, boolean random){
 
         // Initialise starting variables
@@ -329,12 +289,57 @@ public class encode {
         return new int[]{currentPosition[0], currentPosition[1]};
     }
 
-    public String getBinaryLSB(int number){
-        String binary = Integer.toBinaryString(number);
-        String LSB = binary.substring(binary.length() - 1);
-        return LSB;
+    /**
+     * Gets the position to start decoding data from
+     * (HOPEFULLY USE ONE FUNCTION FOR ENCODING AND DECODING EVENTUALLY!!)
+     *
+     * @param random                Determines whether random embedding was used
+     * @param coloursToConsider     List of colours that data was embedded into
+     * @param dataType              Defines the type of data being retrieved
+     * @return                      Position to start decoding (dependent on what we're decoding)
+     */
+    public int[] getStartPosition(boolean random, int[] coloursToConsider, String dataType){
+        if(dataType.equals("colour")){
+            return new int[] {0, 0};
+        }
+
+        if(dataType.equals("random")){
+            return new int[] {1, 0};
+        }
+
+        if(dataType.equals("position")){
+            return new int[] {2, 0};
+        }
+
+        if(random){
+            int position = generator.getNextElement();
+            return new int[]{position % coverImage.getWidth(), position / coverImage.getWidth()};
+        }else{
+            return new int[] {12, 0};
+        }
     }
 
+    /**
+     * Generates next position of the data within image
+     *
+     * @param currentPosition The position which data has just been encoded
+     * @param random          Determines whether random embedding should be used
+     * @return The new position to consider
+     */
+    public int[] generateNextPosition(int[] currentPosition, boolean random) {
+        int imageWidth = coverImage.getWidth();
+        if (random) {
+            int position = generator.getNextElement();
+            currentPosition[0] = position % imageWidth;
+            currentPosition[1] = position / imageWidth;
+        } else {
+            currentPosition[0] = (currentPosition[0] + 1) % imageWidth;
+            if (currentPosition[0] == 0) {
+                currentPosition[1] += 1;
+            }
+        }
+        return currentPosition;
+    }
 
 
 
@@ -397,6 +402,7 @@ public class encode {
     }
 
 
+
     // LSB MANIPULATION FUNCTIONS
     /**
      * Gets pixel data from an image at a specific location
@@ -453,6 +459,18 @@ public class encode {
         Color newColour = new Color(pixelData[0], pixelData[1], pixelData[2]);
         int newRGB = newColour.getRGB();
         coverImage.setRGB(x, y, newRGB);
+    }
+
+    /**
+     * Gets the least significant bit of some number
+     *
+     * @param number        The number to use
+     * @return              The LSB of the number (in binary)
+     */
+    public String getBinaryLSB(int number){
+        String binary = Integer.toBinaryString(number);
+        String LSB = binary.substring(binary.length() - 1);
+        return LSB;
     }
 
 

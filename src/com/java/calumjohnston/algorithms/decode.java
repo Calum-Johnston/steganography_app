@@ -96,7 +96,7 @@ public class decode {
      * @param random                Determines whether random embedding was used
      * @param coloursToConsider     List of colours that data was embedded into
      * @param parameters            List of parameters used for determining when to stop decoding
-     * @return                      The text hidden within the image
+     * @return                      The binary data encoded within the image
      */
     public StringBuilder decodeData(BufferedImage stegoImage, boolean random, int[] coloursToConsider, int[] parameters){
         if(algorithm == 0 || algorithm == 1){
@@ -108,6 +108,15 @@ public class decode {
         return new StringBuilder();
     }
 
+    /**
+     * Performs the decoding of data from the stego image using LSB / LSBM
+     *
+     * @param stegoImage            The image to be used
+     * @param random                Determines whether random embedding was used
+     * @param coloursToConsider     List of colours that data was embedded into
+     * @param parameters            List of parameters used for determining when to stop decoding
+     * @return                      The binary data encoded within the image
+     */
     public StringBuilder decodeLSB(BufferedImage stegoImage, boolean random, int[] coloursToConsider, int[] parameters){
         StringBuilder data = new StringBuilder();
         int[] pixelData;
@@ -134,6 +143,15 @@ public class decode {
         return data;
     }
 
+    /**
+     * Performs the decoding of data from the stego image using LSB / LSBM
+     *
+     * @param stegoImage            The image to be used
+     * @param random                Determines whether random embedding was used
+     * @param coloursToConsider     List of colours that data was embedded into
+     * @param parameters            List of parameters used for determining when to stop decoding
+     * @return                      The binary data encoded within the image
+     */
     public StringBuilder decodeLSBMR(BufferedImage stegoImage, boolean random, int[] coloursToConsider, int[] parameters){
 
         // Initialise starting variables
@@ -159,7 +177,6 @@ public class decode {
             order.add(current);
         }
 
-
         // Define variables to store the pixel data of each colour being accessed
         int[] firstColourPixelData;
         int[] secondColourPixelData;
@@ -173,6 +190,11 @@ public class decode {
         int secondColour;
 
         for(int i = 0; i < order.size(); i += 2){
+
+            // Check we are not out of bounds
+            if(order.size() - 1 == i){
+                break;
+            }
 
             // Get the next two positional information to consider
             firstColourData = order.get(i);
@@ -192,11 +214,10 @@ public class decode {
             // Get hidden data from second colour
             data.append(getBinaryLSB((firstColour / 2) + secondColour));
         }
-        System.out.println(data);
 
+        // Return the binary data
         return data;
     }
-
 
     /**
      * Gets the position to start decoding data from
@@ -239,11 +260,6 @@ public class decode {
         return currentPosition;
     }
 
-    public String getBinaryLSB(int number){
-        String binary = Integer.toBinaryString(number);
-        String LSB = binary.substring(binary.length() - 1);
-        return LSB;
-    }
 
 
 
@@ -375,8 +391,6 @@ public class decode {
 
 
 
-
-
     // LSB MANIPULATION FUNCTIONS
     /**
      * Gets pixel data from an image at a specific location
@@ -392,6 +406,18 @@ public class decode {
         int green = (pixel & 0x0000ff00) >> 8;
         int blue = pixel & 0x000000ff;
         return new int[]{red, green, blue};
+    }
+
+    /**
+     * Gets the least significant bit of some number
+     *
+     * @param number        The number to use
+     * @return              The LSB of the number (in binary)
+     */
+    public String getBinaryLSB(int number){
+        String binary = Integer.toBinaryString(number);
+        String LSB = binary.substring(binary.length() - 1);
+        return LSB;
     }
 
 

@@ -50,7 +50,6 @@ public class encoder {
 
 
     // ======= CONSTRUCTOR =======
-
     /**
      * Constructor for the class
      */
@@ -132,7 +131,6 @@ public class encoder {
 
 
     // ======= ENCODE FUNCTIONS =======
-
     /**
      * Determines which algorithm to apply when encoding the data
      */
@@ -154,101 +152,9 @@ public class encoder {
         }
     }
 
-    /**
-     * Performs the LSBMR algorithm - detailed in LSBMR.txt
-     *
-     * @param coverImage
-     * @param binaryText
-     */
-    public void LSBMR(BufferedImage coverImage, StringBuilder binaryText) {
-        // Initialise starting image pixel position
-        int x = 0;
-        int y = 0;
-        char data_1;
-        char data_2;
-
-        for (int pos = 0; pos < binaryText.length(); pos += 2) {
-            // Get message data from text at specific points
-            data_1 = binaryText.charAt(pos);
-            data_2 = binaryText.charAt(pos + 1);
-
-            // Get first pixel data from image at a specific location
-            int pixel_left = coverImage.getRGB(x, y);
-            int red_left = (pixel_left & 0x00ff0000) >> 16;
-            int green_left = (pixel_left & 0x0000ff00) >> 8;
-            int blue_left = pixel_left & 0x000000ff;
-
-            // Get second pixel data from image at a specific location
-            int pixel_right = coverImage.getRGB(x + 1, y);
-            int red_right = (pixel_right & 0x00ff0000) >> 16;
-            int green_right = (pixel_right & 0x0000ff00) >> 8;
-            int blue_right = pixel_right & 0x000000ff;
-
-            // Manipulate pixel data
-            // Binary relationship between both pixels LSB
-            int pixel_Relationship = (int) Math.floor(green_left / 2) + green_right;
-            String binary_Relationship = Integer.toBinaryString(pixel_Relationship);
-            String LSB_Relationship = binary_Relationship.substring(binary_Relationship.length() - 1);
-
-            int pixel_Relationship_2 = (int) Math.floor((green_left - 1) / 2) + green_right;
-            String binary_Relationship_2 = Integer.toBinaryString(pixel_Relationship_2);
-            String LSB_Relationship_2 = binary_Relationship_2.substring(binary_Relationship_2.length() - 1);
-
-            // Get binary equivalent of green
-            String binary_green_left = Integer.toBinaryString(green_left);
-            String binary_green_right = Integer.toBinaryString(green_right);
-            // Get LSBs of pixel colour
-            String binary_green_left_LSB = binary_green_left.substring(binary_green_left.length() - 1);
-            String binary_green_right_LSB = binary_green_right.substring(binary_green_right.length() - 1);
-
-            // Case 1:
-            if (Character.toString(data_1).equals(binary_green_left_LSB) &&
-                    !(Character.toString(data_2).equals(LSB_Relationship))) {
-                // normal, +-1
-                if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
-                    green_right -= 1;
-                } else {
-                    green_right += 1;
-                }
-            } else if (Character.toString(data_1).equals(binary_green_left_LSB) &&
-                    Character.toString(data_2).equals(LSB_Relationship)) {
-                // normal, normal
-
-            } else if (!(Character.toString(data_1).equals(binary_green_left_LSB)) &&
-                    Character.toString(data_2).equals(LSB_Relationship_2)) {
-                // -1, normal
-                green_left -= 1;
-            } else {
-                // +1, normal
-                green_right += 1;
-            }
-
-            // Write new pixel data to image at specified location
-            Color newColour = new Color(red_left, green_left, blue_left);
-            int newRGB = newColour.getRGB();
-            coverImage.setRGB(x, y, newRGB);
-
-            Color newColour_2 = new Color(red_right, green_right, blue_right);
-            int newRGB_2 = newColour.getRGB();
-            coverImage.setRGB(x + 1, y, newRGB_2);
-
-
-            // Update position in image to manipulate pixel
-            x += 2;
-            if (x >= coverImage.getWidth() - 1) {
-                x = 0;
-                y += 1;
-            }
-        }
-
-        // Call a function to write image to disk
-        writeImageFile(coverImage);
-
-    }
 
 
     // ======= PURPOSE FUNCTIONS =======
-
     /**
      * Reads an image from file explorer
      * (TYPE: .png)
@@ -341,7 +247,7 @@ public class encoder {
         return seed;
     }
 
-    /**
+    /** Gets the main panel of the form
      *
      * @return The JPanel of the current form
      */
