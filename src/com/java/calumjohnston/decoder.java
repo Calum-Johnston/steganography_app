@@ -60,11 +60,9 @@ public class decoder {
 
     // ======= DECODE FUNCTIONS =======
     /**
-     * Determines which algorithm to apply when decoding the data
+     * Runs the decoder on an image
      */
     public void decodeData() {
-        String seed = "";
-
         String text = decoder.decodeImage(stegoImage);
         textField.setText(text);
     }

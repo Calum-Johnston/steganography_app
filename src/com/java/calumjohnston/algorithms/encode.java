@@ -44,7 +44,7 @@ public class encode {
     int algorithm;
     int[] endPosition;
     int[] coloursToConsider;
-    int[] lsbToConsider;
+    ArrayList<Integer> lsbToConsider;
 
 
     // ======= CONSTRUCTOR(S) =======
@@ -182,10 +182,10 @@ public class encode {
             order.add(current);
             currentLSB += 1;
 
-            if(currentLSB == lsbToConsider.length){
+            if(currentLSB == lsbToConsider.size()){
                 currentLSB = 0;
             }
-            if(lsbToConsider[currentLSB] == 0) {
+            if(lsbToConsider.get(currentLSB) == 0) {
                 currentColour += 1;
                 if ((currentColour + 1) % (coloursToConsider.length + 1) == 0) {
                     currentColour = 0;
@@ -213,7 +213,7 @@ public class encode {
             currentLSB = colourData.get(3);
 
             // Update current pixel data
-            pixelData[coloursToConsider[colourData.get(2)]] = updateLSB(pixelData[coloursToConsider[colourData.get(2)]], data_1, lsbToConsider[currentLSB], algorithm);
+            pixelData[coloursToConsider[colourData.get(2)]] = updateLSB(pixelData[coloursToConsider[colourData.get(2)]], data_1, lsbToConsider.get(currentLSB), algorithm);
 
             // Write data to current pixel
             writePixelData(pixelData, colourData.get(0), colourData.get(1));
@@ -223,7 +223,7 @@ public class encode {
 
         // Return next position
         currentLSB += 1;
-        if(currentLSB == lsbToConsider.length){
+        if(currentLSB == lsbToConsider.size()){
             currentLSB = 0;
         }
         return new int[]{currentPosition[0], currentPosition[1], currentLSB};
@@ -390,11 +390,11 @@ public class encode {
         this.blue = blue;
         coloursToConsider = getColoursToConsider(this.red, this.green, this.blue);
 
-        // Set colour LSBs
+        // Set colour LSBs (store as 1 less than number (due to size in programming))
         this.redBits = redBits;
         this.greenBits = greenBits;
         this.blueBits = blueBits;
-        lsbToConsider = getLSBsToConsider(this.redBits, this.greenBits, this.blueBits);
+        lsbToConsider = getLSBsToConsider(this.redBits, this.greenBits, this.blueBits, this.red, this.green, this.blue);
 
         // Set random
         this.random = random;
@@ -599,6 +599,14 @@ public class encode {
      * @param blue  Boolean to whether blue will be used
      * @return      The colours that will be considered
      */
+    /**
+     * Gets the colours that will be used
+     *
+     * @param red   Boolean to whether red will be used
+     * @param green Boolean to whether green will be used
+     * @param blue  Boolean to whether blue will be used
+     * @return      The colours that will be considered
+     */
     public int[] getColoursToConsider(boolean red, boolean green, boolean blue) {
         if (red && green && blue) {
             return new int[]{0, 1, 2};
@@ -624,24 +632,34 @@ public class encode {
      * @param redBits       Determines whether the red colour channel will be used
      * @param greenBits     Determines whether the green colour channel will be used
      * @param blueBits      Determines whether the blue colour channel will be used
+     * @param red           Determines whether the red colour channel will be used
+     * @param green         Determines whether the green colour channel will be used
+     * @param blue          Determines whether the blue colour channel will be used
      * @return              The LSBs that will be considered for each colour (same order as coloursToConsider)
      */
-    public int[] getLSBsToConsider(int redBits, int greenBits, int blueBits){
-        int[] lsbToConsider = new int[redBits + greenBits + blueBits];
+    public ArrayList<Integer> getLSBsToConsider(int redBits, int greenBits, int blueBits,
+                                   boolean red, boolean green, boolean blue){
+        ArrayList<Integer> lsbToConsider = new ArrayList<Integer>();
         int count = 0;
-        for(int i = 0; i < redBits; i++){
-            lsbToConsider[i] = count;
-            count += 1;
+        if(red) {
+            for (int i = 0; i < redBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
         }
-        count = 0;
-        for(int i = redBits; i < greenBits + redBits; i++){
-            lsbToConsider[i] = count;
-            count += 1;
+        if(green) {
+            count = 0;
+            for (int i = redBits; i < greenBits + redBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
         }
-        count = 0;
-        for(int i = redBits + greenBits; i < redBits + greenBits + blueBits; i++){
-            lsbToConsider[i] = count;
-            count += 1;
+        if(blue) {
+            count = 0;
+            for (int i = redBits + greenBits; i < redBits + greenBits + blueBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
         }
         return lsbToConsider;
     }

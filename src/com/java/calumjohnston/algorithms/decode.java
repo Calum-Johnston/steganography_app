@@ -33,7 +33,7 @@ public class decode {
     int algorithm;
     int[] endPositionData;
     int[] coloursToConsider;
-    int[] lsbToConsider;
+    ArrayList<Integer> lsbToConsider;
 
 
 
@@ -132,10 +132,10 @@ public class decode {
             order.add(current);
             currentLSB += 1;
 
-            if(currentLSB == lsbToConsider.length){
+            if(currentLSB == lsbToConsider.size()){
                 currentLSB = 0;
             }
-            if(lsbToConsider[currentLSB] == 0) {
+            if(lsbToConsider.get(currentLSB) == 0) {
                 currentColour += 1;
                 if ((currentColour + 1) % (coloursToConsider.length + 1) == 0) {
                     currentColour = 0;
@@ -159,10 +159,10 @@ public class decode {
             pixelData = getPixelData(stegoImage, colourData.get(0), colourData.get(1));
 
             // Get the colours from each pixel
-            colour = pixelData[colourData.get(2)];
+            colour = pixelData[coloursToConsider[colourData.get(2)]];
 
             // Get data from first colour
-            data.append(getBinaryLSB(colour, lsbToConsider[colourData.get(3)]));
+            data.append(getBinaryLSB(colour, lsbToConsider.get(colourData.get(3))));
 
             // Could improve efficiency by only writing / getting new pixel data when position changes
         }
@@ -321,7 +321,7 @@ public class decode {
         int redBits = getLSBBits(getPixelData(stegoImage, 12, 0)) + 1;
         int greenBits = getLSBBits(getPixelData(stegoImage, 13, 0)) + 1;
         int blueBits = getLSBBits(getPixelData(stegoImage, 14, 0)) + 1;
-        lsbToConsider = getLSBsToConsider(redBits, greenBits, blueBits);
+        lsbToConsider = getLSBsToConsider(redBits, greenBits, blueBits, red, green, blue);
 
         // Get end LSB position
         endPositionData[2] = getEndLSBPosition(stegoImage);
@@ -568,24 +568,34 @@ public class decode {
      * @param redBits       Determines whether the red colour channel will be used
      * @param greenBits     Determines whether the green colour channel will be used
      * @param blueBits      Determines whether the blue colour channel will be used
+     * @param red           Determines whether the red colour channel will be used
+     * @param green         Determines whether the green colour channel will be used
+     * @param blue          Determines whether the blue colour channel will be used
      * @return              The LSBs that will be considered for each colour (same order as coloursToConsider)
      */
-    public int[] getLSBsToConsider(int redBits, int greenBits, int blueBits){
-        int[] lsbToConsider = new int[redBits + greenBits + blueBits];
+    public ArrayList<Integer> getLSBsToConsider(int redBits, int greenBits, int blueBits,
+                                                boolean red, boolean green, boolean blue){
+        ArrayList<Integer> lsbToConsider = new ArrayList<Integer>();
         int count = 0;
-        for(int i = 0; i < redBits; i++){
-            lsbToConsider[i] = count;
-            count += 1;
+        if(red) {
+            for (int i = 0; i < redBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
         }
-        count = 0;
-        for(int i = redBits; i < greenBits + redBits; i++){
-            lsbToConsider[i] = count;
-            count += 1;
+        if(green) {
+            count = 0;
+            for (int i = redBits; i < greenBits + redBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
         }
-        count = 0;
-        for(int i = redBits + greenBits; i < redBits + greenBits + blueBits; i++){
-            lsbToConsider[i] = count;
-            count += 1;
+        if(blue) {
+            count = 0;
+            for (int i = redBits + greenBits; i < redBits + greenBits + blueBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
         }
         return lsbToConsider;
     }
