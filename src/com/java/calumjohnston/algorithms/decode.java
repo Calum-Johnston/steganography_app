@@ -318,9 +318,9 @@ public class decode {
         endPositionData = getEndPosition(stegoImage);
 
         // Get number of LSBs used per colour
-        int redBits = getLSBBits(getPixelData(stegoImage, 12, 0));
-        int greenBits = getLSBBits(getPixelData(stegoImage, 13, 0));
-        int blueBits = getLSBBits(getPixelData(stegoImage, 14, 0));
+        int redBits = getLSBBits(getPixelData(stegoImage, 12, 0)) + 1;
+        int greenBits = getLSBBits(getPixelData(stegoImage, 13, 0)) + 1;
+        int blueBits = getLSBBits(getPixelData(stegoImage, 14, 0)) + 1;
         lsbToConsider = getLSBsToConsider(redBits, greenBits, blueBits);
 
         // Get end LSB position

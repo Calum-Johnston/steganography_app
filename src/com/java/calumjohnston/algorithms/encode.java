@@ -423,9 +423,9 @@ public class encode {
         parameters.append(getBinaryParameters(algorithm, param_lengths[4]));
         parameters.append(getBinaryParameters(endPositionData[0], param_lengths[5]));
         parameters.append(getBinaryParameters(endPositionData[1], param_lengths[6]));
-        parameters.append(getBinaryParameters(redBits, param_lengths[7]));
-        parameters.append(getBinaryParameters(greenBits, param_lengths[8]));
-        parameters.append(getBinaryParameters(blueBits, param_lengths[9]));
+        parameters.append(getBinaryParameters(redBits - 1, param_lengths[7]));
+        parameters.append(getBinaryParameters(greenBits - 1, param_lengths[8]));
+        parameters.append(getBinaryParameters(blueBits - 1, param_lengths[9]));
         parameters.append(getBinaryParameters(endPositionData[2], param_lengths[10]));
         encodeParameters(parameters);
     }
@@ -503,16 +503,29 @@ public class encode {
             return Integer.parseInt(binaryColour.toString(), 2);
         }
 
-        // NEED TO UPDATE THIS FOR MULTIPLE LSBS
         if(algorithm == 1){
-            String binaryColour = Integer.toBinaryString(colour);
-            if (!(binaryColour.substring(binaryColour.length() - 1).equals(Character.toString(data)))) {
+            StringBuilder binaryFirstHalf = new StringBuilder();
+            StringBuilder binarySecondHalf = new StringBuilder();
+            int firstHalfNum;
+            String binaryColour = getBinaryParameters(colour, 8);
+            binaryFirstHalf.append(binaryColour.substring(0, 8 - position));
+            binarySecondHalf.append(binaryColour.substring(8 - position));
+            firstHalfNum = Integer.parseInt(binaryFirstHalf.toString(), 2);
+            if(binaryFirstHalf.charAt(binaryFirstHalf.length() - 1) != data) {
                 if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
-                    colour -= 1;
+                    firstHalfNum -= 1;
                 } else {
-                    colour += 1;
+                    firstHalfNum += 1;
                 }
             }
+            binaryColour = Integer.toBinaryString(firstHalfNum) + binarySecondHalf.toString();
+            int result = Integer.parseInt(binaryColour, 2);
+            if(result > 255){
+                return 254;
+            }else if(result < 0){
+                return 1;
+            }
+            return result;
         }
         return colour;
     }
