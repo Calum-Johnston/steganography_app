@@ -539,14 +539,7 @@ public class encode {
                     }
                 }
             }
-            binaryColour = Integer.toBinaryString(firstHalfNum) + binarySecondHalf.toString();
-            int result = Integer.parseInt(binaryColour, 2);
-            if(result > 255){
-                return 254;
-            }else if(result < 0){
-                return 1;
-            }
-            return result;
+            return Integer.parseInt(Integer.toBinaryString(firstHalfNum) + binarySecondHalf.toString(), 2);
         }
         return colour;
     }
