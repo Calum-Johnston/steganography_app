@@ -5,7 +5,6 @@ import com.java.calumjohnston.algorithms.encode;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -33,9 +32,9 @@ public class encoder {
     private JCheckBox randomCheckBox;
     private JComboBox algorithmComboBox;
     private JButton mainMenuButton;
-    private JSpinner redSpinner;
-    private JSpinner greenSpinner;
-    private JSpinner blueSpinner;
+    private JComboBox redLSBComboBox;
+    private JComboBox greenLSBComboBox;
+    private JComboBox blueLSBComboBox;
 
     private final JFileChooser openFileChooser;
     private BufferedImage coverImage;
@@ -58,23 +57,39 @@ public class encoder {
      */
     public encoder() {
 
+        // Create a new encode object
         encoder = new encode();
 
-        red = false;
-        green = false;
-        blue = false;
+        // Define initial parameter values
+        red = true;
+        green = true;
+        blue = true;
         random = false;
         seed = "";
 
-        encodeButton.setEnabled(false);
-
+        // Defines the file chooser (for selecting images)
         openFileChooser = new JFileChooser();
-        // Directory is for testing - change for release
         openFileChooser.setCurrentDirectory(new File("C:\\Users\\Calum\\Documents\\3rd year - Dissertation\\Steganography Desktop App\\rsts"));
 
+        // Set check boxes to default as selected
+        redCheckBox.setSelected(true);
+        greenCheckBox.setSelected(true);
+        blueCheckBox.setSelected(true);
+
+        // Sets up algorithm options in combo box
         algorithmComboBox.addItem("LSB");
         algorithmComboBox.addItem("LSBM");
         algorithmComboBox.addItem("LSBMR");
+
+        // Sets up LSB options in combo box
+        redLSBComboBox.addItem(1); greenLSBComboBox.addItem(1); blueLSBComboBox.addItem(1);
+        redLSBComboBox.addItem(2); greenLSBComboBox.addItem(2); blueLSBComboBox.addItem(2);
+        redLSBComboBox.addItem(3); greenLSBComboBox.addItem(3); blueLSBComboBox.addItem(3);
+        redLSBComboBox.addItem(4); greenLSBComboBox.addItem(4); blueLSBComboBox.addItem(4);
+        redLSBComboBox.addItem(5); greenLSBComboBox.addItem(5); blueLSBComboBox.addItem(5);
+        redLSBComboBox.addItem(6); greenLSBComboBox.addItem(6); blueLSBComboBox.addItem(6);
+        redLSBComboBox.addItem(7); greenLSBComboBox.addItem(7); blueLSBComboBox.addItem(7);
+        redLSBComboBox.addItem(8); greenLSBComboBox.addItem(8); blueLSBComboBox.addItem(8);
 
         selectImageButton.addActionListener(new ActionListener() {
             @Override
@@ -101,6 +116,11 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 red = !red;
+                if(!red){
+                    redLSBComboBox.setEnabled(false);
+                }else{
+                    redLSBComboBox.setEnabled(true);
+                }
             }
         });
 
@@ -108,6 +128,11 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 green = !green;
+                if(!green){
+                    greenLSBComboBox.setEnabled(false);
+                }else{
+                    greenLSBComboBox.setEnabled(true);
+                }
             }
         });
 
@@ -115,6 +140,11 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 blue = !blue;
+                if(!blue){
+                    blueLSBComboBox.setEnabled(false);
+                }else{
+                    blueLSBComboBox.setEnabled(true);
+                }
             }
         });
 
@@ -139,14 +169,20 @@ public class encoder {
      */
     public void encodeData() {
         // Check enough options have been selected
+        if(!checkEncode()){
+            return;
+        }
 
-        // Get algorithm to be used
+        // Get data from combo boxes
         int algorithm = algorithmComboBox.getSelectedIndex();
+        int redLSBs = redLSBComboBox.getSelectedIndex() + 1;
+        int greenLSBs = greenLSBComboBox.getSelectedIndex() + 1;
+        int blueLSBs = blueLSBComboBox.getSelectedIndex() + 1;
+        String text = textField.getText();
 
         // Calls algorithm to embed the data
-        BufferedImage stegoImage = encoder.encodeImage(coverImage, textField.getText(),
-                red, green, blue, (Integer) redSpinner.getValue(), (Integer) greenSpinner.getValue(),
-                (Integer) blueSpinner.getValue(), random, seed, algorithm);
+        BufferedImage stegoImage = encoder.encodeImage(coverImage, text, red, green, blue,
+                redLSBs, greenLSBs, blueLSBs, random, seed, algorithm);
 
         if(stegoImage == null){
             String message = "Input text too large - try increasing number of colours components to use!";
@@ -154,6 +190,34 @@ public class encoder {
         }else{
             writeImageFile(stegoImage);
         }
+    }
+
+    /**
+     * Determines whether enough options have been selected to encode
+     *
+     * @return      Value defines whether encoding is possible or not
+     */
+    public boolean checkEncode(){
+        // Check whether text has been provided
+        System.out.println(textField.getText());
+        if(textField.getText() == null || textField.getText().equals("")){
+            JOptionPane.showMessageDialog(rootPanel, "Text is required to complete this action");
+            return false;
+        }
+
+        // Check whether an image has been provided
+        if(coverImage == null){
+            JOptionPane.showMessageDialog(rootPanel, "You have forgotten to select an image!");
+            return false;
+        }
+
+        // Check whether at least one colour channel is selected
+        if(redCheckBox.isSelected() == false && greenCheckBox.isSelected() == false && blueCheckBox.isSelected() == false){
+            JOptionPane.showMessageDialog(rootPanel, "Please select at least one colour channel");
+            return false;
+        }
+
+        return true;
     }
 
 
@@ -176,9 +240,6 @@ public class encoder {
                 // Store image name (ensuring to remove extension)
                 coverImageName = openFileChooser.getSelectedFile().getName();
                 coverImageName = coverImageName.replaceFirst("[.][^.]+$", "");
-
-                // User can now encode
-                encodeButton.setEnabled(true);
 
                 // Debugging purposes
                 System.out.println("Successfully read in image");
