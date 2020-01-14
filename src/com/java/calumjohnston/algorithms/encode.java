@@ -302,21 +302,35 @@ public class encode {
             String firstColourLSB = getBinaryLSB(firstColour);
 
             // Determines what to embed based on LSBss and relationship between them
+            // Could add an update LSB function here too!! (for pixelData!!)
             if (Character.toString(data_1).equals(firstColourLSB)) {
                 if(!(Character.toString(data_2).equals(LSB_Relationship))) {
                     if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
                         secondColourPixelData[secondColourData.get(2)] -= 1;
+                        if(secondColourPixelData[secondColourData.get(2)] == -1){
+                            secondColourPixelData[secondColourData.get(2)] = 255;
+                        }
                     } else {
                         secondColourPixelData[secondColourData.get(2)] += 1;
+                        if(secondColourPixelData[secondColourData.get(2)] == 256){
+                            secondColourPixelData[secondColourData.get(2)] = 0;
+                        }
                     }
+
                     writePixelData(secondColourPixelData, secondColourData.get(0), secondColourData.get(1));
                 }
             } else if (!(Character.toString(data_1).equals(firstColourLSB))) {
                 if (Character.toString(data_2).equals(LSB_Relationship_2)) {
                     firstColourPixelData[firstColourData.get(2)] -= 1;
+                    if(firstColourPixelData[firstColourData.get(2)] == -1){
+                        firstColourPixelData[firstColourData.get(2)] = 255;
+                    }
                     writePixelData(firstColourPixelData, firstColourData.get(0), firstColourData.get(1));
                 } else {
                     firstColourPixelData[firstColourData.get(2)] += 1;
+                    if(firstColourPixelData[firstColourData.get(2)] == 256){
+                        firstColourPixelData[firstColourData.get(2)] = 0;
+                    }
                     writePixelData(firstColourPixelData, firstColourData.get(0), firstColourData.get(1));
                 }
             }

@@ -1,5 +1,6 @@
 package com.java.calumjohnston;
 
+import com.java.calumjohnston.algorithms.decode;
 import com.java.calumjohnston.algorithms.encode;
 
 import javax.imageio.ImageIO;
@@ -13,7 +14,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.stream.Collectors;
-
+import static org.junit.Assert.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -168,6 +169,7 @@ public class encoder {
      * Determines which algorithm to apply when encoding the data
      */
     public void encodeData() {
+
         // Check enough options have been selected
         if(!checkEncode()){
             return;
