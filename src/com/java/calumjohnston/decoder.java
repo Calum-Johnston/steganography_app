@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * The decoder_GUI class runs the GUI for the decoding page
+ * The decoder class defines the GUI for the decoder form
  */
 public class decoder {
     private JPanel rootPanel;

@@ -2,6 +2,9 @@ package com.java.calumjohnston;
 
 import javax.swing.*;
 
+/**
+ * The main class defines the GUI for the main form
+ */
 public class main {
     private JPanel rootPanel;
     private JButton encodeButton;

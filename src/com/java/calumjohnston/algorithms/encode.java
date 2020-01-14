@@ -90,6 +90,9 @@ public class encode {
      * @param red           Determines whether the red colour channel will be used
      * @param green         Determines whether the blue colour channel will be used
      * @param blue          Determines whether the green colour channel will be used
+     * @param redBits       Number of LSBs to use in red colour channel
+     * @param greenBits     Number of LSBs to use in green colour channel
+     * @param blueBits      Number of LSBs to use in blue colour channel
      * @param random        Determines whether the PRNG will be used
      * @param seed          Acts as the seed for the PRNG
      * @param algorithm     The algorithm being used to decode
@@ -643,9 +646,9 @@ public class encode {
     /**
      * Gets the LSBs that will be used for each colour
      *
-     * @param redBits       Determines whether the red colour channel will be used
-     * @param greenBits     Determines whether the green colour channel will be used
-     * @param blueBits      Determines whether the blue colour channel will be used
+     * @param redBits       Number of LSBs to use in red colour channel
+     * @param greenBits     Number of LSBs to use in green colour channel
+     * @param blueBits      Number of LSBs to use in blue colour channel
      * @param red           Determines whether the red colour channel will be used
      * @param green         Determines whether the green colour channel will be used
      * @param blue          Determines whether the blue colour channel will be used

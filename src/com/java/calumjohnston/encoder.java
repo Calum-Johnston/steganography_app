@@ -1,6 +1,5 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.decode;
 import com.java.calumjohnston.algorithms.encode;
 
 import javax.imageio.ImageIO;
@@ -14,11 +13,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.stream.Collectors;
-import static org.junit.Assert.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * The encoder_GUI class runs the GUI for the encoding page
+ * The encoder class defines the GUI for the main form
  */
 public class encoder {
 

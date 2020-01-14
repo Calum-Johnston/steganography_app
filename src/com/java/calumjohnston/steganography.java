@@ -6,7 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * The main_GUI class runs the GUI for the main page
+ *  The steganography class initiates the program and gets the Main Menu displayed
  */
 public class steganography extends JFrame{
     private JPanel rootPanel;

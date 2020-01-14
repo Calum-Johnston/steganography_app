@@ -257,6 +257,7 @@ public class LSB {
      *
      * @param stegoImage        Image to be used
      * @param random            Determines whether random embedding was used
+     * @param seed              Acts as the seed for the PRNG
      * @return                  Text hidden within the image
      */
     public String decode(BufferedImage stegoImage, boolean random, String seed){
