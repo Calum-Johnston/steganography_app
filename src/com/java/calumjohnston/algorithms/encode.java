@@ -528,8 +528,15 @@ public class encode {
             if(binaryFirstHalf.charAt(binaryFirstHalf.length() - 1) != data) {
                 if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
                     firstHalfNum -= 1;
+                    if(firstHalfNum < 0){
+                        firstHalfNum = 1;
+                    }
                 } else {
                     firstHalfNum += 1;
+                    int maxBinary = (int) Math.pow(2, binaryFirstHalf.length()) - 1;
+                    if(firstHalfNum > maxBinary){
+                        firstHalfNum = maxBinary - 1;
+                    }
                 }
             }
             binaryColour = Integer.toBinaryString(firstHalfNum) + binarySecondHalf.toString();

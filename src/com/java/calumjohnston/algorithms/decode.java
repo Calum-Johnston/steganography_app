@@ -60,12 +60,14 @@ public class decode {
      * Central HUB to control decoding of the image
      *
      * @param stegoImage        Image to be used
+     * @param seed              The seed used to initialise the PRNG
+     *                          (passed in purely for running batch tests and preventing dialog popups)
      * @return                  Text hidden within the image
      */
-    public String decodeImage(BufferedImage stegoImage){
+    public String decodeImage(BufferedImage stegoImage, String seed){
 
         // Get parameter data
-        getParameterData(stegoImage);
+        getParameterData(stegoImage, seed);
 
         // Get binary version of hidden data
         StringBuilder binaryData = decodeData(stegoImage, random, coloursToConsider, endPositionData);
@@ -293,8 +295,9 @@ public class decode {
      * Gets the parameter data from the stego image
      *
      * @param stegoImage            Image to be used
+     * @param seed              The seed used to initialise the PRNG
      */
-    public void getParameterData(BufferedImage stegoImage){
+    public void getParameterData(BufferedImage stegoImage, String seed){
 
         // Get colours used
         int[] pixelData = getPixelData(stegoImage, 0, 0);
@@ -306,8 +309,12 @@ public class decode {
         // Get random
         random = getRandom(stegoImage);
         if(random){
-            String seed = JOptionPane.showInputDialog("Please select a password for the data");
-            if(seed == null){ seed = ""; }
+            if(seed.equals("")) {
+                seed = JOptionPane.showInputDialog("Please select a password for the data");
+                if (seed == null) {
+                    seed = "";
+                }
+            }
             generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed);
         }
 

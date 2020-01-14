@@ -37,33 +37,53 @@ public class test {
 
         String text = "What does a man say to a women if they aren't the same?";
         String seed = "calum";
+        String result = "";
+
+        long startTime = System.currentTimeMillis();
 
         // The actual tests
+        int count = 0;
         for(int redBits = 1; redBits < 9; redBits++){
             for(int greenBits = 1; greenBits < 9; greenBits++){
                 for(int blueBits = 1; blueBits < 9; blueBits++){
                     for(int algorithm = 0; algorithm < 2; algorithm ++) {
-                        for(boolean random : new boolean[] { false, true}) {
-                            stegoImage = encoder.encodeImage(coverImage, text, true, true, true,
-                                    redBits, greenBits, blueBits, random, "", algorithm);
-                            String assertionError = null;
-                            try {
-                                assertEquals(text, decoder.decodeImage(stegoImage));
-                            } catch (AssertionError ae) {
-                                assertionError = ae.toString();
-                            }
-                            if (assertionError != null) {
-                                System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
-                                System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
-                                System.out.println("Algorithm: " + algorithm);
-                                System.out.println("Random: " + random + ", with seed: " + seed);
-                                System.out.println("Text: " + text);
+                        for(boolean random : new boolean[] {false, true}) {
+                            for(boolean red : new boolean[] {false, true}) {
+                                for (boolean green : new boolean[]{false, true}) {
+                                    for (boolean blue : new boolean[]{false, true}) {
+                                        count += 1;
+                                        if(red == false && green == false && blue == false){
+                                            break;
+                                        }
+                                        stegoImage = encoder.encodeImage(coverImage, text, red, green, blue,
+                                                redBits, greenBits, blueBits, random, seed, algorithm);
+                                        String assertionError = null;
+                                        try {
+                                            result = decoder.decodeImage(stegoImage, seed);
+                                            assertEquals(text, result);
+                                        } catch (AssertionError ae) {
+                                            assertionError = ae.toString();
+                                        }
+                                        if (assertionError != null) {
+                                            System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
+                                            System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
+                                            System.out.println("Algorithm: " + algorithm);
+                                            System.out.println("Random: " + random + ", with seed: " + seed);
+                                            System.out.println("Text: " + text);
+                                            System.out.println("Result: " + result);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
+        long endTime = System.currentTimeMillis();
+        float differenceMS = (endTime - startTime);
+        float differenceS = differenceMS / 1000;
+        System.out.println("Ran " + count + " test cases in " + differenceS + "s");
     }
 
     public static void main(String[] args){
