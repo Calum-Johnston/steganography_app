@@ -67,12 +67,13 @@ public class pseudorandom{
     public int getNextElement(){
         int element = orderSequence.get(position);
         position += 1;
-        int x = position % width;
-        int y = position / width;
+        int x = element % width;
+        int y = element / width;
         if(x > 17 || y != 0){
             return element;
+        }else{
+            return getNextElement();
         }
-        return getNextElement();
     }
 
     /**

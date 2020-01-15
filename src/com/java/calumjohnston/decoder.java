@@ -63,7 +63,7 @@ public class decoder {
      * Runs the decoder on an image
      */
     public void decodeData() {
-        String text = decoder.decodeImage(stegoImage, null);
+        String text = decoder.decodeImage(stegoImage, "");
         textField.setText(text);
     }
 
