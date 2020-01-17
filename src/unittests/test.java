@@ -43,7 +43,7 @@ public class test {
 
         // The actual tests
         int count = 0;
-        /**for(int redBits = 1; redBits < 9; redBits++){
+        for(int redBits = 1; redBits < 9; redBits++){
             for(int greenBits = 1; greenBits < 9; greenBits++){
                 for(int blueBits = 1; blueBits < 9; blueBits++){
                     for(int algorithm = 0; algorithm < 2; algorithm ++) {
@@ -79,7 +79,7 @@ public class test {
                     }
                 }
             }
-        }*/
+        }
         int fail = 0;
         int algorithm = 2; int redBits = 1; int greenBits = 1; int blueBits = 1;
         for(boolean random : new boolean[] {false, true}) {

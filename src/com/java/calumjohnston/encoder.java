@@ -115,9 +115,13 @@ public class encoder {
             public void actionPerformed(ActionEvent e) {
                 red = !red;
                 if(!red){
-                    redLSBComboBox.setEnabled(false);
+                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                        redLSBComboBox.setEnabled(false);
+                    }
                 }else{
-                    redLSBComboBox.setEnabled(true);
+                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                        redLSBComboBox.setEnabled(true);
+                    }
                 }
             }
         });
@@ -127,9 +131,13 @@ public class encoder {
             public void actionPerformed(ActionEvent e) {
                 green = !green;
                 if(!green){
-                    greenLSBComboBox.setEnabled(false);
+                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                        greenLSBComboBox.setEnabled(false);
+                    }
                 }else{
-                    greenLSBComboBox.setEnabled(true);
+                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                        greenLSBComboBox.setEnabled(true);
+                    }
                 }
             }
         });
@@ -139,9 +147,13 @@ public class encoder {
             public void actionPerformed(ActionEvent e) {
                 blue = !blue;
                 if(!blue){
-                    blueLSBComboBox.setEnabled(false);
+                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                        blueLSBComboBox.setEnabled(false);
+                    }
                 }else{
-                    blueLSBComboBox.setEnabled(true);
+                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                        blueLSBComboBox.setEnabled(true);
+                    }
                 }
             }
         });
@@ -155,6 +167,21 @@ public class encoder {
                 }
                 if(seed == null){
                     randomCheckBox.setSelected(false);
+                }
+            }
+        });
+        algorithmComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(algorithmComboBox.getSelectedIndex() == 0 || algorithmComboBox.getSelectedIndex() == 1){
+                    redLSBComboBox.setEnabled(true);
+                    greenLSBComboBox.setEnabled(true);
+                    blueLSBComboBox.setEnabled(true);
+                }
+                if(algorithmComboBox.getSelectedIndex() == 2){
+                    redLSBComboBox.setEnabled(false);
+                    greenLSBComboBox.setEnabled(false);
+                    blueLSBComboBox.setEnabled(false);
                 }
             }
         });

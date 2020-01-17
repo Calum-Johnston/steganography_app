@@ -99,7 +99,9 @@
         <constraints>
           <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
-        <properties/>
+        <properties>
+          <model/>
+        </properties>
       </component>
       <component id="b3980" class="javax.swing.JComboBox" binding="redLSBComboBox">
         <constraints>
