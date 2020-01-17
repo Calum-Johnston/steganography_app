@@ -283,6 +283,8 @@ public class encode {
             char data_1 = binary.charAt(i);
             char data_2 = binary.charAt(i + 1);
 
+            //System.out.println(binary.substring(i, i+8));
+
             // Get the next two positional information to consider
             firstColourData = order.get(i);
             secondColourData = order.get(i + 1);
@@ -298,7 +300,13 @@ public class encode {
             // Get the binary relationships between the firstColour and secondColour
             int pixel_Relationship = (int) Math.floor(firstColour / 2) + secondColour;
             String LSB_Relationship = getBinaryLSB(pixel_Relationship);
-            int pixel_Relationship_2 = (int) Math.floor((firstColour - 1) / 2) + secondColour;
+            int pixel_Relationship_2;
+            if(firstColour == 0){
+                // Fix for 0 - 1 / 2 giving 0 instead of -0.5
+                pixel_Relationship_2 = -1 + secondColour;
+            }else{
+                pixel_Relationship_2 = (int) Math.floor((firstColour - 1) / 2) + secondColour;
+            }
             String LSB_Relationship_2 = getBinaryLSB(pixel_Relationship_2);
 
             // Get LSBs of pixel colour
@@ -328,14 +336,13 @@ public class encode {
                     if(firstColourPixelData[firstColourData.get(2)] == -1){
                         firstColourPixelData[firstColourData.get(2)] = 255;
                     }
-                    writePixelData(firstColourPixelData, firstColourData.get(0), firstColourData.get(1));
                 } else {
                     firstColourPixelData[firstColourData.get(2)] += 1;
                     if(firstColourPixelData[firstColourData.get(2)] == 256){
                         firstColourPixelData[firstColourData.get(2)] = 0;
                     }
-                    writePixelData(firstColourPixelData, firstColourData.get(0), firstColourData.get(1));
                 }
+                writePixelData(firstColourPixelData, firstColourData.get(0), firstColourData.get(1));
             }
         }
 

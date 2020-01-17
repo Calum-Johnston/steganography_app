@@ -64,6 +64,7 @@ public class decoder {
      */
     public void decodeData() {
         String text = decoder.decodeImage(stegoImage, "");
+        System.out.println(text);
         textField.setText(text);
     }
 
