@@ -251,7 +251,6 @@ public class lsbDecode {
 
     /**
      * Gets the position to start decoding data from
-     * (HOPEFULLY USE ONE FUNCTION FOR ENCODING AND DECODING EVENTUALLY!!)
      *
      * @param image                 The image to be used
      * @param random                Determines whether random embedding was used

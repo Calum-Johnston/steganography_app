@@ -1,6 +1,7 @@
 package com.java.calumjohnston;
 
 import com.java.calumjohnston.algorithms.lsb.lsbDecode;
+import com.java.calumjohnston.algorithms.pvd.pvdDecode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -63,7 +64,9 @@ public class decoder {
      * Runs the decoder on an image
      */
     public void decodeData() {
-        String text = lsbDecoder.decodeImage(stegoImage, "");
+        pvdDecode pvd = new pvdDecode();
+        pvd.decode(stegoImage);
+        //String text = lsbDecoder.decodeImage(stegoImage, "");
         System.out.println(text);
         textField.setText(text);
     }

@@ -341,6 +341,13 @@ public class pvdEncode {
 
 
     // ======= PARAMETER ENCODING =======
+    /**
+     * Converts parameter data to binary and writes to image
+     *
+     * @param red       Determines whether the red colour channel has been used
+     * @param green     Determines whether the green colour channel has been used
+     * @param blue      Determines whether the blue colour channel has been used
+     */
     public void encodeParameterData(boolean red, boolean green, boolean blue){
         StringBuilder parameters = new StringBuilder();
         parameters.append(conformBinaryLength(red ? 1 : 0, 1));
@@ -350,6 +357,7 @@ public class pvdEncode {
         parameters.append(conformBinaryLength(3, 2));
         parameters.append(conformBinaryLength(endPositionX, 15));
         parameters.append(conformBinaryLength(endPositionY, 15));
+        System.out.println(parameters);
         encodeParameters(parameters);
     }
 
