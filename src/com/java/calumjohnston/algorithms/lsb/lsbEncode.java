@@ -16,11 +16,6 @@ import java.util.stream.IntStream;
 public class lsbEncode {
 
     /**
-     * Stores the number of parameters in the image
-     */
-    private int param_number;
-
-    /**
      * Store the number of bits each parameter requires
      */
     private int[] param_lengths;
@@ -53,9 +48,8 @@ public class lsbEncode {
      * Constructor: Sets up initial variables
      */
     public lsbEncode() {
-        // Default values
-        param_number = 11;
-        param_lengths = new int[param_number];
+        // Define number of bits each parameter requires
+        param_lengths = new int[11];
         param_lengths[0] = 1;  // Length for red (Bool)
         param_lengths[1] = 1;  // Length for green (Bool)
         param_lengths[2] = 1;  // Length for blue (Bool)
@@ -67,7 +61,6 @@ public class lsbEncode {
         param_lengths[8] = 3;  // Length for green bits (Int) - MAX VALUE 7
         param_lengths[9] = 3;  // Length for blue bits (Int) - MAX VALUE 7
         param_lengths[10] = 5;  // Length for final pos (Int) - MAX VALUE 23
-
 
         red = false;
         green = false;
@@ -284,8 +277,6 @@ public class lsbEncode {
             char data_1 = binary.charAt(i);
             char data_2 = binary.charAt(i + 1);
 
-            //System.out.println(binary.substring(i, i+8));
-
             // Get the next two positional information to consider
             firstColourData = order.get(i);
             secondColourData = order.get(i + 1);
@@ -465,7 +456,7 @@ public class lsbEncode {
         // Initialise variables for encoding
         int[] coloursToConsider = new int[] {0, 1, 2};
         int[] currentPosition = new int[] {0, 0};
-        int[] pixelData =getPixelData(currentPosition[0], currentPosition[1]);
+        int[] pixelData = getPixelData(currentPosition[0], currentPosition[1]);
         int currentColour = 0;
 
         // Loop through binary data to be inserted
@@ -616,14 +607,6 @@ public class lsbEncode {
 
 
     // SETUP FUNCTIONS
-    /**
-     * Gets the colours that will be used
-     *
-     * @param red   Boolean to whether red will be used
-     * @param green Boolean to whether green will be used
-     * @param blue  Boolean to whether blue will be used
-     * @return      The colours that will be considered
-     */
     /**
      * Gets the colours that will be used
      *
