@@ -1,6 +1,6 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.encode;
+import com.java.calumjohnston.algorithms.lsb.lsbEncode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -46,7 +46,7 @@ public class encoder {
     private boolean random;
     private String seed;
 
-    private encode encoder;
+    private lsbEncode lsbEncoder;
 
 
     // ======= CONSTRUCTOR =======
@@ -56,7 +56,7 @@ public class encoder {
     public encoder() {
 
         // Create a new encode object
-        encoder = new encode();
+        lsbEncoder = new lsbEncode();
 
         // Define initial parameter values
         red = true;
@@ -207,7 +207,7 @@ public class encoder {
         String text = textField.getText();
 
         // Calls algorithm to embed the data
-        BufferedImage stegoImage = encoder.encodeImage(coverImage, text, red, green, blue,
+        BufferedImage stegoImage = lsbEncoder.encodeImage(coverImage, text, red, green, blue,
                 redLSBs, greenLSBs, blueLSBs, random, seed, algorithm);
 
         if(stegoImage == null){

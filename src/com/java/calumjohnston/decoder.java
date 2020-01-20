@@ -1,6 +1,6 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.decode;
+import com.java.calumjohnston.algorithms.lsb.lsbDecode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -25,7 +25,7 @@ public class decoder {
     private BufferedImage stegoImage;
     private String text;
 
-    private decode decoder;
+    private lsbDecode lsbDecoder;
 
 
 
@@ -35,7 +35,7 @@ public class decoder {
      */
     public decoder() {
 
-        decoder = new decode();
+        lsbDecoder = new lsbDecode();
 
         decodeButton.setEnabled(false);
 
@@ -63,7 +63,7 @@ public class decoder {
      * Runs the decoder on an image
      */
     public void decodeData() {
-        String text = decoder.decodeImage(stegoImage, "");
+        String text = lsbDecoder.decodeImage(stegoImage, "");
         System.out.println(text);
         textField.setText(text);
     }

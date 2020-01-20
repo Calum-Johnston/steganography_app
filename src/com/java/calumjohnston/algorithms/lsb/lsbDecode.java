@@ -1,4 +1,4 @@
-package com.java.calumjohnston.algorithms;
+package com.java.calumjohnston.algorithms.lsb;
 
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
@@ -10,9 +10,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 /**
- * Performs LSB decoding on several algorithmic techniques
+ * lsbDecode Class: This class implements the extraction of data from an image
+ * that has been embedded using the several LSB techniques
  */
-public class decode {
+public class lsbDecode {
 
     /**
      * Stores the number of parameters in the image
@@ -39,9 +40,9 @@ public class decode {
 
     // ======= CONSTRUCTOR(S) =======
     /**
-     * Constructor for the class
+     * Constructor: Sets up initial variables
      */
-    public decode() {
+    public lsbDecode() {
         // Default values
         param_number = 11;
         param_lengths = new int[param_number];

@@ -1,7 +1,7 @@
 package unittests;
 
-import com.java.calumjohnston.algorithms.decode;
-import com.java.calumjohnston.algorithms.encode;
+import com.java.calumjohnston.algorithms.lsb.lsbDecode;
+import com.java.calumjohnston.algorithms.lsb.lsbEncode;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -26,8 +26,8 @@ public class test {
      */
     public void runTests() {
 
-        encode encoder = new encode();
-        decode decoder = new decode();
+        lsbEncode encoder = new lsbEncode();
+        lsbDecode decoder = new lsbDecode();
 
         BufferedImage coverImage = null;
         BufferedImage stegoImage = null;

@@ -1,4 +1,4 @@
-package com.java.calumjohnston.algorithms;
+package com.java.calumjohnston.algorithms.lsb;
 
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
@@ -10,9 +10,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 /**
- * Performs LSB encoding on several algorithmic techniques
+ * lsbEncode Class: This class implements the embedding of data into an image
+ * using the several LSB techniques
  */
-public class encode {
+public class lsbEncode {
 
     /**
      * Stores the number of parameters in the image
@@ -49,9 +50,9 @@ public class encode {
 
     // ======= CONSTRUCTOR(S) =======
     /**
-     * Constructor for the class
+     * Constructor: Sets up initial variables
      */
-    public encode() {
+    public lsbEncode() {
         // Default values
         param_number = 11;
         param_lengths = new int[param_number];
