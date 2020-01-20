@@ -1,6 +1,7 @@
 package com.java.calumjohnston.algorithms.pvd;
 
 import com.java.calumjohnston.randomgenerators.pseudorandom;
+import org.apache.commons.lang3.StringUtils;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ public class pvdDecode {
         //Setup data to be used for decoding
         setupData(stegoImage);
 
+        decodeSecretData();
     }
 
 
@@ -212,12 +214,12 @@ public class pvdDecode {
 
         // Define some initial variables required
         ArrayList<Integer> colourData = null;   // Stores data about the next two colours to manipulate
-        int[] encodingData;         // Stores important encoding information (i.e. number of bits to encode)
+        int[] decodingData;         // Stores important encoding information (i.e. number of bits to encode)
         int firstColour;            // Stores the first colour to be manipulated
         int secondColour;           // Stores the neighbouring second colour to be manipulated
         int colourDifference;       // Stores the colour difference
         int newColourDifference;    // Stores the colour difference once range has been decided
-        StringBuilder binary;       // Stores the data we wish have decoded (in bits)
+        StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
 
         // Generates pixel order to visit the image in
         ArrayList<ArrayList<Integer>> orderToConsider = getPixelOrder();
@@ -236,32 +238,16 @@ public class pvdDecode {
             colourDifference = Math.abs(firstColour - secondColour);
 
             // Get the number of bits we can encode at this time
-            encodingData = quantisationRangeTable(colourDifference);
+            decodingData = quantisationRangeTable(colourDifference);
 
-            // Get the data to encode into the image
-            dataToEncode = binary.substring(i, i + encodingData[2]);
-            int decimalData = Integer.parseInt(dataToEncode, 2);
+            // Get the data from the into the image
+            int binaryData = colourDifference - decodingData[0];
 
-            // Calculate the new colour difference
-            newColourDifference = encodingData[0] + decimalData;
+            binary.append(conformBinaryLength(binaryData, decodingData[2]));
 
-            // Obtain new colour values for firstColour and secondColour by averaging new difference to them
-            if(firstColour >= secondColour && newColourDifference > colourDifference){
-                firstColour += Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
-                secondColour -= Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
-            }else if(firstColour < secondColour && newColourDifference > colourDifference){
-                firstColour -= Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
-                secondColour += Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
-            }else if(firstColour >= secondColour && newColourDifference <= colourDifference){
-                firstColour -= Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
-                secondColour += Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
-            }else if(firstColour < secondColour && newColourDifference <= colourDifference){
-                firstColour += Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
-                secondColour -= Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
-            }
         }
 
-        return "";
+        return binary.toString();
     }
 
     /**
@@ -278,7 +264,7 @@ public class pvdDecode {
         ArrayList<ArrayList<Integer>> order = new ArrayList<>();
 
         // Gets the pixel order we will consider
-        while(firstPosition[0] != endPositionX && firstPosition[1] != endPositionY){
+        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY){
             if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
                 currentColourPosition = 0;
                 firstPosition = generateNextPosition(secondPosition);
@@ -295,5 +281,46 @@ public class pvdDecode {
         }
 
         return order;
+    }
+
+    /**
+     * Function acts as the quantisation range table
+     *
+     * @param difference    The difference between two consecutive pixel values
+     * @return              The data required for encoding
+     */
+    public int[] quantisationRangeTable(int difference){
+        if(difference <= 7){
+            return new int[] {0, 7, 1};
+        }
+        if(difference <= 15){
+            return new int[] {8, 15, 2};
+        }
+        if(difference <= 31){
+            return new int[] {16, 31, 3};
+        }
+        if(difference <= 63){
+            return new int[] {32, 63, 4};
+        }
+        if(difference <= 12715){
+            return new int[] {64, 127, 5};
+        }
+        if(difference <= 255){
+            return new int[] {128, 255, 6};
+        }
+        return null;
+    }
+
+    /**
+     * Converts some integer to binary of a defined length
+     *
+     * @param data      The data to be converted to binary
+     * @param length    The number of bits to represent the data as
+     * @return          The binary equivalent of data
+     */
+    public String conformBinaryLength(int data, int length){
+        String binaryParameter = Integer.toBinaryString(data);
+        binaryParameter = (StringUtils.repeat('0', length) + binaryParameter).substring(binaryParameter.length());
+        return binaryParameter;
     }
 }
