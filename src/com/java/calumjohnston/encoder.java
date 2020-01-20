@@ -1,6 +1,7 @@
 package com.java.calumjohnston;
 
 import com.java.calumjohnston.algorithms.lsb.lsbEncode;
+import com.java.calumjohnston.algorithms.pvd.pvdEncode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -46,17 +47,12 @@ public class encoder {
     private boolean random;
     private String seed;
 
-    private lsbEncode lsbEncoder;
-
 
     // ======= CONSTRUCTOR =======
     /**
      * Constructor for the class
      */
     public encoder() {
-
-        // Create a new encode object
-        lsbEncoder = new lsbEncode();
 
         // Define initial parameter values
         red = true;
@@ -67,7 +63,7 @@ public class encoder {
 
         // Defines the file chooser (for selecting images)
         openFileChooser = new JFileChooser();
-        openFileChooser.setCurrentDirectory(new File("C:\\Users\\Calum\\Documents\\3rd year - Dissertation\\Steganography Desktop App\\rsts"));
+        openFileChooser.setCurrentDirectory(new File("C:\\Users\\Calum\\Documents\\Projects\\Dissertation\\Dissertation Project\\rsts"));
 
         // Set check boxes to default as selected
         redCheckBox.setSelected(true);
@@ -78,6 +74,7 @@ public class encoder {
         algorithmComboBox.addItem("LSB");
         algorithmComboBox.addItem("LSBM");
         algorithmComboBox.addItem("LSBMR");
+        algorithmComboBox.addItem("PVD");
 
         // Sets up LSB options in combo box
         redLSBComboBox.addItem(1); greenLSBComboBox.addItem(1); blueLSBComboBox.addItem(1);
@@ -207,8 +204,16 @@ public class encoder {
         String text = textField.getText();
 
         // Calls algorithm to embed the data
-        BufferedImage stegoImage = lsbEncoder.encodeImage(coverImage, text, red, green, blue,
-                redLSBs, greenLSBs, blueLSBs, random, seed, algorithm);
+        BufferedImage stegoImage;
+        if(algorithm == 3){
+            pvdEncode pvd = new pvdEncode();
+            stegoImage = pvd.encode(coverImage, red, green, blue,
+                     random, seed, text);
+        }else {
+            lsbEncode lsb = new lsbEncode();
+            stegoImage = lsb.encodeImage(coverImage, text, red, green, blue,
+                    redLSBs, greenLSBs, blueLSBs, random, seed, algorithm);
+        }
 
         if(stegoImage == null){
             String message = "Input text too large - try increasing number of colours components to use!";

@@ -143,13 +143,13 @@ public class pvdEncode {
     public void encodeSecretData(StringBuilder binary){
 
         // Define some initial variables required
-        ArrayList<Integer> colourData;  // Stores data about the next two colours to manipulate
-        int[] encodingData;             // Stores important encoding information (i.e. number of bits to encode)
-        int firstColour;                // Stores the first colour to be manipulated
-        int secondColour;               // Stores the neighbouring second colour to be manipulated
-        int colourDifference;           // Stores the colour difference
-        int newColourDifference;        // Stores the colour difference once range has been decided
-        String dataToEncode;            // Stores the data we wish to encode (in bits)
+        ArrayList<Integer> colourData = null;   // Stores data about the next two colours to manipulate
+        int[] encodingData;         // Stores important encoding information (i.e. number of bits to encode)
+        int firstColour;            // Stores the first colour to be manipulated
+        int secondColour;           // Stores the neighbouring second colour to be manipulated
+        int colourDifference;       // Stores the colour difference
+        int newColourDifference;    // Stores the colour difference once range has been decided
+        String dataToEncode;        // Stores the data we wish to encode (in bits)
 
         // Generates pixel order to visit the image in
         ArrayList<ArrayList<Integer>> orderToConsider = getPixelOrder(binary);
@@ -171,7 +171,7 @@ public class pvdEncode {
             encodingData = quantisationRangeTable(colourDifference);
 
             // Get the data to encode into the image
-            dataToEncode = binary.substring(i, encodingData[2]);
+            dataToEncode = binary.substring(i, i + encodingData[2]);
             int decimalData = Integer.parseInt(dataToEncode, 2);
 
             // Calculate the new colour difference
@@ -198,6 +198,10 @@ public class pvdEncode {
 
         }
 
+        // Write end position data (for decoding purposes)
+        endPositionX = colourData.get(0);
+        endPositionY = colourData.get(1);
+
     }
 
     /**
@@ -215,7 +219,7 @@ public class pvdEncode {
         ArrayList<ArrayList<Integer>> order = new ArrayList<>();
 
         // Gets the pixel order we will consider
-        for(int i = 0; i < binary.length(); i++){
+        for(int i = 0; i < binary.length(); i += 1){
             if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
                 currentColourPosition = 0;
                 firstPosition = generateNextPosition(secondPosition);
@@ -228,11 +232,8 @@ public class pvdEncode {
             current.add(secondPosition[1]);
             current.add(currentColourPosition);
             order.add(current);
+            currentColourPosition += 1;
         }
-
-        // Write end position data (for decoding purposes)
-        endPositionX = firstPosition[0];
-        endPositionY = firstPosition[1];
 
         return order;
     }
@@ -247,15 +248,15 @@ public class pvdEncode {
         int imageWidth = coverImage.getWidth();
         if (random) {
             int position = generator.getNextElement();
-            currentPosition[0] = position % imageWidth;
-            currentPosition[1] = position / imageWidth;
+            return new int[] {position % imageWidth, position / imageWidth};
         } else {
-            currentPosition[0] = (currentPosition[0] + 1) % imageWidth;
-            if (currentPosition[0] == 0) {
-                currentPosition[1] += 1;
+            int newLine = (currentPosition[0] + 1) % imageWidth;
+            if (newLine == 0) {
+                return new int[] {0, currentPosition[1] + 1};
+            }else{
+                return new int[] {currentPosition[0] + 1, currentPosition[1]};
             }
         }
-        return currentPosition;
     }
 
     /**
