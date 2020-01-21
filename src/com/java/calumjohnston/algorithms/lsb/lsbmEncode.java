@@ -201,7 +201,7 @@ public class lsbmEncode {
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
         int currentLSBPosition = -1     ;
-        int[] firstPosition = generateNextPosition(new int[] {16, 0});
+        int[] firstPosition = generateNextPosition(new int[] {17, 0});
 
         // Loop through binary data to be inserted
         for (int i = 0; i < binary.length(); i += 1) {
@@ -402,9 +402,9 @@ public class lsbmEncode {
         parameters.append(conformBinaryLength(red ? 1 : 0, 1));
         parameters.append(conformBinaryLength(green ? 1 : 0, 1));
         parameters.append(conformBinaryLength(blue ? 1 : 0, 1));
-        parameters.append(conformBinaryLength(redBits, 3));
-        parameters.append(conformBinaryLength(greenBits, 3));
-        parameters.append(conformBinaryLength(blueBits, 3));
+        parameters.append(conformBinaryLength(redBits - 1, 3));
+        parameters.append(conformBinaryLength(greenBits - 1, 3));
+        parameters.append(conformBinaryLength(blueBits - 1, 3));
         parameters.append(conformBinaryLength(random ? 1 : 0, 1));
         parameters.append(conformBinaryLength(endPositionX, 15));
         parameters.append(conformBinaryLength(endPositionY, 15));

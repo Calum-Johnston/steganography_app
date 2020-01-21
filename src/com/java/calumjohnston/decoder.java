@@ -43,7 +43,7 @@ public class decoder {
         decodeButton.setEnabled(false);
 
         openFileChooser = new JFileChooser();
-        openFileChooser.setCurrentDirectory(new File("C:\\Users\\Calum\\Documents\\3rd year - Dissertation\\Steganography Desktop App\\rsts"));
+        openFileChooser.setCurrentDirectory(new File("C:\\Users\\Calum\\Documents\\Projects\\Dissertation\\Dissertation Project\\rsts"));
 
         selectImageButtom.addActionListener(new ActionListener() {
             @Override

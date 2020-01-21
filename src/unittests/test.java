@@ -91,6 +91,44 @@ public class test {
             }
         }
 
+        // LSB
+        for(int redBits = 1; redBits < 9; redBits++){
+            for(int greenBits = 1; greenBits < 9; greenBits++){
+                for(int blueBits = 1; blueBits < 9; blueBits++){
+                    for(boolean random : new boolean[] {false}) {
+                        for(boolean red : new boolean[] {false, true}) {
+                            for (boolean green : new boolean[]{false, true}) {
+                                for (boolean blue : new boolean[]{false, true}) {
+                                    count += 1;
+                                    if(red == false && green == false && blue == false){
+                                        break;
+                                    }
+                                    stegoImage = lsbmEncoder.encode(coverImage, red, green, blue,
+                                            redBits, greenBits, blueBits, random, seed, text);
+                                    String assertionError = null;
+                                    try {
+                                        result = lsbmDecoder.decode(stegoImage);
+                                        assertEquals(text, result);
+                                    } catch (AssertionError ae) {
+                                        assertionError = ae.toString();
+                                    }
+                                    if (assertionError != null ) {
+                                        System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
+                                        System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
+                                        System.out.println("Algorithm: LSBM");
+                                        System.out.println("Random: " + random + ", with seed: " + seed);
+                                        System.out.println("Text: " + text);
+                                        System.out.println("Result: " + result);
+                                        fail += 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // LSBMR (Works perfectly)
         for(int redBits = 1; redBits < 2; redBits++){
             for(int greenBits = 1; greenBits < 2; greenBits++){
@@ -156,6 +194,7 @@ public class test {
                                         System.out.println("Random: " + random + ", with seed: " + seed);
                                         System.out.println("Text: " + text);
                                         System.out.println("Result: " + result);
+                                        fail += 1;
                                     }
                                 }
                             }

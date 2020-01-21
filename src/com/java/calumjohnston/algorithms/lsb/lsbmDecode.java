@@ -73,9 +73,9 @@ public class lsbmDecode {
         boolean blue = binaryToInt(parameters.substring(5,6)) == 1;
         this.coloursToConsider = getColoursToConsider(red, green, blue);
 
-        int redBits = binaryToInt(parameters.substring(6, 9));
-        int greenBits = binaryToInt(parameters.substring(9, 12));
-        int blueBits = binaryToInt(parameters.substring(12, 15));
+        int redBits = binaryToInt(parameters.substring(6, 9)) + 1;
+        int greenBits = binaryToInt(parameters.substring(9, 12)) + 1;
+        int blueBits = binaryToInt(parameters.substring(12, 15)) + 1;
         this.lsbsToConsider = getLSBsToConsider(redBits, greenBits, blueBits, red, green, blue);
 
         // Determine whether random embedding is being used
@@ -287,7 +287,7 @@ public class lsbmDecode {
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
         int currentLSBPosition = -1     ;
-        int[] firstPosition = generateNextPosition(new int[] {16, 0});
+        int[] firstPosition = generateNextPosition(new int[] {17, 0});
 
         // Loop through binary data to be inserted
         while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentLSBPosition != endLSBPosition) {
