@@ -222,11 +222,11 @@ public class lsbmEncode {
             // Get bit required from binary input
             char data_1 = binary.charAt(i);
 
-            // Get the next two colour channel data
+            // Get the next colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
 
             // Update current colour data based on binary data to insert
-            firstColour = updateColour(firstColour, data_1, currentLSBPosition);
+            firstColour = updateColour(firstColour, data_1, lsbsToConsider.get(currentLSBPosition));
 
             // Write colour data back to the image
             writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, firstColour);
@@ -398,7 +398,7 @@ public class lsbmEncode {
     public void encodeParameterData(boolean red, boolean green, boolean blue,
                                     int redBits, int greenBits, int blueBits){
         StringBuilder parameters = new StringBuilder();
-        parameters.append(conformBinaryLength(3, 3));
+        parameters.append(conformBinaryLength(1, 3));
         parameters.append(conformBinaryLength(red ? 1 : 0, 1));
         parameters.append(conformBinaryLength(green ? 1 : 0, 1));
         parameters.append(conformBinaryLength(blue ? 1 : 0, 1));

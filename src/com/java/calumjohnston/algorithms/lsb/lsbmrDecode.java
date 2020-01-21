@@ -1,4 +1,4 @@
-package com.java.calumjohnston.algorithms.pvd;
+package com.java.calumjohnston.algorithms.lsb;
 
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
@@ -7,10 +7,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 /**
- * pvdDecode Class: This class implements the extraction of data from an image
- * that has been embedded using the PVD technique
+ * lSBMR Decode Class: This class implements the extraction of data from an image
+ * that has been embedded using the LSBMR technique
  */
-public class pvdDecode {
+public class lsbmrDecode {
 
     BufferedImage stegoImage;
     boolean random;
@@ -23,7 +23,7 @@ public class pvdDecode {
     /**
      * Constructor
      */
-    public pvdDecode(){
+    public lsbmrDecode(){
 
     }
 
@@ -235,12 +235,9 @@ public class pvdDecode {
 
         // Define some initial variables required
         ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
-        int[] decodingData;         // Stores important encoding information (i.e. number of bits to encode)
         int firstColour;            // Stores the first colour to be manipulated
         int secondColour;           // Stores the neighbouring second colour to be manipulated
-        int colourDifference;       // Stores the colour difference
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
-        String binaryData = "";     // Stores the binary data retrieved from the image at a point
 
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
@@ -258,26 +255,13 @@ public class pvdDecode {
             secondPosition = colourData.get(1);
             currentColourPosition = colourData.get(2)[0];
 
-            if(firstPosition[0] == 447 && firstPosition[1] == 55){
-                System.out.println("as");
-            }
-
             // Get the next two colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
             secondColour = getColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition);
 
-            // Calculate the colour difference
-            colourDifference = Math.abs(firstColour - secondColour);
-
-            // Get the number of bits we can encode at this time
-            decodingData = quantisationRangeTable(colourDifference);
-
-            // Get the data from the colour difference
-            binaryData = conformBinaryLength(colourDifference - decodingData[0], decodingData[2]);
-
             // Append the retrieved binary data to the final string of data
-            binary.append(binaryData);
-
+            binary.append(getLSB(firstColour));
+            binary.append(getLSB((firstColour / 2) + secondColour));
         }
 
         return binary;
@@ -314,46 +298,6 @@ public class pvdDecode {
         return current;
     }
 
-    /**
-     * Function acts as the quantisation range table
-     *
-     * @param difference    The difference between two consecutive pixel values
-     * @return              The data required for encoding
-     */
-    public int[] quantisationRangeTable(int difference){
-        if(difference <= 7){
-            return new int[] {0, 7, 1};
-        }
-        if(difference <= 15){
-            return new int[] {8, 15, 2};
-        }
-        if(difference <= 31){
-            return new int[] {16, 31, 3};
-        }
-        if(difference <= 63){
-            return new int[] {32, 63, 4};
-        }
-        if(difference <= 12715){
-            return new int[] {64, 127, 5};
-        }
-        if(difference <= 255){
-            return new int[] {128, 255, 6};
-        }
-        return null;
-    }
-
-    /**
-     * Converts some integer to binary of a defined length
-     *
-     * @param data      The data to be converted to binary
-     * @param length    The number of bits to represent the data as
-     * @return          The binary equivalent of data
-     */
-    public String conformBinaryLength(int data, int length){
-        String binaryParameter = Integer.toBinaryString(data);
-        binaryParameter = (StringUtils.repeat('0', length) + binaryParameter).substring(binaryParameter.length());
-        return binaryParameter;
-    }
 
 
 

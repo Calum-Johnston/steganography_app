@@ -1,4 +1,4 @@
-package com.java.calumjohnston.algorithms.lsb;
+package unused.unused;
 
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;

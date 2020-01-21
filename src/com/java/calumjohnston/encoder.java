@@ -1,5 +1,6 @@
 package com.java.calumjohnston;
 
+import com.java.calumjohnston.algorithms.lsb.lsbEncode;
 import com.java.calumjohnston.algorithms.lsb.lsbmEncode;
 import com.java.calumjohnston.algorithms.lsb.lsbmrEncode;
 import com.java.calumjohnston.algorithms.pvd.pvdEncode;
@@ -227,6 +228,14 @@ public class encoder {
             lsbmEncode lsbm = new lsbmEncode();
             try{
                 stegoImage = lsbm.encode(coverImage, red, green, blue, redLSBs, greenLSBs, blueLSBs,
+                        random, seed, text);
+            }catch(DataOverflowException e){
+                System.out.println("Error");
+            }
+        }else {
+            lsbEncode lsb = new lsbEncode();
+            try{
+                stegoImage = lsb.encode(coverImage, red, green, blue, redLSBs, greenLSBs, blueLSBs,
                         random, seed, text);
             }catch(DataOverflowException e){
                 System.out.println("Error");

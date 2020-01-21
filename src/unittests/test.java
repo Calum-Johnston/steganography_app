@@ -1,7 +1,7 @@
 package unittests;
 
-import com.java.calumjohnston.algorithms.lsb.alllsb_decode;
-import com.java.calumjohnston.algorithms.lsb.alllsb_encode;
+import unused.unused.alllsb_decode;
+import unused.unused.alllsb_encode;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

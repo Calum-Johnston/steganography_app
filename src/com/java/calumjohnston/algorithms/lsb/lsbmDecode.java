@@ -1,4 +1,4 @@
-package com.java.calumjohnston.algorithms.pvd;
+package com.java.calumjohnston.algorithms.lsb;
 
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
@@ -7,23 +7,25 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 /**
- * pvdDecode Class: This class implements the extraction of data from an image
- * that has been embedded using the PVD technique
+ * LSBM Decode Class: This class implements the extraction of data from an image
+ * that has been embedded using the LSBM technique
  */
-public class pvdDecode {
+public class lsbmDecode {
 
     BufferedImage stegoImage;
     boolean random;
     int[] coloursToConsider;
+    ArrayList<Integer> lsbsToConsider;
     pseudorandom generator;
     int endPositionX;
     int endPositionY;
     int endColourChannel;
+    int endLSBPosition;
 
     /**
      * Constructor
      */
-    public pvdDecode(){
+    public lsbmDecode(){
 
     }
 
@@ -71,16 +73,22 @@ public class pvdDecode {
         boolean blue = binaryToInt(parameters.substring(5,6)) == 1;
         this.coloursToConsider = getColoursToConsider(red, green, blue);
 
+        int redBits = binaryToInt(parameters.substring(6, 9));
+        int greenBits = binaryToInt(parameters.substring(9, 12));
+        int blueBits = binaryToInt(parameters.substring(12, 15));
+        this.lsbsToConsider = getLSBsToConsider(redBits, greenBits, blueBits, red, green, blue);
+
         // Determine whether random embedding is being used
-        this.random = binaryToInt(parameters.substring(6, 7)) == 1;
+        this.random = binaryToInt(parameters.substring(15, 16)) == 1;
         if (random) {
             this.generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), "");
         }
 
         // Get end position for data encoding
-        endPositionX = binaryToInt(parameters.substring(7,22));
-        endPositionY = binaryToInt(parameters.substring(22,37));
-        endColourChannel = binaryToInt(parameters.substring(37));
+        endPositionX = binaryToInt(parameters.substring(16,31));
+        endPositionY = binaryToInt(parameters.substring(31,46));
+        endColourChannel = binaryToInt(parameters.substring(46, 48));
+        endLSBPosition = binaryToInt(parameters.substring(48));
 
     }
 
@@ -99,7 +107,7 @@ public class pvdDecode {
         StringBuilder parameters = new StringBuilder();
 
         // Loop through binary data to be inserted
-        for (int i = 0; i < 39; i += 1) {
+        for (int i = 0; i < 53; i += 1) {
 
             // Get current colour to manipulate
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
@@ -216,6 +224,44 @@ public class pvdDecode {
         return new int[]{0, 1, 2};
     }
 
+    /**
+     * Gets the LSBs that will be used for each colour
+     *
+     * @param redBits       Number of LSBs to use in red colour channel
+     * @param greenBits     Number of LSBs to use in green colour channel
+     * @param blueBits      Number of LSBs to use in blue colour channel
+     * @param red           Determines whether the red colour channel will be used
+     * @param green         Determines whether the green colour channel will be used
+     * @param blue          Determines whether the blue colour channel will be used
+     * @return              The LSBs that will be considered for each colour (same order as coloursToConsider)
+     */
+    public ArrayList<Integer> getLSBsToConsider(int redBits, int greenBits, int blueBits,
+                                                boolean red, boolean green, boolean blue){
+        ArrayList<Integer> lsbToConsider = new ArrayList<Integer>();
+        int count = 0;
+        if(red) {
+            for (int i = 0; i < redBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
+        }
+        if(green) {
+            count = 0;
+            for (int i = redBits; i < greenBits + redBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
+        }
+        if(blue) {
+            count = 0;
+            for (int i = redBits + greenBits; i < redBits + greenBits + blueBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
+        }
+        return lsbToConsider;
+    }
+
 
 
     // ======= CHECK FUNCTIONS =======
@@ -235,49 +281,30 @@ public class pvdDecode {
 
         // Define some initial variables required
         ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
-        int[] decodingData;         // Stores important encoding information (i.e. number of bits to encode)
         int firstColour;            // Stores the first colour to be manipulated
-        int secondColour;           // Stores the neighbouring second colour to be manipulated
-        int colourDifference;       // Stores the colour difference
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
-        String binaryData = "";     // Stores the binary data retrieved from the image at a point
 
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
+        int currentLSBPosition = -1     ;
         int[] firstPosition = generateNextPosition(new int[] {16, 0});
-        int[] secondPosition = generateNextPosition(firstPosition);
 
         // Loop through binary data to be inserted
-        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
+        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentLSBPosition != endLSBPosition) {
 
             // Get the colour data required for embedding
-            colourData = getNextData(firstPosition, secondPosition, currentColourPosition);
+            colourData = getNextData(firstPosition, currentColourPosition, currentLSBPosition);
 
             // Update positional information
             firstPosition = colourData.get(0);
-            secondPosition = colourData.get(1);
-            currentColourPosition = colourData.get(2)[0];
+            currentColourPosition = colourData.get(1)[0];
+            currentLSBPosition = colourData.get(2)[0];
 
-            if(firstPosition[0] == 447 && firstPosition[1] == 55){
-                System.out.println("as");
-            }
-
-            // Get the next two colour channel data
+            // Get the next colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
-            secondColour = getColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition);
-
-            // Calculate the colour difference
-            colourDifference = Math.abs(firstColour - secondColour);
-
-            // Get the number of bits we can encode at this time
-            decodingData = quantisationRangeTable(colourDifference);
-
-            // Get the data from the colour difference
-            binaryData = conformBinaryLength(colourDifference - decodingData[0], decodingData[2]);
 
             // Append the retrieved binary data to the final string of data
-            binary.append(binaryData);
-
+            binary.append(getSpecificLSB(firstColour, lsbsToConsider.get(currentLSBPosition)));
         }
 
         return binary;
@@ -287,59 +314,49 @@ public class pvdDecode {
      * Determines the next two pixels we should encode into
      *
      * @param firstPosition         The positional data of the first pixel being considered
-     * @param secondPosition        The positional data of the second pixel being considered
      * @param currentColourPosition The current position in coloursToConsider we are using
      * @return                      The order we should consider pixel whilst encoding
      */
-    public ArrayList<int[]> getNextData(int[] firstPosition, int[] secondPosition, int currentColourPosition){
+    public ArrayList<int[]> getNextData(int[] firstPosition, int currentColourPosition, int currentLSBPosition){
 
         // Define ArrayList to store data in
         ArrayList<int[]> current = new ArrayList<>();
 
         // Update current position to check for in coloursToConsider
-        currentColourPosition += 1;
+        currentLSBPosition += 1;
 
         // Update positions (if ran out of colour channels to manipulate with current positions)
-        if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
-            currentColourPosition = 0;
-            firstPosition = generateNextPosition(secondPosition);
-            secondPosition = generateNextPosition(firstPosition);
+        if(currentLSBPosition == lsbsToConsider.size()){
+            currentLSBPosition = 0;
+        }
+        if(lsbsToConsider.get(currentLSBPosition) == 0) {
+            currentColourPosition += 1;
+            if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
+                currentColourPosition = 0;
+                firstPosition = generateNextPosition(firstPosition);
+            }
         }
 
         // Add data to ArrayList to return
         current.add(firstPosition);
-        current.add(secondPosition);
         current.add(new int[] {currentColourPosition});
+        current.add(new int[] {currentLSBPosition});
 
         return current;
     }
 
     /**
-     * Function acts as the quantisation range table
+     * Gets the least significant bit of some integer at a certain point
      *
-     * @param difference    The difference between two consecutive pixel values
-     * @return              The data required for encoding
+     * @param number        The number retrieve the data from
+     * @param LSB           The LSB we are considering
+     * @return              The LSB of the number (in binary)
      */
-    public int[] quantisationRangeTable(int difference){
-        if(difference <= 7){
-            return new int[] {0, 7, 1};
-        }
-        if(difference <= 15){
-            return new int[] {8, 15, 2};
-        }
-        if(difference <= 31){
-            return new int[] {16, 31, 3};
-        }
-        if(difference <= 63){
-            return new int[] {32, 63, 4};
-        }
-        if(difference <= 12715){
-            return new int[] {64, 127, 5};
-        }
-        if(difference <= 255){
-            return new int[] {128, 255, 6};
-        }
-        return null;
+    public char getSpecificLSB(int number, int LSB){
+        StringBuilder binaryColour = new StringBuilder();
+        binaryColour.append(conformBinaryLength(number, 8));
+        int lsb_Position = 7 - LSB;
+        return binaryColour.charAt(lsb_Position);
     }
 
     /**
@@ -354,7 +371,6 @@ public class pvdDecode {
         binaryParameter = (StringUtils.repeat('0', length) + binaryParameter).substring(binaryParameter.length());
         return binaryParameter;
     }
-
 
 
     // ======= CONVERSION FUNCTIONS =======

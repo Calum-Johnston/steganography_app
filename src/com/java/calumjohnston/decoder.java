@@ -1,7 +1,9 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.lsb.alllsb_decode;
+import com.java.calumjohnston.algorithms.lsb.*;
 import com.java.calumjohnston.algorithms.pvd.pvdDecode;
+import com.java.calumjohnston.exceptions.DataOverflowException;
+import unused.unused.alllsb_decode;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -64,9 +66,48 @@ public class decoder {
      * Runs the decoder on an image
      */
     public void decodeData() {
-        pvdDecode pvd = new pvdDecode();
-        String text = pvd.decode(stegoImage);
-        textField.setText(text);
+        // Get algorithm here
+        int pixel = stegoImage.getRGB(0, 0);
+        int red = (pixel & 0x00ff0000) >> 16;
+        int green = (pixel & 0x0000ff00) >> 8;
+        int blue = pixel & 0x000000ff;
+        int algorithm = Integer.parseInt(getLSB(red) + "" + getLSB(green) + "" + getLSB(blue), 2);
+
+
+        // Calls algorithm to embed the data
+        String data = "";
+        if(algorithm == 3){
+            pvdDecode pvd = new pvdDecode();
+            try{
+                data = pvd.decode(stegoImage);
+            }catch(DataOverflowException e){
+                System.out.println("Error");
+            }
+        }else if(algorithm == 2) {
+            lsbmrDecode lsbmr = new lsbmrDecode();
+            try{
+                data = lsbmr.decode(stegoImage);
+            }catch(DataOverflowException e){
+                System.out.println("Error");
+            }
+        }else if(algorithm == 1){
+            lsbmDecode lsbm = new lsbmDecode();
+            try{
+                data = lsbm.decode(stegoImage);
+            }catch(DataOverflowException e){
+                System.out.println("Error");
+            }
+        }else {
+            lsbDecode lsb = new lsbDecode();
+            try{
+                data = lsb.decode(stegoImage);
+            }catch(DataOverflowException e){
+                System.out.println("Error");
+            }
+        }
+
+        System.out.println(data);
+        textField.setText(data);
     }
 
 
@@ -104,6 +145,20 @@ public class decoder {
      */
     public JPanel getPanel(){
         return rootPanel;
+    }
+
+    /**
+     * Gets the least significant bit of a colour
+     *
+     * @param colour        The colour to get the LSB of
+     * @return              The LSB of colour
+     */
+    public int getLSB(int colour){
+        if(colour % 2 == 0) {
+            return 0;
+        }else{
+            return 1;
+        }
     }
 
 }

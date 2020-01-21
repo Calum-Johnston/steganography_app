@@ -317,34 +317,6 @@ public class lsbmrEncode {
     }
 
     /**
-     * Function acts as the quantisation range table
-     *
-     * @param difference    The difference between two consecutive pixel values
-     * @return              The data required for encoding
-     */
-    public int[] quantisationRangeTable(int difference){
-        if(difference <= 7){
-            return new int[] {0, 7, 1};
-        }
-        if(difference <= 15){
-            return new int[] {8, 15, 2};
-        }
-        if(difference <= 31){
-            return new int[] {16, 31, 3};
-        }
-        if(difference <= 63){
-            return new int[] {32, 63, 4};
-        }
-        if(difference <= 127){
-            return new int[] {64, 127, 5};
-        }
-        if(difference <= 255){
-            return new int[] {128, 255, 6};
-        }
-        return null;
-    }
-
-    /**
      * Writes colour channel data to an image at a specific location
      *
      * @param x                 x coordinate of pixel
@@ -396,7 +368,7 @@ public class lsbmrEncode {
      */
     public void encodeParameterData(boolean red, boolean green, boolean blue){
         StringBuilder parameters = new StringBuilder();
-        parameters.append(conformBinaryLength(3, 3));
+        parameters.append(conformBinaryLength(2, 3));
         parameters.append(conformBinaryLength(red ? 1 : 0, 1));
         parameters.append(conformBinaryLength(green ? 1 : 0, 1));
         parameters.append(conformBinaryLength(blue ? 1 : 0, 1));
