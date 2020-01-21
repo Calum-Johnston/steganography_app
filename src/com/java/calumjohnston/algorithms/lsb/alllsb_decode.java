@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
  * lsbDecode Class: This class implements the extraction of data from an image
  * that has been embedded using the several LSB techniques
  */
-public class lsbDecode {
+public class alllsb_decode {
 
     /**
      * Stores the number of parameters in the image
@@ -42,7 +42,7 @@ public class lsbDecode {
     /**
      * Constructor: Sets up initial variables
      */
-    public lsbDecode() {
+    public alllsb_decode() {
         // Default values
         param_number = 11;
         param_lengths = new int[param_number];

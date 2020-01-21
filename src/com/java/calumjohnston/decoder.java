@@ -1,6 +1,6 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.lsb.lsbDecode;
+import com.java.calumjohnston.algorithms.lsb.alllsb_decode;
 import com.java.calumjohnston.algorithms.pvd.pvdDecode;
 
 import javax.imageio.ImageIO;
@@ -26,7 +26,7 @@ public class decoder {
     private BufferedImage stegoImage;
     private String text;
 
-    private lsbDecode lsbDecoder;
+    private alllsb_decode lsbDecoder;
 
 
 
@@ -36,7 +36,7 @@ public class decoder {
      */
     public decoder() {
 
-        lsbDecoder = new lsbDecode();
+        lsbDecoder = new alllsb_decode();
 
         decodeButton.setEnabled(false);
 

@@ -18,6 +18,7 @@ public class pvdDecode {
     pseudorandom generator;
     int endPositionX;
     int endPositionY;
+    int endColourChannel;
 
     /**
      * Constructor
@@ -36,15 +37,19 @@ public class pvdDecode {
         // Setup data to be used for decoding
         setupData(stegoImage);
 
+        // Check parameter data will allow for successful decoding
+        checkData();
+
         // Decode data from the image
         StringBuilder binary = decodeSecretData();
 
         // Convert the data back to text
         String text = getText(binary);
 
-        // Return the text
+        // Return the retrieved text
         return text;
     }
+
 
 
     // ======= SETUP & PARAMETER FUNCTIONS =======
@@ -61,20 +66,21 @@ public class pvdDecode {
         StringBuilder parameters = decodeParameters();
 
         // Get the colours to consider (some combination of red, green and blue)
-        boolean red = binaryToInt(parameters.substring(0,1)) == 1;
-        boolean green = binaryToInt(parameters.substring(1,2)) == 1;
-        boolean blue = binaryToInt(parameters.substring(2,3)) == 1;
+        boolean red = binaryToInt(parameters.substring(3,4)) == 1;
+        boolean green = binaryToInt(parameters.substring(4,5)) == 1;
+        boolean blue = binaryToInt(parameters.substring(5,6)) == 1;
         this.coloursToConsider = getColoursToConsider(red, green, blue);
 
         // Determine whether random embedding is being used
-        this.random = binaryToInt(parameters.substring(3, 4)) == 1;
+        this.random = binaryToInt(parameters.substring(6, 7)) == 1;
         if (random) {
             this.generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), "");
         }
 
         // Get end position for data encoding
-        endPositionX = binaryToInt(parameters.substring(6,21));
-        endPositionY = binaryToInt(parameters.substring(21, 36));
+        endPositionX = binaryToInt(parameters.substring(7,22));
+        endPositionY = binaryToInt(parameters.substring(22,37));
+        endColourChannel = binaryToInt(parameters.substring(37));
 
     }
 
@@ -93,7 +99,7 @@ public class pvdDecode {
         StringBuilder parameters = new StringBuilder();
 
         // Loop through binary data to be inserted
-        for (int i = 0; i < 36; i += 1) {
+        for (int i = 0; i < 39; i += 1) {
 
             // Get current colour to manipulate
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
@@ -212,6 +218,13 @@ public class pvdDecode {
 
 
 
+    // ======= CHECK FUNCTIONS =======
+    public void checkData(){
+
+    }
+
+
+
     // ======= DECODING FUNCTIONS =======
     /**
      * Decodes the data to be hidden into the image
@@ -221,7 +234,7 @@ public class pvdDecode {
     public StringBuilder decodeSecretData(){
 
         // Define some initial variables required
-        ArrayList<Integer> colourData = null;   // Stores data about the next two colours to manipulate
+        ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
         int[] decodingData;         // Stores important encoding information (i.e. number of bits to encode)
         int firstColour;            // Stores the first colour to be manipulated
         int secondColour;           // Stores the neighbouring second colour to be manipulated
@@ -229,18 +242,29 @@ public class pvdDecode {
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
         String binaryData = "";     // Stores the binary data retrieved from the image at a point
 
-        // Generates pixel order to visit the image in
-        ArrayList<ArrayList<Integer>> orderToConsider = getPixelOrder();
+        // Define some variables for determining which pixels to manipulate
+        int currentColourPosition = -1;
+        int[] firstPosition = generateNextPosition(new int[] {16, 0});
+        int[] secondPosition = generateNextPosition(firstPosition);
 
         // Loop through binary data to be inserted
-        for (int i = 0; i < orderToConsider.size(); i += binaryData.length() ) {
+        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
 
             // Get the colour data required for embedding
-            colourData = orderToConsider.get(i);
+            colourData = getNextData(firstPosition, secondPosition, currentColourPosition);
+
+            // Update positional information
+            firstPosition = colourData.get(0);
+            secondPosition = colourData.get(1);
+            currentColourPosition = colourData.get(2)[0];
+
+            if(firstPosition[0] == 447 && firstPosition[1] == 55){
+                System.out.println("as");
+            }
 
             // Get the next two colour channel data
-            firstColour = getColourAtPosition(colourData.get(0), colourData.get(1), colourData.get(4));
-            secondColour = getColourAtPosition(colourData.get(2), colourData.get(3), colourData.get(4));
+            firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
+            secondColour = getColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition);
 
             // Calculate the colour difference
             colourDifference = Math.abs(firstColour - secondColour);
@@ -249,6 +273,9 @@ public class pvdDecode {
             decodingData = quantisationRangeTable(colourDifference);
 
             // Get the data from the into the image
+            if(colourDifference - decodingData[0] < 0){
+                System.out.println("a");
+            }
             binaryData = conformBinaryLength(colourDifference - decodingData[0], decodingData[2]);
 
             // Append the binary data acquired to the final string of data
@@ -260,36 +287,34 @@ public class pvdDecode {
     }
 
     /**
-     * Determines the order of pixels we embed data into
+     * Determines the next two pixels we should encode into
      *
-     * @return              The order we should consider pixel whilst encoding
+     * @param firstPosition         The positional data of the first pixel being considered
+     * @param secondPosition        The positional data of the second pixel being considered
+     * @param currentColourPosition The current position in coloursToConsider we are using
+     * @return                      The order we should consider pixel whilst encoding
      */
-    public ArrayList<ArrayList<Integer>> getPixelOrder(){
+    public ArrayList<int[]> getNextData(int[] firstPosition, int[] secondPosition, int currentColourPosition){
 
-        // Define some initial variables required
-        int currentColourPosition = 0;
-        int[] firstPosition = generateNextPosition(new int[] {16, 0});
-        int[] secondPosition = generateNextPosition(firstPosition);
-        ArrayList<ArrayList<Integer>> order = new ArrayList<>();
+        // Define ArrayList to store data in
+        ArrayList<int[]> current = new ArrayList<>();
 
-        // Gets the pixel order we will consider
-        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY){
-            if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
-                currentColourPosition = 0;
-                firstPosition = generateNextPosition(secondPosition);
-                secondPosition = generateNextPosition(firstPosition);
-            }
-            ArrayList<Integer> current = new ArrayList<>();
-            current.add(firstPosition[0]);
-            current.add(firstPosition[1]);
-            current.add(secondPosition[0]);
-            current.add(secondPosition[1]);
-            current.add(currentColourPosition);
-            order.add(current);
-            currentColourPosition += 1;
+        // Update current position to check for in coloursToConsider
+        currentColourPosition += 1;
+
+        // Update positions (if ran out of colour channels to manipulate with current positions)
+        if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
+            currentColourPosition = 0;
+            firstPosition = generateNextPosition(secondPosition);
+            secondPosition = generateNextPosition(firstPosition);
         }
 
-        return order;
+        // Add data to ArrayList to return
+        current.add(firstPosition);
+        current.add(secondPosition);
+        current.add(new int[] {currentColourPosition});
+
+        return current;
     }
 
     /**

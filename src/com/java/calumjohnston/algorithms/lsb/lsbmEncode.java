@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * LSB Encode Class: This class implements the embedding of data into an image
- * using the LSB technique
+ * LSBM Encode Class: This class implements the embedding of data into an image
+ * using the LSBM technique
  */
-public class lsbEncode {
+public class lsbmEncode {
 
     BufferedImage coverImage;
     boolean random;
@@ -29,7 +29,7 @@ public class lsbEncode {
     /**
      * Constructor
      */
-    public lsbEncode(){
+    public lsbmEncode(){
 
     }
 
@@ -357,13 +357,28 @@ public class lsbEncode {
      * @return              Updated colour
      */
     public int updateColour(int colour, char data, int position) {
-        StringBuilder binaryColour = new StringBuilder();
-        binaryColour.append(conformBinaryLength(colour, 8));
-        int lsb_Position = 7 - position;
-        if(binaryColour.charAt(lsb_Position) != data){
-            binaryColour.setCharAt(lsb_Position, data);
+        StringBuilder binaryFirstHalf = new StringBuilder();
+        StringBuilder binarySecondHalf = new StringBuilder();
+        int firstHalfNum;
+        String binaryColour = conformBinaryLength(colour, 8);
+        binaryFirstHalf.append(binaryColour.substring(0, 8 - position));
+        binarySecondHalf.append(binaryColour.substring(8 - position));
+        firstHalfNum = Integer.parseInt(binaryFirstHalf.toString(), 2);
+        if(binaryFirstHalf.charAt(binaryFirstHalf.length() - 1) != data) {
+            if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
+                firstHalfNum -= 1;
+                if(firstHalfNum < 0){
+                    firstHalfNum = 1;
+                }
+            } else {
+                firstHalfNum += 1;
+                int maxBinary = (int) Math.pow(2, binaryFirstHalf.length()) - 1;
+                if(firstHalfNum > maxBinary){
+                    firstHalfNum = maxBinary - 1;
+                }
+            }
         }
-        return Integer.parseInt(binaryColour.toString(), 2);
+        return Integer.parseInt(Integer.toBinaryString(firstHalfNum) + binarySecondHalf.toString(), 2);
     }
 
 

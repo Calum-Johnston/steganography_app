@@ -1,7 +1,9 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.lsb.lsbEncode;
+import com.java.calumjohnston.algorithms.lsb.lsbmEncode;
+import com.java.calumjohnston.algorithms.lsb.lsbmrEncode;
 import com.java.calumjohnston.algorithms.pvd.pvdEncode;
+import com.java.calumjohnston.exceptions.DataOverflowException;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -204,15 +206,31 @@ public class encoder {
         String text = textField.getText();
 
         // Calls algorithm to embed the data
-        BufferedImage stegoImage;
+        BufferedImage stegoImage = null;
         if(algorithm == 3){
             pvdEncode pvd = new pvdEncode();
-            stegoImage = pvd.encode(coverImage, red, green, blue,
-                     random, seed, text);
-        }else {
-            lsbEncode lsb = new lsbEncode();
-            stegoImage = lsb.encodeImage(coverImage, text, red, green, blue,
-                    redLSBs, greenLSBs, blueLSBs, random, seed, algorithm);
+            try{
+                stegoImage = pvd.encode(coverImage, red, green, blue,
+                        random, seed, text);
+            }catch(DataOverflowException e){
+                System.out.println("Error");
+            }
+        }else if(algorithm == 2) {
+            lsbmrEncode lsbmr = new lsbmrEncode();
+            try{
+                stegoImage = lsbmr.encode(coverImage, red, green, blue,
+                        random, seed, text);
+            }catch(DataOverflowException e){
+                System.out.println("Error");
+            }
+        }else if(algorithm == 1){
+            lsbmEncode lsbm = new lsbmEncode();
+            try{
+                stegoImage = lsbm.encode(coverImage, red, green, blue, redLSBs, greenLSBs, blueLSBs,
+                        random, seed, text);
+            }catch(DataOverflowException e){
+                System.out.println("Error");
+            }
         }
 
         if(stegoImage == null){
@@ -230,7 +248,6 @@ public class encoder {
      */
     public boolean checkEncode(){
         // Check whether text has been provided
-        System.out.println(textField.getText());
         if(textField.getText() == null || textField.getText().equals("")){
             JOptionPane.showMessageDialog(rootPanel, "Text is required to complete this action");
             return false;
