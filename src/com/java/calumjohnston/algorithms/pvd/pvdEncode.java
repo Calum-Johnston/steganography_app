@@ -198,9 +198,13 @@ public class pvdEncode {
 
         }
 
+        // Find next position (to end on)
+        int[] position = generateNextPosition(new int[] {colourData.get(0), colourData.get(1)});
+        position = generateNextPosition(position);
+
         // Write end position data (for decoding purposes)
-        endPositionX = colourData.get(0);
-        endPositionY = colourData.get(1);
+        endPositionX = position[0];
+        endPositionY = position[1];
 
     }
 
