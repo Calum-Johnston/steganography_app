@@ -167,10 +167,6 @@ public class pvdEncode {
             secondPosition = colourData.get(1);
             currentColourPosition = colourData.get(2)[0];
 
-            if(firstPosition[0] == 447 && firstPosition[1] == 55){
-                System.out.println("as");
-            }
-
             // Check we are within bounds
             if(secondPosition[0] >= coverImage.getWidth() || secondPosition[1] >= coverImage.getHeight()){
                 throw new DataOverflowException("Input text too large");

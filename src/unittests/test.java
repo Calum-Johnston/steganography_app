@@ -75,7 +75,7 @@ public class test {
                                         assertionError = ae.toString();
                                     }
                                     if (assertionError != null ) {
-                                        System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
+                                        System.out.println("Red: " + red + ", Green: " + green + ", Blue: " + blue);
                                         System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
                                         System.out.println("Algorithm: LSB");
                                         System.out.println("Random: " + random + ", with seed: " + seed);
@@ -113,7 +113,7 @@ public class test {
                                         assertionError = ae.toString();
                                     }
                                     if (assertionError != null ) {
-                                        System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
+                                        System.out.println("Red: " + red + ", Green: " + green + ", Blue: " + blue);
                                         System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
                                         System.out.println("Algorithm: LSBM");
                                         System.out.println("Random: " + random + ", with seed: " + seed);
@@ -151,7 +151,7 @@ public class test {
                                         assertionError = ae.toString();
                                     }
                                     if (assertionError != null ) {
-                                        System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
+                                        System.out.println("Red: " + red + ", Green: " + green + ", Blue: " + blue);
                                         System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
                                         System.out.println("Algorithm: LSBMR");
                                         System.out.println("Random: " + random + ", with seed: " + seed);
@@ -166,7 +166,7 @@ public class test {
             }
         }
 
-        // PVD (Works without random for small stuff!!)
+        // PVD
         for(int redBits = 1; redBits < 2; redBits++){
             for(int greenBits = 1; greenBits < 2; greenBits++){
                 for(int blueBits = 1; blueBits < 2; blueBits++){
@@ -178,6 +178,9 @@ public class test {
                                     if(red == false && green == false && blue == false){
                                         break;
                                     }
+                                    try{
+                                        coverImage = ImageIO.read(new File("C:\\Users\\Calum\\Documents\\Projects\\Dissertation\\Dissertation Project\\src\\unittests\\testdata\\test_image.png"));
+                                    }catch(Exception e){}
                                     stegoImage = pvdEncoder.encode(coverImage, red, green, blue,
                                             random, seed, text);
                                     String assertionError = null;
@@ -188,7 +191,7 @@ public class test {
                                         assertionError = ae.toString();
                                     }
                                     if (assertionError != null ) {
-                                        System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
+                                        System.out.println("Red: " + red + ", Green: " + green + ", Blue: " + blue);
                                         System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
                                         System.out.println("Algorithm: PVD");
                                         System.out.println("Random: " + random + ", with seed: " + seed);
