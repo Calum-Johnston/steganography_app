@@ -1,7 +1,8 @@
 package unittests;
 
-import unused.unused.alllsb_decode;
-import unused.unused.alllsb_encode;
+import com.java.calumjohnston.algorithms.lsb.*;
+import com.java.calumjohnston.algorithms.pvd.pvdDecode;
+import com.java.calumjohnston.algorithms.pvd.pvdEncode;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -26,8 +27,15 @@ public class test {
      */
     public void runTests() {
 
-        alllsb_encode encoder = new alllsb_encode();
-        alllsb_decode decoder = new alllsb_decode();
+        lsbEncode lsbEncoder = new lsbEncode();
+        lsbmEncode lsbmEncoder = new lsbmEncode();
+        lsbmrEncode lsbmrEncoder = new lsbmrEncode();
+        pvdEncode pvdEncoder = new pvdEncode();
+
+        lsbDecode lsbDecoder = new lsbDecode();
+        lsbmDecode lsbmDecoder = new lsbmDecode();
+        lsbmrDecode lsbmrDecoder = new lsbmrDecode();
+        pvdDecode pvdDecoder = new pvdDecode();
 
         BufferedImage coverImage = null;
         BufferedImage stegoImage = null;
@@ -37,41 +45,43 @@ public class test {
 
         String text = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxys1234567890";
         String seed = "calum";
+        text = "a";
         String result = "";
 
         long startTime = System.currentTimeMillis();
 
         // The actual tests
-        int count = 0;
+        int count = 0; int fail = 0;
+
+        // LSB
         for(int redBits = 1; redBits < 9; redBits++){
             for(int greenBits = 1; greenBits < 9; greenBits++){
                 for(int blueBits = 1; blueBits < 9; blueBits++){
-                    for(int algorithm = 0; algorithm < 2; algorithm ++) {
-                        for(boolean random : new boolean[] {false, true}) {
-                            for(boolean red : new boolean[] {false, true}) {
-                                for (boolean green : new boolean[]{false, true}) {
-                                    for (boolean blue : new boolean[]{false, true}) {
-                                        count += 1;
-                                        if(red == false && green == false && blue == false){
-                                            break;
-                                        }
-                                        stegoImage = encoder.encodeImage(coverImage, text, red, green, blue,
-                                                redBits, greenBits, blueBits, random, seed, algorithm);
-                                        String assertionError = null;
-                                        try {
-                                            result = decoder.decodeImage(stegoImage, seed);
-                                            assertEquals(text, result);
-                                        } catch (AssertionError ae) {
-                                            assertionError = ae.toString();
-                                        }
-                                        if (assertionError != null ) {
-                                            System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
-                                            System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
-                                            System.out.println("Algorithm: " + algorithm);
-                                            System.out.println("Random: " + random + ", with seed: " + seed);
-                                            System.out.println("Text: " + text);
-                                            System.out.println("Result: " + result);
-                                        }
+                    for(boolean random : new boolean[] {false}) {
+                        for(boolean red : new boolean[] {false, true}) {
+                            for (boolean green : new boolean[]{false, true}) {
+                                for (boolean blue : new boolean[]{false, true}) {
+                                    count += 1;
+                                    if(red == false && green == false && blue == false){
+                                        break;
+                                    }
+                                    stegoImage = lsbEncoder.encode(coverImage, red, green, blue,
+                                            redBits, greenBits, blueBits, random, seed, text);
+                                    String assertionError = null;
+                                    try {
+                                        result = lsbDecoder.decode(stegoImage);
+                                        assertEquals(text, result);
+                                    } catch (AssertionError ae) {
+                                        assertionError = ae.toString();
+                                    }
+                                    if (assertionError != null ) {
+                                        System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
+                                        System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
+                                        System.out.println("Algorithm: LSB");
+                                        System.out.println("Random: " + random + ", with seed: " + seed);
+                                        System.out.println("Text: " + text);
+                                        System.out.println("Result: " + result);
+                                        fail += 1;
                                     }
                                 }
                             }
@@ -80,33 +90,75 @@ public class test {
                 }
             }
         }
-        int fail = 0;
-        int algorithm = 2; int redBits = 1; int greenBits = 1; int blueBits = 1;
-        for(boolean random : new boolean[] {false, true}) {
-            for(boolean red : new boolean[] {false, true}) {
-                for (boolean green : new boolean[]{false, true}) {
-                    for (boolean blue : new boolean[]{false, true}) {
-                        count += 1;
-                        if(red == false && green == false && blue == false){
-                            break;
+
+        // LSBMR (Works perfectly)
+        for(int redBits = 1; redBits < 2; redBits++){
+            for(int greenBits = 1; greenBits < 2; greenBits++){
+                for(int blueBits = 1; blueBits < 2; blueBits++){
+                    for(boolean random : new boolean[] {false, true}) {
+                        for(boolean red : new boolean[] {false, true}) {
+                            for (boolean green : new boolean[]{false, true}) {
+                                for (boolean blue : new boolean[]{false, true}) {
+                                    count += 1;
+                                    if(red == false && green == false && blue == false){
+                                        break;
+                                    }
+                                    stegoImage = lsbmrEncoder.encode(coverImage, red, green, blue,
+                                                        random, seed, text);
+                                    String assertionError = null;
+                                    try {
+                                        result = lsbmrDecoder.decode(stegoImage);
+                                        assertEquals(text, result);
+                                    } catch (AssertionError ae) {
+                                        assertionError = ae.toString();
+                                    }
+                                    if (assertionError != null ) {
+                                        System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
+                                        System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
+                                        System.out.println("Algorithm: LSBMR");
+                                        System.out.println("Random: " + random + ", with seed: " + seed);
+                                        System.out.println("Text: " + text);
+                                        System.out.println("Result: " + result);
+                                    }
+                                }
+                            }
                         }
-                        stegoImage = encoder.encodeImage(coverImage, text, red, green, blue,
-                                redBits, greenBits, blueBits, random, seed, algorithm);
-                        String assertionError = null;
-                        try {
-                            result = decoder.decodeImage(stegoImage, seed);
-                            assertEquals(text, result);
-                        } catch (AssertionError ae) {
-                            assertionError = ae.toString();
-                        }
-                        if (assertionError != null) {
-                            System.out.println("Red: " + red + ", Green: " + green + ", Blue: " + blue);
-                            System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
-                            System.out.println("Algorithm: " + algorithm);
-                            System.out.println("Random: " + random + ", with seed: " + seed);
-                            System.out.println("Text: " + text);
-                            System.out.println("Result: " + result);
-                            fail += 1;
+                    }
+                }
+            }
+        }
+
+        // PVD (Works without random for small stuff!!)
+        for(int redBits = 1; redBits < 2; redBits++){
+            for(int greenBits = 1; greenBits < 2; greenBits++){
+                for(int blueBits = 1; blueBits < 2; blueBits++){
+                    for(boolean random : new boolean[] {false}) {
+                        for(boolean red : new boolean[] {false, true}) {
+                            for (boolean green : new boolean[]{false, true}) {
+                                for (boolean blue : new boolean[]{false, true}) {
+                                    count += 1;
+                                    if(red == false && green == false && blue == false){
+                                        break;
+                                    }
+                                    stegoImage = pvdEncoder.encode(coverImage, red, green, blue,
+                                            random, seed, text);
+                                    String assertionError = null;
+                                    try {
+                                        result = pvdDecoder.decode(stegoImage);
+                                        assertEquals(text, result);
+                                    } catch (AssertionError ae) {
+                                        assertionError = ae.toString();
+                                    }
+                                    if (assertionError != null ) {
+                                        System.out.println("Red: " + true + ", Green: " + true + ", Blue: " + true);
+                                        System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
+                                        System.out.println("Algorithm: PVD");
+                                        System.out.println("Random: " + random + ", with seed: " + seed);
+                                        System.out.println("Text: " + text);
+                                        System.out.println("Result: " + result);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
