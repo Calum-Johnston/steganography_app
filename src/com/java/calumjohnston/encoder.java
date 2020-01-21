@@ -112,11 +112,11 @@ public class encoder {
             public void actionPerformed(ActionEvent e) {
                 red = !red;
                 if(!red){
-                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
                         redLSBComboBox.setEnabled(false);
                     }
                 }else{
-                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
                         redLSBComboBox.setEnabled(true);
                     }
                 }
@@ -128,11 +128,11 @@ public class encoder {
             public void actionPerformed(ActionEvent e) {
                 green = !green;
                 if(!green){
-                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
                         greenLSBComboBox.setEnabled(false);
                     }
                 }else{
-                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
                         greenLSBComboBox.setEnabled(true);
                     }
                 }
@@ -144,11 +144,11 @@ public class encoder {
             public void actionPerformed(ActionEvent e) {
                 blue = !blue;
                 if(!blue){
-                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
                         blueLSBComboBox.setEnabled(false);
                     }
                 }else{
-                    if(algorithmComboBox.getSelectedIndex() != 2) {
+                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
                         blueLSBComboBox.setEnabled(true);
                     }
                 }
@@ -175,7 +175,7 @@ public class encoder {
                     greenLSBComboBox.setEnabled(true);
                     blueLSBComboBox.setEnabled(true);
                 }
-                if(algorithmComboBox.getSelectedIndex() == 2){
+                if(algorithmComboBox.getSelectedIndex() == 2 || algorithmComboBox.getSelectedIndex() == 3){
                     redLSBComboBox.setEnabled(false);
                     greenLSBComboBox.setEnabled(false);
                     blueLSBComboBox.setEnabled(false);

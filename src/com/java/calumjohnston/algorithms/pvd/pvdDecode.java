@@ -29,13 +29,21 @@ public class pvdDecode {
     /**
      * Acts as central controller to decoding functions
      *
-     * @return              The data hidden within the image
+     * @param stegoImage    The image we will decode data from
+     * @return              The data to be hidden within the image
      */
-    public void decode(BufferedImage stegoImage){
-        //Setup data to be used for decoding
+    public String decode(BufferedImage stegoImage){
+        // Setup data to be used for decoding
         setupData(stegoImage);
 
-        decodeSecretData();
+        // Decode data from the image
+        StringBuilder binary = decodeSecretData();
+
+        // Convert the data back to text
+        String text = getText(binary);
+
+        // Return the text
+        return text;
     }
 
 
@@ -210,7 +218,7 @@ public class pvdDecode {
      *
      * @return          The data hidden within the image
      */
-    public String decodeSecretData(){
+    public StringBuilder decodeSecretData(){
 
         // Define some initial variables required
         ArrayList<Integer> colourData = null;   // Stores data about the next two colours to manipulate
@@ -248,7 +256,7 @@ public class pvdDecode {
 
         }
 
-        return binary.toString();
+        return binary;
     }
 
     /**
@@ -323,5 +331,27 @@ public class pvdDecode {
         String binaryParameter = Integer.toBinaryString(data);
         binaryParameter = (StringUtils.repeat('0', length) + binaryParameter).substring(binaryParameter.length());
         return binaryParameter;
+    }
+
+
+
+    // ======= CONVERSION FUNCTIONS =======
+    /**
+     * Converts the binary stream of data to it's ASCII equivalent
+     *
+     * @param binaryText    Binary stream of data
+     * @return              ASCII representation of binary data
+     */
+    public String getText(StringBuilder binaryText){
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < binaryText.length(); i += 8) {
+            try {
+                String binaryData = binaryText.substring(i, i + 8);
+                char characterData = (char) Integer.parseInt(binaryData, 2);
+                text.append(characterData);
+            } catch (Exception e) {
+            }
+        }
+        return text.toString();
     }
 }

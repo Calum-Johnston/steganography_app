@@ -65,9 +65,7 @@ public class decoder {
      */
     public void decodeData() {
         pvdDecode pvd = new pvdDecode();
-        pvd.decode(stegoImage);
-        //String text = lsbDecoder.decodeImage(stegoImage, "");
-        System.out.println(text);
+        String text = pvd.decode(stegoImage);
         textField.setText(text);
     }
 
