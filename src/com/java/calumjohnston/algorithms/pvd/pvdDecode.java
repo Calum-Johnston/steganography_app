@@ -218,14 +218,14 @@ public class pvdDecode {
         int firstColour;            // Stores the first colour to be manipulated
         int secondColour;           // Stores the neighbouring second colour to be manipulated
         int colourDifference;       // Stores the colour difference
-        int newColourDifference;    // Stores the colour difference once range has been decided
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
+        String binaryData = "";     // Stores the binary data retrieved from the image at a point
 
         // Generates pixel order to visit the image in
         ArrayList<ArrayList<Integer>> orderToConsider = getPixelOrder();
 
         // Loop through binary data to be inserted
-        for (int i = 0; i < orderToConsider.size(); i++) {
+        for (int i = 0; i < orderToConsider.size(); i += binaryData.length() ) {
 
             // Get the colour data required for embedding
             colourData = orderToConsider.get(i);
@@ -241,9 +241,10 @@ public class pvdDecode {
             decodingData = quantisationRangeTable(colourDifference);
 
             // Get the data from the into the image
-            int binaryData = colourDifference - decodingData[0];
+            binaryData = conformBinaryLength(colourDifference - decodingData[0], decodingData[2]);
 
-            binary.append(conformBinaryLength(binaryData, decodingData[2]));
+            // Append the binary data acquired to the final string of data
+            binary.append(binaryData);
 
         }
 
