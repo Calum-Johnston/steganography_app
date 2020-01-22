@@ -54,7 +54,7 @@ public class test {
         int count = 0; int fail = 0;
 
         // LSB
-        for(int redBits = 1; redBits < 9; redBits++){
+        /**for(int redBits = 1; redBits < 9; redBits++){
             for(int greenBits = 1; greenBits < 9; greenBits++){
                 for(int blueBits = 1; blueBits < 9; blueBits++){
                     for(boolean random : new boolean[] {false, true}) {
@@ -164,7 +164,7 @@ public class test {
                     }
                 }
             }
-        }
+        }*/
 
         // PVD
         for(int redBits = 1; redBits < 2; redBits++){

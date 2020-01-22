@@ -18,8 +18,6 @@ public class pseudorandom{
     int width;
     int sequencePosition;
     int consecutiveNum;
-    int currentElement;
-    int currentConsecutiveNum;
     String seed;
     List<Integer> orderSequence;
 
@@ -59,7 +57,6 @@ public class pseudorandom{
         this.width = width;
         this.seed = seed;
         this.consecutiveNum = consecutiveNum;
-        this.currentConsecutiveNum = 0;
         this.sequencePosition = 0;
         this.orderSequence = new ArrayList<Integer>();
         generateRandomList();
@@ -84,18 +81,9 @@ public class pseudorandom{
      */
     public int getNextElement(){
 
-        // Get the next positional element
-        if(currentConsecutiveNum == 0){
-            currentElement = orderSequence.get(sequencePosition);
-        }else{
-            currentElement = currentElement + 1;
-        }
-
-        // Update current consecutive number
-        currentConsecutiveNum = (currentConsecutiveNum + 1) % consecutiveNum;
+        int currentElement = orderSequence.get(sequencePosition);
 
         // Determine whether it is valid (i.e. not out of user bounds)
-        sequencePosition += 1;
         int x = currentElement % width;
         int y = currentElement / width;
         if(x < 17 && y == 0){
@@ -104,6 +92,21 @@ public class pseudorandom{
 
         // Return the next positional element
         return currentElement;
+    }
+
+    public int[] getNextNeighbours(){
+        int currentElement = orderSequence.get(sequencePosition);
+        int nextElement = currentElement + 1;
+
+        // Determine whether it is valid (i.e. not out of user bounds)
+        int x = currentElement % width;
+        int y = currentElement / width;
+        if(x < 17 && y == 0){
+            return getNextNeighbours();
+        }
+
+        // Return the next positional element
+        return new int[] {currentElement, nextElement};
     }
 
     /**
