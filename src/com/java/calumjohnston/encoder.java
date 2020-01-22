@@ -1,8 +1,8 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.lsb.lsbEncode;
-import com.java.calumjohnston.algorithms.lsb.lsbmEncode;
-import com.java.calumjohnston.algorithms.lsb.lsbmrEncode;
+import unused.unused.lsbEncode;
+import unused.unused.lsbmEncode;
+import unused.unused.lsbmrEncode;
 import com.java.calumjohnston.algorithms.pvd.pvdEncode;
 import com.java.calumjohnston.exceptions.DataOverflowException;
 

@@ -81,7 +81,9 @@ public class pseudorandom{
      */
     public int getNextElement(){
 
+        // Get next random element and updated position
         int currentElement = orderSequence.get(sequencePosition);
+        sequencePosition += 1;
 
         // Determine whether it is valid (i.e. not out of user bounds)
         int x = currentElement % width;

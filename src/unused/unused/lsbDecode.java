@@ -1,4 +1,4 @@
-package com.java.calumjohnston.algorithms.lsb;
+package unused.unused;
 
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
@@ -7,10 +7,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 /**
- * LSBM Decode Class: This class implements the extraction of data from an image
- * that has been embedded using the LSBM technique
+ * LSB Decode Class: This class implements the extraction of data from an image
+ * that has been embedded using the LSB technique
  */
-public class lsbmDecode {
+public class lsbDecode {
 
     BufferedImage stegoImage;
     boolean random;
@@ -25,7 +25,7 @@ public class lsbmDecode {
     /**
      * Constructor
      */
-    public lsbmDecode(){
+    public lsbDecode(){
 
     }
 

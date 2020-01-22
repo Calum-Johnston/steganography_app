@@ -1,4 +1,4 @@
-package com.java.calumjohnston.algorithms.lsb;
+package unused.unused;
 
 import com.java.calumjohnston.exceptions.DataOverflowException;
 import com.java.calumjohnston.randomgenerators.pseudorandom;
@@ -7,27 +7,28 @@ import org.apache.commons.lang3.StringUtils;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * LSBMR Encode Class: This class implements the embedding of data into an image
- * using the LSBMR technique
+ * LSB Encode Class: This class implements the embedding of data into an image
+ * using the LSB technique
  */
-public class lsbmrEncode {
+public class lsbEncode {
 
     BufferedImage coverImage;
     boolean random;
     int[] coloursToConsider;
+    ArrayList<Integer> lsbsToConsider;
     pseudorandom generator;
     int endPositionX;
     int endPositionY;
     int endColourChannel;
+    int endLSBPosition;
 
 
     /**
      * Constructor
      */
-    public lsbmrEncode(){
+    public lsbEncode(){
 
     }
 
@@ -38,15 +39,19 @@ public class lsbmrEncode {
      * @param red           Determines whether the red colour channel will be used
      * @param green         Determines whether the green colour channel will be used
      * @param blue          Determines whether the blue colour channel will be used
+     * @param redBits       Number of LSBs to use in red colour channel
+     * @param greenBits     Number of LSBs to use in green colour channel
+     * @param blueBits      Number of LSBs to use in blue colour channel
      * @param random        Determines whether random embedding has been used
      * @param seed          The seed used to initialise the PRNG (if used)
      * @param text          The data to be hidden within the image
      * @return              The image with the hidden data embedded into it
      */
     public BufferedImage encode(BufferedImage coverImage, boolean red, boolean green, boolean blue,
+                                int redBits, int greenBits, int blueBits,
                                 boolean random, String seed, String text){
         // Setup data to be used for encoding
-        setupData(coverImage, red, green, blue, random, seed);
+        setupData(coverImage, red, green, blue, redBits, greenBits, blueBits, random, seed);
 
         // Get the binary data to encode
         StringBuilder binary = getBinaryText(text);
@@ -55,7 +60,7 @@ public class lsbmrEncode {
         encodeSecretData(binary);
 
         // Encode parameters to the image
-        encodeParameterData(red, green, blue);
+        encodeParameterData(red, green, blue, redBits, greenBits, blueBits);
 
         // Return the manipulated image
         return coverImage;
@@ -70,10 +75,14 @@ public class lsbmrEncode {
      * @param red           Determines whether the red colour channel will be used
      * @param green         Determines whether the green colour channel will be used
      * @param blue          Determines whether the blue colour channel will be used
+     * @param redBits       Number of LSBs to use in red colour channel
+     * @param greenBits     Number of LSBs to use in green colour channel
+     * @param blueBits      Number of LSBs to use in blue colour channel
      * @param random        Determines whether random embedding has been used
      * @param seed          The seed used to initialise the PRNG (if used)
      */
     public void setupData(BufferedImage coverImage, boolean red, boolean green, boolean blue,
+                          int redBits, int greenBits, int blueBits,
                           boolean random, String seed){
 
         // Define the image we are embedding data into
@@ -81,6 +90,9 @@ public class lsbmrEncode {
 
         // Get the colours to consider (some combination of red, green and blue)
         coloursToConsider = getColoursToConsider(red, green, blue);
+
+        // Get the LSBs to consider
+        lsbsToConsider = getLSBsToConsider(redBits, greenBits, blueBits, red, green, blue);
 
         // Determine whether random embedding is being used
         this.random = random;
@@ -117,6 +129,44 @@ public class lsbmrEncode {
     }
 
     /**
+     * Gets the LSBs that will be used for each colour
+     *
+     * @param redBits       Number of LSBs to use in red colour channel
+     * @param greenBits     Number of LSBs to use in green colour channel
+     * @param blueBits      Number of LSBs to use in blue colour channel
+     * @param red           Determines whether the red colour channel will be used
+     * @param green         Determines whether the green colour channel will be used
+     * @param blue          Determines whether the blue colour channel will be used
+     * @return              The LSBs that will be considered for each colour (same order as coloursToConsider)
+     */
+    public ArrayList<Integer> getLSBsToConsider(int redBits, int greenBits, int blueBits,
+                                                boolean red, boolean green, boolean blue){
+        ArrayList<Integer> lsbToConsider = new ArrayList<Integer>();
+        int count = 0;
+        if(red) {
+            for (int i = 0; i < redBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
+        }
+        if(green) {
+            count = 0;
+            for (int i = redBits; i < greenBits + redBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
+        }
+        if(blue) {
+            count = 0;
+            for (int i = redBits + greenBits; i < redBits + greenBits + blueBits; i++) {
+                lsbToConsider.add(count);
+                count += 1;
+            }
+        }
+        return lsbToConsider;
+    }
+
+    /**
      * Converts character data (ASCII) into its binary equivalent
      *
      * @param text      The character data to be converted
@@ -145,90 +195,40 @@ public class lsbmrEncode {
 
         // Define some variables for manipulating pixel data
         ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
-        int[] encodingData;         // Stores important encoding information (i.e. number of bits to encode)
         int firstColour;            // Stores the first colour to be manipulated
-        int secondColour;           // Stores the neighbouring second colour to be manipulated
-        int colourDifference;       // Stores the colour difference
-        int newColourDifference;    // Stores the colour difference once range has been decided
-        String dataToEncode;        // Stores the data we wish to encode at one instance (in bits)
 
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
-        int[] firstPosition = generateNextPosition(new int[] {16, 0}, false);
-        int[] secondPosition = generateNextPosition(firstPosition, false);
+        int currentLSBPosition = -1     ;
+        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
 
         // Loop through binary data to be inserted
-        for (int i = 0; i < binary.length(); i += 2) {
+        for (int i = 0; i < binary.length(); i += 1) {
 
             // Get the colour data required for embedding
-            colourData = getNextData(firstPosition, secondPosition, currentColourPosition);
+            colourData = getNextData(firstPosition, currentColourPosition, currentLSBPosition, random);
 
             // Update positional information
             firstPosition = colourData.get(0);
-            secondPosition = colourData.get(1);
-            currentColourPosition = colourData.get(2)[0];
+            currentColourPosition = colourData.get(1)[0];
+            currentLSBPosition = colourData.get(2)[0];
 
             // Check we are within bounds
-            if(secondPosition[0] >= coverImage.getWidth() || secondPosition[1] >= coverImage.getHeight()){
+            if(firstPosition[0] >= coverImage.getWidth() || firstPosition[1] >= coverImage.getHeight()){
                 throw new DataOverflowException("Input text too large");
             }
 
-            // Get bits required from binary input
+            // Get bit required from binary input
             char data_1 = binary.charAt(i);
-            char data_2 = binary.charAt(i + 1);
 
-            // Get the next two colour channel data
+            // Get the next colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
-            secondColour = getColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition);
 
-            // Get the binary relationships between the firstColour and secondColour
-            int pixel_Relationship = (int) Math.floor(firstColour / 2) + secondColour;
-            String LSB_Relationship = getLSB(pixel_Relationship);
-            int pixel_Relationship_2;
-            if(firstColour == 0){
-                // Fix for 0 - 1 / 2 giving 0 instead of -0.5
-                pixel_Relationship_2 = -1 + secondColour;
-            }else{
-                pixel_Relationship_2 = (int) Math.floor((firstColour - 1) / 2) + secondColour;
-            }
-            String LSB_Relationship_2 = getLSB(pixel_Relationship_2);
+            // Update current colour data based on binary data to insert
+            firstColour = updateColour(firstColour, data_1, lsbsToConsider.get(currentLSBPosition));
 
-            // Get LSBs of pixel colour
-            String firstColourLSB = getLSB(firstColour);
-
-            // Determines what to embed based on LSBss and relationship between them
-            // Could add an update LSB function here too!! (for pixelData!!)
-            if (Character.toString(data_1).equals(firstColourLSB)) {
-                if(!(Character.toString(data_2).equals(LSB_Relationship))) {
-                    if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
-                        secondColour -= 1;
-                        if(secondColour == -1){
-                            secondColour = 255;
-                        }
-                    } else {
-                        secondColour += 1;
-                        if(secondColour == 256){
-                            secondColour = 0;
-                        }
-                    }
-                    // Write colour data back to the image
-                    writeColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition, secondColour);
-                }
-            } else if (!(Character.toString(data_1).equals(firstColourLSB))) {
-                if (Character.toString(data_2).equals(LSB_Relationship_2)) {
-                    firstColour -= 1;
-                    if(firstColour == -1){
-                        firstColour = 255;
-                    }
-                } else {
-                    firstColour += 1;
-                    if(firstColour == 256){
-                        firstColour = 0;
-                    }
-                }
-                // Write colour data back to the image
-                writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, firstColour);
-            }
+            // Write colour data back to the image
+            writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, firstColour);
 
         }
 
@@ -236,6 +236,7 @@ public class lsbmrEncode {
         endPositionX = firstPosition[0];
         endPositionY = firstPosition[1];
         endColourChannel = currentColourPosition;
+        endLSBPosition = currentLSBPosition;
 
     }
 
@@ -243,29 +244,35 @@ public class lsbmrEncode {
      * Determines the next two pixels we should encode into
      *
      * @param firstPosition         The positional data of the first pixel being considered
-     * @param secondPosition        The positional data of the second pixel being considered
      * @param currentColourPosition The current position in coloursToConsider we are using
+     * @param random                Determines whether random embedding was used
      * @return                      The order we should consider pixel whilst encoding
      */
-    public ArrayList<int[]> getNextData(int[] firstPosition, int[] secondPosition, int currentColourPosition){
+    public ArrayList<int[]> getNextData(int[] firstPosition, int currentColourPosition, int currentLSBPosition,
+                                        boolean random){
 
         // Define ArrayList to store data in
         ArrayList<int[]> current = new ArrayList<>();
 
         // Update current position to check for in coloursToConsider
-        currentColourPosition += 1;
+        currentLSBPosition += 1;
 
         // Update positions (if ran out of colour channels to manipulate with current positions)
-        if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
-            currentColourPosition = 0;
-            firstPosition = generateNextPosition(secondPosition, random);
-            secondPosition = generateNextPosition(firstPosition, random);
+        if(currentLSBPosition == lsbsToConsider.size()){
+            currentLSBPosition = 0;
+        }
+        if(lsbsToConsider.get(currentLSBPosition) == 0) {
+            currentColourPosition += 1;
+            if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
+                currentColourPosition = 0;
+                firstPosition = generateNextPosition(firstPosition, random);
+            }
         }
 
         // Add data to ArrayList to return
         current.add(firstPosition);
-        current.add(secondPosition);
         current.add(new int[] {currentColourPosition});
+        current.add(new int[] {currentLSBPosition});
 
         return current;
     }
@@ -344,18 +351,23 @@ public class lsbmrEncode {
     }
 
     /**
-     * Gets the least significant bit of a colour
+     * Inserts data into a defined significant bit of the colour
      *
-     * @param colour        The colour to get the LSB of
-     * @return              The LSB of colour
+     * @param colour        Original colour to be manipulated
+     * @param data          Binary data to be inserted into the colour
+     * @param position      The position in the colour's 8 bit representation we are considering
+     * @return              Updated colour
      */
-    public String getLSB(int colour){
-        if(colour % 2 == 0) {
-            return "0";
-        }else{
-            return "1";
+    public int updateColour(int colour, char data, int position) {
+        StringBuilder binaryColour = new StringBuilder();
+        binaryColour.append(conformBinaryLength(colour, 8));
+        int lsb_Position = 7 - position;
+        if(binaryColour.charAt(lsb_Position) != data){
+            binaryColour.setCharAt(lsb_Position, data);
         }
+        return Integer.parseInt(binaryColour.toString(), 2);
     }
+
 
 
 
@@ -366,17 +378,25 @@ public class lsbmrEncode {
      * @param red       Determines whether the red colour channel has been used
      * @param green     Determines whether the green colour channel has been used
      * @param blue      Determines whether the blue colour channel has been used
+     * @param redBits       Number of LSBs to use in red colour channel
+     * @param greenBits     Number of LSBs to use in green colour channel
+     * @param blueBits      Number of LSBs to use in blue colour channel
      */
-    public void encodeParameterData(boolean red, boolean green, boolean blue){
+    public void encodeParameterData(boolean red, boolean green, boolean blue,
+                                    int redBits, int greenBits, int blueBits){
         StringBuilder parameters = new StringBuilder();
-        parameters.append(conformBinaryLength(2, 3));
+        parameters.append(conformBinaryLength(0, 3));
         parameters.append(conformBinaryLength(red ? 1 : 0, 1));
         parameters.append(conformBinaryLength(green ? 1 : 0, 1));
         parameters.append(conformBinaryLength(blue ? 1 : 0, 1));
+        parameters.append(conformBinaryLength(redBits - 1, 3));
+        parameters.append(conformBinaryLength(greenBits - 1, 3));
+        parameters.append(conformBinaryLength(blueBits - 1, 3));
         parameters.append(conformBinaryLength(random ? 1 : 0, 1));
         parameters.append(conformBinaryLength(endPositionX, 15));
         parameters.append(conformBinaryLength(endPositionY, 15));
         parameters.append(conformBinaryLength(endColourChannel, 2));
+        parameters.append(conformBinaryLength(endLSBPosition, 5));
         encodeParameters(parameters);
     }
 
