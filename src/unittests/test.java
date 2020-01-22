@@ -57,7 +57,7 @@ public class test {
         for(int redBits = 1; redBits < 9; redBits++){
             for(int greenBits = 1; greenBits < 9; greenBits++){
                 for(int blueBits = 1; blueBits < 9; blueBits++){
-                    for(boolean random : new boolean[] {false}) {
+                    for(boolean random : new boolean[] {false, true}) {
                         for(boolean red : new boolean[] {false, true}) {
                             for (boolean green : new boolean[]{false, true}) {
                                 for (boolean blue : new boolean[]{false, true}) {
@@ -91,11 +91,11 @@ public class test {
             }
         }
 
-        // LSB
+        // LSBM
         for(int redBits = 1; redBits < 9; redBits++){
             for(int greenBits = 1; greenBits < 9; greenBits++){
                 for(int blueBits = 1; blueBits < 9; blueBits++){
-                    for(boolean random : new boolean[] {false}) {
+                    for(boolean random : new boolean[] {false, true}) {
                         for(boolean red : new boolean[] {false, true}) {
                             for (boolean green : new boolean[]{false, true}) {
                                 for (boolean blue : new boolean[]{false, true}) {

@@ -154,8 +154,8 @@ public class lsbmrEncode {
 
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
-        int[] firstPosition = generateNextPosition(new int[] {16, 0});
-        int[] secondPosition = generateNextPosition(firstPosition);
+        int[] firstPosition = generateNextPosition(new int[] {16, 0}, false);
+        int[] secondPosition = generateNextPosition(firstPosition, false);
 
         // Loop through binary data to be inserted
         for (int i = 0; i < binary.length(); i += 2) {
@@ -258,8 +258,8 @@ public class lsbmrEncode {
         // Update positions (if ran out of colour channels to manipulate with current positions)
         if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
             currentColourPosition = 0;
-            firstPosition = generateNextPosition(secondPosition);
-            secondPosition = generateNextPosition(firstPosition);
+            firstPosition = generateNextPosition(secondPosition, random);
+            secondPosition = generateNextPosition(firstPosition, random);
         }
 
         // Add data to ArrayList to return
@@ -274,9 +274,10 @@ public class lsbmrEncode {
      * Generates the next pixel position to consider when encoding data
      *
      * @param currentPosition   The position which data has just been encoded
+     * @param random            Determines whether random embedding will be used or not
      * @return                  The new position to consider
      */
-    public int[] generateNextPosition(int[] currentPosition) {
+    public int[] generateNextPosition(int[] currentPosition, boolean random) {
         int imageWidth = coverImage.getWidth();
         if (random) {
             int position = generator.getNextElement();
@@ -400,7 +401,7 @@ public class lsbmrEncode {
             // Get current colour to manipulate
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
                 currentColourPosition = 0;
-                currentPosition = generateNextPosition(currentPosition);
+                currentPosition = generateNextPosition(currentPosition, false);
             }
             colour = getColourAtPosition(currentPosition[0], currentPosition[1], currentColourPosition);
 

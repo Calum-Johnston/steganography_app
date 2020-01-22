@@ -200,13 +200,13 @@ public class lsbEncode {
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
         int currentLSBPosition = -1     ;
-        int[] firstPosition = generateNextPosition(new int[] {17, 0});
+        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
 
         // Loop through binary data to be inserted
         for (int i = 0; i < binary.length(); i += 1) {
 
             // Get the colour data required for embedding
-            colourData = getNextData(firstPosition, currentColourPosition, currentLSBPosition);
+            colourData = getNextData(firstPosition, currentColourPosition, currentLSBPosition, random);
 
             // Update positional information
             firstPosition = colourData.get(0);
@@ -245,9 +245,11 @@ public class lsbEncode {
      *
      * @param firstPosition         The positional data of the first pixel being considered
      * @param currentColourPosition The current position in coloursToConsider we are using
+     * @param random                Determines whether random embedding was used
      * @return                      The order we should consider pixel whilst encoding
      */
-    public ArrayList<int[]> getNextData(int[] firstPosition, int currentColourPosition, int currentLSBPosition){
+    public ArrayList<int[]> getNextData(int[] firstPosition, int currentColourPosition, int currentLSBPosition,
+                                        boolean random){
 
         // Define ArrayList to store data in
         ArrayList<int[]> current = new ArrayList<>();
@@ -263,7 +265,7 @@ public class lsbEncode {
             currentColourPosition += 1;
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
                 currentColourPosition = 0;
-                firstPosition = generateNextPosition(firstPosition);
+                firstPosition = generateNextPosition(firstPosition, random);
             }
         }
 
@@ -279,9 +281,10 @@ public class lsbEncode {
      * Generates the next pixel position to consider when encoding data
      *
      * @param currentPosition   The position which data has just been encoded
+     * @param random            Determines whether random embedding will be used or not
      * @return                  The new position to consider
      */
-    public int[] generateNextPosition(int[] currentPosition) {
+    public int[] generateNextPosition(int[] currentPosition, boolean random) {
         int imageWidth = coverImage.getWidth();
         if (random) {
             int position = generator.getNextElement();
@@ -418,7 +421,7 @@ public class lsbEncode {
             // Get current colour to manipulate
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
                 currentColourPosition = 0;
-                currentPosition = generateNextPosition(currentPosition);
+                currentPosition = generateNextPosition(currentPosition, false);
             }
             colour = getColourAtPosition(currentPosition[0], currentPosition[1], currentColourPosition);
 

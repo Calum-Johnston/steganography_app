@@ -81,7 +81,7 @@ public class lsbDecode {
         // Determine whether random embedding is being used
         this.random = binaryToInt(parameters.substring(15, 16)) == 1;
         if (random) {
-            this.generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), "");
+            this.generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), "calum");
         }
 
         // Get end position for data encoding
@@ -112,7 +112,7 @@ public class lsbDecode {
             // Get current colour to manipulate
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
                 currentColourPosition = 0;
-                currentPosition = generateNextPosition(currentPosition);
+                currentPosition = generateNextPosition(currentPosition, false);
             }
             colour = getColourAtPosition(currentPosition[0], currentPosition[1], currentColourPosition);
 
@@ -131,9 +131,10 @@ public class lsbDecode {
      * Generates the next pixel position to consider when encoding data
      *
      * @param currentPosition   The position which data has just been encoded
+     * @param random                Determines whether random embedding was used
      * @return                  The new position to consider
      */
-    public int[] generateNextPosition(int[] currentPosition) {
+    public int[] generateNextPosition(int[] currentPosition, boolean random) {
         int imageWidth = stegoImage.getWidth();
         if (random) {
             int position = generator.getNextElement();
@@ -287,7 +288,7 @@ public class lsbDecode {
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
         int currentLSBPosition = -1     ;
-        int[] firstPosition = generateNextPosition(new int[] {17, 0});
+        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
 
         // Loop through binary data to be inserted
         while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentLSBPosition != endLSBPosition) {
@@ -333,7 +334,7 @@ public class lsbDecode {
             currentColourPosition += 1;
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
                 currentColourPosition = 0;
-                firstPosition = generateNextPosition(firstPosition);
+                firstPosition = generateNextPosition(firstPosition, random);
             }
         }
 
