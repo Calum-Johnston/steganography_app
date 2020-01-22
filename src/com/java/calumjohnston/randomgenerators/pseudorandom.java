@@ -16,9 +16,12 @@ public class pseudorandom{
 
     int height;
     int width;
+    int sequencePosition;
+    int consecutiveNum;
+    int currentElement;
+    int currentConsecutiveNum;
     String seed;
     List<Integer> orderSequence;
-    int position;
 
     /**
      * Secondary Constructor for the class
@@ -28,22 +31,37 @@ public class pseudorandom{
      * @param width     the width of the image
      */
     public pseudorandom(int height, int width) {
-        this(height, width, "default");
+        this(height, width, "default", 1);
+    }
+
+    /**
+     * Secondary Constructor for the class
+     * Only called when no user-input given
+     *
+     * @param height    the height of the image
+     * @param width     the width of the image
+     * @param seed          the seed to be used for random generation
+     */
+    public pseudorandom(int height, int width, String seed) {
+        this(height, width, seed, 1);
     }
 
     /**
      * Primary Constructor for the class
      *
-     * @param height    the height of the image
-     * @param width     the width of the image
-     * @param seed      the seed to be used for random generation
+     * @param height        the height of the image
+     * @param width         the width of the image
+     * @param seed          the seed to be used for random generation
+     * @param consecutiveNum   number of consecutive numbers to generate
      */
-    public pseudorandom(int height, int width, String seed){
+    public pseudorandom(int height, int width, String seed, int consecutiveNum){
         this.height = height;
         this.width = width;
         this.seed = seed;
-        orderSequence = new ArrayList<Integer>();
-        position = 0;
+        this.consecutiveNum = consecutiveNum;
+        this.currentConsecutiveNum = 0;
+        this.sequencePosition = 0;
+        this.orderSequence = new ArrayList<Integer>();
         generateRandomList();
     }
 
@@ -51,7 +69,7 @@ public class pseudorandom{
      * Generates the random sequence to be used
      */
     public void generateRandomList(){
-        for(int i = 0; i < width * height; i++){
+        for(int i = 0; i < width * height; i += consecutiveNum){
             orderSequence.add(i);
         }
         // https://stackoverflow.com/questions/6284589/setting-a-seed-to-shuffle-arraylist-in-java-deterministically
@@ -65,24 +83,36 @@ public class pseudorandom{
      * @return      the next element in the sequence
      */
     public int getNextElement(){
-        int element = orderSequence.get(position);
-        position += 1;
-        int x = element % width;
-        int y = element / width;
-        if(x > 17 || y != 0){
-            return element;
+
+        // Get the next positional element
+        if(currentConsecutiveNum == 0){
+            currentElement = orderSequence.get(sequencePosition);
         }else{
+            currentElement = currentElement + 1;
+        }
+
+        // Update current consecutive number
+        currentConsecutiveNum = (currentConsecutiveNum + 1) % consecutiveNum;
+
+        // Determine whether it is valid (i.e. not out of user bounds)
+        sequencePosition += 1;
+        int x = currentElement % width;
+        int y = currentElement / width;
+        if(x < 17 && y == 0){
             return getNextElement();
         }
+
+        // Return the next positional element
+        return currentElement;
     }
 
     /**
      * SETTER method for variable position
      *
-     * @param position      The new position
+     * @param sequencePosition      The new position
      */
-    public void setPosition(int position){
-        this.position = position;
+    public void setPosition(int sequencePosition){
+        this.sequencePosition = sequencePosition;
     }
 
     /**
@@ -91,6 +121,6 @@ public class pseudorandom{
      * @return      The position of the current random number being accessed
      */
     public int getPosition(){
-        return position;
+        return sequencePosition;
     }
 }
