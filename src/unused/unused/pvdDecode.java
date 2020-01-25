@@ -1,4 +1,5 @@
-package com.java.calumjohnston.algorithms.pvd;
+package unused.unused;
+
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
@@ -257,6 +258,10 @@ public class pvdDecode {
             secondPosition = colourData.get(1);
             currentColourPosition = colourData.get(2)[0];
 
+            if(firstPosition[0] == 447 && firstPosition[1] == 55){
+                System.out.println("as");
+            }
+
             // Get the next two colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
             secondColour = getColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition);
@@ -267,15 +272,8 @@ public class pvdDecode {
             // Get the number of bits we can encode at this time
             decodingData = quantisationRangeTable(colourDifference);
 
-            // Calculate the quantisation range width, then the number of bits to encode
-            int width = decodingData[1] - decodingData[0] + 1;
-            int t = (int)Math.floor(Math.log(width)/Math.log(2.0));
-
-            // Get the remainder value
-            int difRmder = (firstColour + secondColour) % (int) Math.pow(2, t);
-
             // Get the data from the colour difference
-            binaryData = conformBinaryLength(difRmder, t);
+            binaryData = conformBinaryLength(colourDifference - decodingData[0], decodingData[2]);
 
             // Append the retrieved binary data to the final string of data
             binary.append(binaryData);
@@ -324,22 +322,22 @@ public class pvdDecode {
      */
     public int[] quantisationRangeTable(int difference){
         if(difference <= 7){
-            return new int[] {0, 7};
+            return new int[] {0, 7, 1};
         }
         if(difference <= 15){
-            return new int[] {8, 15};
+            return new int[] {8, 15, 2};
         }
         if(difference <= 31){
-            return new int[] {16, 31};
+            return new int[] {16, 31, 3};
         }
         if(difference <= 63){
-            return new int[] {32, 63};
+            return new int[] {32, 63, 4};
         }
         if(difference <= 12715){
-            return new int[] {64, 127};
+            return new int[] {64, 127, 5};
         }
         if(difference <= 255){
-            return new int[] {128, 255};
+            return new int[] {128, 255, 6};
         }
         return null;
     }

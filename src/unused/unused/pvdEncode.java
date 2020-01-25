@@ -1,5 +1,4 @@
-package com.java.calumjohnston.algorithms.pvd;
-
+package unused.unused;
 import com.java.calumjohnston.exceptions.DataOverflowException;
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
@@ -146,11 +145,10 @@ public class pvdEncode {
         ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
         int[] encodingData;         // Stores important encoding information (i.e. number of bits to encode)
         int firstColour;            // Stores the first colour to be manipulated
-        int newFirstColour = 0;
         int secondColour;           // Stores the neighbouring second colour to be manipulated
-        int newSecondColour = 0;
         int colourDifference;       // Stores the colour difference
-        String data;        // Stores the data we wish to encode at one instance (in bits)
+        int newColourDifference;    // Stores the colour difference once range has been decided
+        String dataToEncode;        // Stores the data we wish to encode at one instance (in bits)
 
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
@@ -158,7 +156,7 @@ public class pvdEncode {
         int[] secondPosition = generateNextPosition(firstPosition);
 
         // Loop through binary data to be inserted
-        for (int i = 0; i < binary.length(); i += data.length()) {
+        for (int i = 0; i < binary.length(); i += dataToEncode.length()) {
 
             // Get the colour data required for embedding
             colourData = getNextData(firstPosition, secondPosition, currentColourPosition);
@@ -183,84 +181,40 @@ public class pvdEncode {
             // Get the number of bits we can encode at this time
             encodingData = quantisationRangeTable(colourDifference);
 
-            // Calculate the quantisation range width, then the number of bits to encode
-            int width = encodingData[1] - encodingData[0] + 1;
-            int t = (int)Math.floor(Math.log(width)/Math.log(2.0));
-
             // Get the data to encode into the image (ensuring we don't go out of range)
-            if (i + t > binary.length()) {
-                data = binary.substring(i);
-            } else {
-                data = binary.substring(i, i + t);
+            if(i + encodingData[2] > binary.length()){
+                dataToEncode = binary.substring(i);
+            }else{
+                dataToEncode = binary.substring(i, i + encodingData[2]);
             }
-            int decimalData = Integer.parseInt(data, 2);
+            int decimalData = Integer.parseInt(dataToEncode, 2);
 
+            // Calculate the new colour difference
+            newColourDifference = encodingData[0] + decimalData;
 
-            // Computer the remainder values
-            int difRemer = (firstColour + secondColour) % (int) Math.pow(2, t);
-
-            // Determine some important values
-            double m = Math.abs(difRemer - decimalData);
-            double m1 = Math.pow(2, t) - Math.abs(difRemer - decimalData);
-
-            // Determine new colour values
-            // Altering first colour and second colour such that difRemer (Frem) = decimalData (t')
-            if (difRemer > decimalData && m <= Math.pow(2, t) / 2 && firstColour >= secondColour) {
-                newFirstColour = firstColour - (int) Math.ceil(m / 2);
-                newSecondColour = secondColour - (int) Math.floor(m / 2);
-            } else if (difRemer > decimalData && m <= Math.pow(2, t) / 2 && firstColour < secondColour) {
-                newFirstColour = firstColour - (int) Math.floor(m / 2);
-                newSecondColour = secondColour - (int) Math.ceil(m / 2);
-            } else if (difRemer > decimalData && m > Math.pow(2, t) / 2 && firstColour >= secondColour) {
-                newFirstColour = firstColour + (int) Math.floor(m1 / 2);
-                newSecondColour = secondColour + (int) Math.ceil(m1 / 2);
-            } else if (difRemer > decimalData && m > Math.pow(2, t) / 2 && firstColour < secondColour) {
-                newFirstColour = firstColour + (int) Math.ceil(m1 / 2);
-                newSecondColour = secondColour + (int) Math.floor(m1 / 2);
-            } else if (difRemer <= decimalData && m <= Math.pow(2, t) / 2 && firstColour >= secondColour) {
-                newFirstColour = firstColour + (int) Math.floor(m / 2);
-                newSecondColour = secondColour + (int) Math.ceil(m / 2);
-            } else if (difRemer <= decimalData && m <= Math.pow(2, t) / 2 && firstColour < secondColour) {
-                newFirstColour = firstColour + (int) Math.ceil(m / 2);
-                newSecondColour = secondColour + (int) Math.floor(m / 2);
-            } else if (difRemer <= decimalData && m > Math.pow(2, t) / 2 && firstColour >= secondColour) {
-                newFirstColour = firstColour - (int) Math.ceil(m1 / 2);
-                newSecondColour = secondColour - (int) Math.floor(m1 / 2);
-            } else if (difRemer <= decimalData && m > Math.pow(2, t) / 2 && firstColour < secondColour) {
-                newFirstColour = firstColour - (int) Math.floor(m1 / 2);
-                newSecondColour = secondColour - (int) Math.ceil(m1 / 2);
+            // Obtain new colour values for firstColour and secondColour by averaging new difference to them
+            if(firstColour >= secondColour && newColourDifference > colourDifference){
+                firstColour += Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
+                secondColour -= Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
+            }else if(firstColour < secondColour && newColourDifference > colourDifference){
+                firstColour -= Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
+                secondColour += Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
+            }else if(firstColour >= secondColour && newColourDifference <= colourDifference){
+                firstColour -= Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
+                secondColour += Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
+            }else if(firstColour < secondColour && newColourDifference <= colourDifference){
+                firstColour += Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
+                secondColour -= Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
             }
 
             // Check data is within range, if not skip position and try again
-            if (newFirstColour > 255 || newFirstColour < 0 || newSecondColour > 255 || newSecondColour < 0) {
-                if (firstColour > -50 && firstColour < 50 && secondColour > -50 && secondColour < 50 &&
-                        (newFirstColour < 0 || newSecondColour < 0)) {
-                    newFirstColour += (Math.pow(2, t) / 2);
-                    newSecondColour += (Math.pow(2, t) / 2);
-                } else if (firstColour > 200 && firstColour < 300 && secondColour > 200 && secondColour < 300 &&
-                        (newFirstColour > 255 || newSecondColour > 255)) {
-                    newFirstColour -= (Math.pow(2, t) / 2);
-                    newSecondColour -= (Math.pow(2, t) / 2);
-                } else if (colourDifference > 128) {
-                    if (newFirstColour < 0 && newSecondColour >= 0) {
-                        newFirstColour = newFirstColour + newSecondColour;
-                        newSecondColour = 0;
-                    } else if (newFirstColour >= 0 && newSecondColour < 0) {
-                        newFirstColour = newFirstColour + newSecondColour;
-                        newSecondColour = 0;
-                    } else if (newFirstColour > 255 && newSecondColour >= 0) {
-                        newSecondColour = newSecondColour + newFirstColour - 255;
-                        newFirstColour = 255;
-                    } else if (newFirstColour > 0 && newSecondColour > 255) {
-                        newFirstColour = newFirstColour + newSecondColour - 255;
-                        newSecondColour = 255;
-                    }
-                }
+            if(firstColour > 255 || firstColour < 0 || secondColour > 255 || secondColour < 0){
+                dataToEncode = "";
+            }else {
+                // Write colour data back to the image
+                writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, firstColour);
+                writeColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition, secondColour);
             }
-
-            // Write colour data back to the image
-            writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, newFirstColour);
-            writeColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition, newSecondColour);
         }
 
         // Write end position data (for decoding purposes)
@@ -355,22 +309,22 @@ public class pvdEncode {
      */
     public int[] quantisationRangeTable(int difference){
         if(difference <= 7){
-            return new int[] {0, 7};
+            return new int[] {0, 7, 1};
         }
         if(difference <= 15){
-            return new int[] {8, 15};
+            return new int[] {8, 15, 2};
         }
         if(difference <= 31){
-            return new int[] {16, 31};
+            return new int[] {16, 31, 3};
         }
         if(difference <= 63){
-            return new int[] {32, 63};
+            return new int[] {32, 63, 4};
         }
         if(difference <= 127){
-            return new int[] {64, 127};
+            return new int[] {64, 127, 5};
         }
         if(difference <= 255){
-            return new int[] {128, 255};
+            return new int[] {128, 255, 6};
         }
         return null;
     }
