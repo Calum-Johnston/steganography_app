@@ -1,5 +1,6 @@
 package com.java.calumjohnston;
 
+import com.java.calumjohnston.algorithms.lsb.encodeData;
 import unused.unused.lsbEncode;
 import unused.unused.lsbmEncode;
 import unused.unused.lsbmrEncode;
@@ -50,6 +51,8 @@ public class encoder {
     private boolean random;
     private String seed;
 
+    private encodeData encode;
+
 
     // ======= CONSTRUCTOR =======
     /**
@@ -63,6 +66,9 @@ public class encoder {
         blue = true;
         random = false;
         seed = "";
+
+        // Define encoders
+        encode = new encodeData();
 
         // Defines the file chooser (for selecting images)
         openFileChooser = new JFileChooser();
@@ -216,26 +222,10 @@ public class encoder {
             }catch(DataOverflowException e){
                 System.out.println("Error");
             }
-        }else if(algorithm == 2) {
-            lsbmrEncode lsbmr = new lsbmrEncode();
-            try{
-                stegoImage = lsbmr.encode(coverImage, red, green, blue,
-                        random, seed, text);
-            }catch(DataOverflowException e){
-                System.out.println("Error");
-            }
-        }else if(algorithm == 1){
-            lsbmEncode lsbm = new lsbmEncode();
-            try{
-                stegoImage = lsbm.encode(coverImage, red, green, blue, redLSBs, greenLSBs, blueLSBs,
-                        random, seed, text);
-            }catch(DataOverflowException e){
-                System.out.println("Error");
-            }
         }else {
-            lsbEncode lsb = new lsbEncode();
+            encode = new encodeData();
             try{
-                stegoImage = lsb.encode(coverImage, red, green, blue, redLSBs, greenLSBs, blueLSBs,
+                stegoImage = encode.encode(coverImage, algorithm, red, green, blue, redLSBs, greenLSBs, blueLSBs,
                         random, seed, text);
             }catch(DataOverflowException e){
                 System.out.println("Error");
