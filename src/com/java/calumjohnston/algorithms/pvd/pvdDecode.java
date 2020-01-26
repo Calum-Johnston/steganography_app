@@ -1,4 +1,5 @@
 package com.java.calumjohnston.algorithms.pvd;
+
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
@@ -236,7 +237,9 @@ public class pvdDecode {
         ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
         int[] decodingData;         // Stores important encoding information (i.e. number of bits to encode)
         int firstColour;            // Stores the first colour to be manipulated
+        int newFirstColour = 0;
         int secondColour;           // Stores the neighbouring second colour to be manipulated
+        int newSecondColour = 0;
         int colourDifference;       // Stores the colour difference
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
         String binaryData = "";     // Stores the binary data retrieved from the image at a point
@@ -248,6 +251,10 @@ public class pvdDecode {
 
         // Loop through binary data to be inserted
         while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
+
+            if(firstPosition[0] == 409 && firstPosition[1] == 4){
+                System.out.println("as");
+            }
 
             // Get the colour data required for embedding
             colourData = getNextData(firstPosition, secondPosition, currentColourPosition);
@@ -271,14 +278,34 @@ public class pvdDecode {
             int width = decodingData[1] - decodingData[0] + 1;
             int t = (int)Math.floor(Math.log(width)/Math.log(2.0));
 
-            // Get the remainder value
-            int difRmder = (firstColour + secondColour) % (int) Math.pow(2, t);
+            // DETERMINE WHETHER DATA EMBEDDING HAS OCCURRED
+            // Check if in range
+            int decimalData = (int) Math.pow(2, t) - 1;
 
-            // Get the data from the colour difference
-            binaryData = conformBinaryLength(difRmder, t);
+            // Calculate the new colour difference
+            int newColourDifference = decodingData[0] + decimalData;
 
-            // Append the retrieved binary data to the final string of data
-            binary.append(binaryData);
+            // Obtain new colour values for firstColour and secondColour by averaging new difference to them
+            if(firstColour >= secondColour && newColourDifference > colourDifference){
+                newFirstColour = firstColour + (int) Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
+                newSecondColour = secondColour - (int) Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
+            }else if(firstColour < secondColour && newColourDifference > colourDifference){
+                newFirstColour = firstColour - (int) Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
+                newSecondColour = secondColour + (int) Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
+            }else if(firstColour >= secondColour && newColourDifference <= colourDifference){
+                newFirstColour = firstColour - (int) Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
+                newSecondColour = secondColour + (int) Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2);
+            }else if(firstColour < secondColour && newColourDifference <= colourDifference){
+                newFirstColour = firstColour + (int) Math.ceil((double) Math.abs(newColourDifference - colourDifference) / 2);
+                newSecondColour = secondColour - (int) Math.floor((double) Math.abs(newColourDifference - colourDifference) / 2); }
+
+            if(newFirstColour >= 0 && newFirstColour <= 255 && newSecondColour >= 0 && newSecondColour <= 255){
+                // Get the data from the colour difference
+                binaryData = conformBinaryLength(colourDifference - decodingData[0], t);
+
+                // Append the retrieved binary data to the final string of data
+                binary.append(binaryData);
+            }
 
         }
 

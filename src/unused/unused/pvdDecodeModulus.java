@@ -267,11 +267,15 @@ public class pvdDecodeModulus {
             // Get the number of bits we can encode at this time
             decodingData = quantisationRangeTable(colourDifference);
 
+            // Calculate the quantisation range width, then the number of bits to encode
+            int width = decodingData[1] - decodingData[0] + 1;
+            int t = (int)Math.floor(Math.log(width)/Math.log(2.0));
+
             // Get the remainder value
-            int difRmder = (firstColour + secondColour) % (int) Math.pow(2, decodingData[2]);
+            int difRmder = (firstColour + secondColour) % (int) Math.pow(2, t);
 
             // Get the data from the colour difference
-            binaryData = conformBinaryLength(difRmder, decodingData[2]);
+            binaryData = conformBinaryLength(difRmder, t);
 
             // Append the retrieved binary data to the final string of data
             binary.append(binaryData);
@@ -320,22 +324,22 @@ public class pvdDecodeModulus {
      */
     public int[] quantisationRangeTable(int difference){
         if(difference <= 7){
-            return new int[] {0, 7, 1};
+            return new int[] {0, 7};
         }
         if(difference <= 15){
-            return new int[] {8, 15, 2};
+            return new int[] {8, 15};
         }
         if(difference <= 31){
-            return new int[] {16, 31, 3};
+            return new int[] {16, 31};
         }
         if(difference <= 63){
-            return new int[] {32, 63, 4};
+            return new int[] {32, 63};
         }
         if(difference <= 12715){
-            return new int[] {64, 127, 5};
+            return new int[] {64, 127};
         }
         if(difference <= 255){
-            return new int[] {128, 255, 6};
+            return new int[] {128, 255};
         }
         return null;
     }
