@@ -1,4 +1,4 @@
-package com.java.calumjohnston.algorithms.lsb;
+package com.java.calumjohnston.algorithms;
 
 import com.java.calumjohnston.exceptions.DataOverflowException;
 import com.java.calumjohnston.randomgenerators.pseudorandom;

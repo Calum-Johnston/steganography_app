@@ -1,10 +1,6 @@
 package com.java.calumjohnston;
 
-import com.java.calumjohnston.algorithms.lsb.encodeData;
-import unused.unused.lsbEncode;
-import unused.unused.lsbmEncode;
-import unused.unused.lsbmrEncode;
-import com.java.calumjohnston.algorithms.pvd.pvdEncode;
+import com.java.calumjohnston.algorithms.encodeData;
 import com.java.calumjohnston.exceptions.DataOverflowException;
 
 import javax.imageio.ImageIO;

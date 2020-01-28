@@ -1,8 +1,7 @@
 package unittests;
 
-import com.java.calumjohnston.algorithms.lsb.*;
-import com.java.calumjohnston.algorithms.pvd.pvdDecode;
-import com.java.calumjohnston.algorithms.pvd.pvdEncode;
+import com.java.calumjohnston.algorithms.decodeData;
+import com.java.calumjohnston.algorithms.encodeData;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -28,10 +27,7 @@ public class test {
     public void runTests() {
 
         encodeData encoder = new encodeData();
-        pvdEncode pvdEncoder = new pvdEncode();
-
         decodeData decoder = new decodeData();
-        pvdDecode pvdDecoder = new pvdDecode();
 
         BufferedImage coverImage = null;
         try{
