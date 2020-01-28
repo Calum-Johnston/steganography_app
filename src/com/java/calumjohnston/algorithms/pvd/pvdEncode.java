@@ -156,10 +156,6 @@ public class pvdEncode {
         // Loop through binary data to be inserted
         for (int i = 0; i < binary.length(); i += dataToEncode.length()) {
 
-            if(firstPosition[0] == 421 && firstPosition[1] == 15){
-                System.out.println("as");
-            }
-
             // Get the colour data required for embedding
             colourData = getNextData(firstPosition, secondPosition, currentColourPosition);
 
@@ -177,43 +173,41 @@ public class pvdEncode {
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
             secondColour = getColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition);
 
-            // Calculate the colour difference
-            int colourDifference = secondColour - firstColour;
+            // Calculate pixel difference
+            int d = secondColour - firstColour;
 
-            // Get the number of bits we can encode at this time
-            encodingData = quantisationRangeTable(Math.abs(colourDifference));
+            // Get the range data for this colour interval
+            encodingData = quantisationRangeTable(Math.abs(d));
 
             // Calculate the quantisation range width, then the number of bits to encode
             int width = encodingData[1] - encodingData[0] + 1;
-            int t = (int)Math.floor(Math.log(width)/Math.log(2.0));
+            int n = (int)Math.floor(Math.log(width)/Math.log(2.0));
 
             // Get the data to encode into the image (ensuring we don't go out of range)
-            if(i + t > binary.length()){
+            if(i + n > binary.length()){
                 dataToEncode = binary.substring(i);
-                while(dataToEncode.length() < t){
+                while(dataToEncode.length() < n){
                     dataToEncode = dataToEncode + "0";
                 }
             }else{
-                dataToEncode = binary.substring(i, i + t);
+                dataToEncode = binary.substring(i, i + n);
             }
+            int decVal = Integer.parseInt(dataToEncode, 2);
 
             // CHECK RANGE
-            int[] newColours = encodeData(firstColour, secondColour, Math.abs(colourDifference), encodingData[1] - colourDifference);
+            int[] newColours = encodeData(firstColour, secondColour, d, encodingData[1]);
 
             if(newColours[0] < 0 || newColours[0] > 255 || newColours[1] < 0 || newColours[1] > 255){
                 dataToEncode = "";
             }else {
-                // Get encoding data
-                int decimalData = Integer.parseInt(dataToEncode, 2);
 
-                // Calculate the new colour difference
-                int newColourDifference = Math.abs(encodingData[0] + decimalData);
-
-                // Calculate difference between differences
-                int m = newColourDifference - colourDifference;
+                // Calculate embedding values
+                int d1;
+                if(d >= 0){ d1 = encodingData[0] + decVal; }
+                else{ d1 = -(encodingData[0] + decVal); }
 
                 // Encode the data
-                newColours = encodeData(firstColour, secondColour, colourDifference, m);
+                newColours = encodeData(firstColour, secondColour, d, d1);
 
                 // Write colour data back to the image
                 writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, newColours[0]);
@@ -228,15 +222,17 @@ public class pvdEncode {
         endColourChannel = currentColourPosition;
     }
 
-    public int[] encodeData(int firstColour, int secondColour, int colourDifference, int m){
+    public int[] encodeData(int firstColour, int secondColour, int d, int d1){
+
+        double m = d1 - d;
 
         // Obtain new colour values for firstColour and secondColour by averaging new difference to them
-        if (colourDifference % 2 == 1) {
-            firstColour -= (int) Math.ceil((double) m / 2);
-            secondColour += (int) Math.floor((double) m / 2);
+        if (Math.abs(d) % 2 == 1) {
+            firstColour -= (int) Math.ceil(m/2);
+            secondColour += (int) Math.floor(m/2);
         } else {
-            firstColour -= (int) Math.floor((double) m / 2);
-            secondColour += (int) Math.ceil((double) m / 2);
+            firstColour -= (int) Math.floor(m/2);
+            secondColour += (int) Math.ceil(m/2);
         }
 
         return new int[] {firstColour, secondColour};

@@ -264,20 +264,21 @@ public class pvdDecode {
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
             secondColour = getColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition);
 
-            int colourDiff = secondColour - firstColour;
+            int d = secondColour - firstColour;
 
-            decodingData = quantisationRangeTable(Math.abs(colourDiff));
+            decodingData = quantisationRangeTable(Math.abs(d));
 
             // Calculate the quantisation range width, then the number of bits to encode
             int width = decodingData[1] - decodingData[0] + 1;
             int t = (int)Math.floor(Math.log(width)/Math.log(2.0));
 
             // DETERMINE WHETHER DATA EMBEDDING HAS OCCURRED
-            int[] newColours = encodeData(firstColour, secondColour, Math.abs(colourDiff), decodingData[1] - colourDiff);
+            int[] newColours = encodeData(firstColour, secondColour, d, decodingData[1]);
+
             if(newColours[0] < 0 || newColours[0] > 255 || newColours[1] < 0 || newColours[1] > 255) {
                 int a = 2;
             }else{
-                int b = colourDiff - decodingData[0];
+                int b = Math.abs(d) - decodingData[0];
                 binary.append(conformBinaryLength(b, t));
             }
 
@@ -285,15 +286,17 @@ public class pvdDecode {
         return binary;
     }
 
-    public int[] encodeData(int firstColour, int secondColour, int colourDifference, int m){
+    public int[] encodeData(int firstColour, int secondColour, int d, int d1){
+
+        double m = d1 - d;
 
         // Obtain new colour values for firstColour and secondColour by averaging new difference to them
-        if (colourDifference % 2 == 1) {
-            firstColour -= (int) Math.ceil((double) m / 2);
-            secondColour += (int) Math.floor((double) m / 2);
+        if (Math.abs(d) % 2 == 1) {
+            firstColour -= (int) Math.ceil(m/2);
+            secondColour += (int) Math.floor(m/2);
         } else {
-            firstColour -= (int) Math.floor((double) m / 2);
-            secondColour += (int) Math.ceil((double) m / 2);
+            firstColour -= (int) Math.floor(m/2);
+            secondColour += (int) Math.ceil(m/2);
         }
 
         return new int[] {firstColour, secondColour};
