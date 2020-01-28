@@ -1,5 +1,7 @@
 package com.java.calumjohnston;
 
+import com.java.calumjohnston.algorithms.lsb.decodeData;
+import com.java.calumjohnston.algorithms.lsb.encodeData;
 import com.java.calumjohnston.algorithms.pvd.pvdDecode;
 import com.java.calumjohnston.exceptions.DataOverflowException;
 import unused.unused.alllsb_decode;
@@ -30,7 +32,7 @@ public class decoder {
     private BufferedImage stegoImage;
     private String text;
 
-    private alllsb_decode lsbDecoder;
+    private decodeData decode;
 
 
 
@@ -39,8 +41,6 @@ public class decoder {
      * Constructor for this class
      */
     public decoder() {
-
-        lsbDecoder = new alllsb_decode();
 
         decodeButton.setEnabled(false);
 
@@ -75,37 +75,13 @@ public class decoder {
         int blue = pixel & 0x000000ff;
         int algorithm = Integer.parseInt(getLSB(red) + "" + getLSB(green) + "" + getLSB(blue), 2);
 
-
         // Calls algorithm to embed the data
+        decode = new decodeData();
         String data = "";
-        if(algorithm == 3){
-            pvdDecode pvd = new pvdDecode();
-            try{
-                data = pvd.decode(stegoImage);
-            }catch(DataOverflowException e){
-                System.out.println("Error");
-            }
-        }else if(algorithm == 2) {
-            lsbmrDecode lsbmr = new lsbmrDecode();
-            try{
-                data = lsbmr.decode(stegoImage);
-            }catch(DataOverflowException e){
-                System.out.println("Error");
-            }
-        }else if(algorithm == 1){
-            lsbmDecode lsbm = new lsbmDecode();
-            try{
-                data = lsbm.decode(stegoImage);
-            }catch(DataOverflowException e){
-                System.out.println("Error");
-            }
-        }else {
-            lsbDecode lsb = new lsbDecode();
-            try{
-                data = lsb.decode(stegoImage);
-            }catch(DataOverflowException e){
-                System.out.println("Error");
-            }
+        try{
+            data = decode.decode(stegoImage);
+        }catch(DataOverflowException e){
+            System.out.println("Error");
         }
 
         System.out.println(data);

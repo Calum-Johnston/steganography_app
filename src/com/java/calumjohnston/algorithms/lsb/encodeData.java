@@ -201,8 +201,10 @@ public class encodeData {
         // Determine which encoding scheme to use
         if(algorithm <= 1){
             encodeSecretDataLSB(binary);
-        }else{
+        }else if(algorithm == 2){
             encodeSecretDataLSBMR(binary);
+        }else{
+            encodeSecretDataPVD(binary);
         }
     }
 
@@ -353,6 +355,94 @@ public class encodeData {
                 }
                 // Write colour data back to the image
                 writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, firstColour);
+            }
+
+        }
+
+        // Write end position data (for decoding purposes)
+        endPositionX = firstPosition[0];
+        endPositionY = firstPosition[1];
+        endColourChannel = currentColourPosition;
+
+    }
+
+    /**
+     * Encodes the data to be hidden into the image by PVD
+     *
+     * @param binary        The binary data to be hidden within the image
+     */
+    public void encodeSecretDataPVD(StringBuilder binary){
+
+        // Define some variables for manipulating pixel data
+        ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
+        int firstColour;            // Stores the first colour to be manipulated
+        int secondColour;           // Stores the neighbouring second colour to be manipulated
+        String dataToEncode;        // Stores the data we wish to encode at one instance (in bits)
+
+        // Define some variables for determining which pixels to manipulate
+        int currentColourPosition = -1;
+        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
+        int[] secondPosition = generateNextPosition(firstPosition, false);
+
+        // Loop through binary data to be inserted
+        for (int i = 0; i < binary.length(); i += dataToEncode.length()) {
+
+            // Get the colour data required for embedding
+            colourData = getNextDataLSBMR(firstPosition, secondPosition, currentColourPosition, random);
+
+            // Update positional information
+            firstPosition = colourData.get(0);
+            secondPosition = colourData.get(1);
+            currentColourPosition = colourData.get(2)[0];
+
+            // Check we are within bounds
+            if(secondPosition[0] >= coverImage.getWidth() || secondPosition[1] >= coverImage.getHeight()){
+                throw new DataOverflowException("Input text too large");
+            }
+
+            // Get the next two colour channel data
+            firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
+            secondColour = getColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition);
+
+            // Calculate pixel difference
+            int d = secondColour - firstColour;
+
+            // Get the range data for this colour interval
+            int[] encodingData = quantisationRangeTable(Math.abs(d));
+
+            // Calculate the quantisation range width, then the number of bits to encode
+            int width = encodingData[1] - encodingData[0] + 1;
+            int n = (int)Math.floor(Math.log(width)/Math.log(2.0));
+
+            // Get the data to encode into the image (ensuring we don't go out of range)
+            if(i + n > binary.length()){
+                dataToEncode = binary.substring(i);
+                while(dataToEncode.length() < n){
+                    dataToEncode = dataToEncode + "0";
+                }
+            }else{
+                dataToEncode = binary.substring(i, i + n);
+            }
+            int decVal = Integer.parseInt(dataToEncode, 2);
+
+            // CHECK RANGE
+            int[] newColours = updateColoursPVD(firstColour, secondColour, d, encodingData[1]);
+
+            if(newColours[0] < 0 || newColours[0] > 255 || newColours[1] < 0 || newColours[1] > 255){
+                dataToEncode = "";
+            }else {
+
+                // Calculate embedding values
+                int d1;
+                if(d >= 0){ d1 = encodingData[0] + decVal; }
+                else{ d1 = -(encodingData[0] + decVal); }
+
+                // Encode the data
+                newColours = updateColoursPVD(firstColour, secondColour, d, d1);
+
+                // Write colour data back to the image
+                writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, newColours[0]);
+                writeColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition, newColours[1]);
             }
 
         }
@@ -556,6 +646,58 @@ public class encodeData {
             }
         }
         return Integer.parseInt(Integer.toBinaryString(firstHalfNum) + binarySecondHalf.toString(), 2);
+    }
+
+    /**
+     * Inserts data into two colours by modifying their difference
+     *
+     * @param firstColour       First colour to be manipulated
+     * @param secondColour      Second colour to be manipulated
+     * @param d                 The difference between the colours
+     * @param d1                The new difference calculated from the data to be inserted
+     * @return                  Updated colours
+     */
+    public int[] updateColoursPVD(int firstColour, int secondColour, int d, int d1){
+        double m = d1 - d;
+
+        // Obtain new colour values for firstColour and secondColour by averaging new difference to them
+        if (Math.abs(d) % 2 == 1) {
+            firstColour -= (int) Math.ceil(m/2);
+            secondColour += (int) Math.floor(m/2);
+        } else {
+            firstColour -= (int) Math.floor(m/2);
+            secondColour += (int) Math.ceil(m/2);
+        }
+
+        return new int[] {firstColour, secondColour};
+    }
+
+    /**
+     * Returns the range the difference of two values sits in (for PVD)
+     *
+     * @param difference    The difference between two consecutive pixel values
+     * @return              The data required for encoding
+     */
+    public int[] quantisationRangeTable(int difference){
+        if(difference <= 7){
+            return new int[] {0, 7};
+        }
+        if(difference <= 15){
+            return new int[] {8, 15};
+        }
+        if(difference <= 31){
+            return new int[] {16, 31};
+        }
+        if(difference <= 63){
+            return new int[] {32, 63};
+        }
+        if(difference <= 127){
+            return new int[] {64, 127};
+        }
+        if(difference <= 255){
+            return new int[] {128, 255};
+        }
+        return null;
     }
 
     /**

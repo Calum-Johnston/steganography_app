@@ -235,7 +235,6 @@ public class pvdDecode {
 
         // Define some initial variables required
         ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
-        int[] decodingData;
         int firstColour;            // Stores the first colour to be manipulated
         int secondColour;           // Stores the neighbouring second colour to be manipulated
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
@@ -247,10 +246,6 @@ public class pvdDecode {
 
         // Loop through binary data to be inserted
         while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
-
-            if(firstPosition[0] == 421 && firstPosition[1] == 15){
-                System.out.println("as");
-            }
 
             // Get the colour data required for embedding
             colourData = getNextData(firstPosition, secondPosition, currentColourPosition);
@@ -266,7 +261,7 @@ public class pvdDecode {
 
             int d = secondColour - firstColour;
 
-            decodingData = quantisationRangeTable(Math.abs(d));
+            int[] decodingData = quantisationRangeTable(Math.abs(d));
 
             // Calculate the quantisation range width, then the number of bits to encode
             int width = decodingData[1] - decodingData[0] + 1;

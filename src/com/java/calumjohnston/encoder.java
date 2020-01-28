@@ -213,23 +213,13 @@ public class encoder {
         String text = textField.getText();
 
         // Calls algorithm to embed the data
+        encode = new encodeData();
         BufferedImage stegoImage = null;
-        if(algorithm == 3){
-            pvdEncode pvd = new pvdEncode();
-            try{
-                stegoImage = pvd.encode(coverImage, red, green, blue,
-                        random, seed, text);
-            }catch(DataOverflowException e){
-                System.out.println("Error");
-            }
-        }else {
-            encode = new encodeData();
-            try{
-                stegoImage = encode.encode(coverImage, algorithm, red, green, blue, redLSBs, greenLSBs, blueLSBs,
-                        random, seed, text);
-            }catch(DataOverflowException e){
-                System.out.println("Error");
-            }
+        try{
+            stegoImage = encode.encode(coverImage, algorithm, red, green, blue, redLSBs, greenLSBs, blueLSBs,
+                    random, seed, text);
+        }catch(DataOverflowException e){
+            System.out.println("Error");
         }
 
         if(stegoImage == null){
