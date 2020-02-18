@@ -85,7 +85,7 @@ public class steganography extends JFrame{
         }
     }
 
-
+    
     public static void main(String[] args) {
         new steganography();
     }
