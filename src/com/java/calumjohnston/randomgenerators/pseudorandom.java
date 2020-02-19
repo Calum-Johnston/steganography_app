@@ -50,23 +50,31 @@ public class pseudorandom{
      * @param height        the height of the image
      * @param width         the width of the image
      * @param seed          the seed to be used for random generation
-     * @param consecutiveNum   number of consecutive numbers to generate
+     * @param gap           gap between generated numbers
      */
-    public pseudorandom(int height, int width, String seed, int consecutiveNum){
+    public pseudorandom(int height, int width, String seed, int gap){
         this.height = height;
         this.width = width;
         this.seed = seed;
-        this.consecutiveNum = consecutiveNum;
         this.sequencePosition = 0;
         this.orderSequence = new ArrayList<Integer>();
-        generateRandomList();
+        generateRandomList(gap);
     }
 
     /**
      * Generates the random sequence to be used
+     *
+     * @param gap           gap between generated numbers
      */
-    public void generateRandomList(){
-        for(int i = 0; i < width * height; i += consecutiveNum){
+    public void generateRandomList(int gap){
+
+        // Change final value depending on the gap (prevents errors later)
+        int finalValue = width * height;
+        if(gap > 1 && (width * height) % gap != 0){
+            finalValue = (width * height) - (gap - 1);
+        }
+
+        for(int i = 0; i < finalValue; i += gap){
             orderSequence.add(i);
         }
         // https://stackoverflow.com/questions/6284589/setting-a-seed-to-shuffle-arraylist-in-java-deterministically
@@ -96,20 +104,6 @@ public class pseudorandom{
         return currentElement;
     }
 
-    public int[] getNextNeighbours(){
-        int currentElement = orderSequence.get(sequencePosition);
-        int nextElement = currentElement + 1;
-
-        // Determine whether it is valid (i.e. not out of user bounds)
-        int x = currentElement % width;
-        int y = currentElement / width;
-        if(x < 17 && y == 0){
-            return getNextNeighbours();
-        }
-
-        // Return the next positional element
-        return new int[] {currentElement, nextElement};
-    }
 
     /**
      * SETTER method for variable position

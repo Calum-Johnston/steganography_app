@@ -219,7 +219,9 @@ public class encoder {
         try{
             stegoImage = encode.encode(deepCopy(coverImage), algorithm, red, green, blue, redLSBs, greenLSBs, blueLSBs,
                     random, seed, text);
-            psnrTextField.setText(Double.toString(psnr.calculatePSNR(coverImage, stegoImage)));
+            System.out.println((stegoImage.getRGB(0, 0) & 0x0000ff00) >> 8);
+            psnrTextField.setText(Double.toString(psnr.calculatePSNR(deepCopy(coverImage), deepCopy(stegoImage))));
+            System.out.println((stegoImage.getRGB(0, 0) & 0x0000ff00) >> 8);
         }catch(DataOverflowException e){
             System.out.println("Error");
         }
@@ -330,7 +332,7 @@ public class encoder {
         try {
             // Writes file to the disk (w/extension of algorithm used)
             File outputFile = new File("rsts/" + coverImageName + "_encoded.png");
-            ImageIO.write(coverImage, "png", outputFile);
+            ImageIO.write(image, "png", outputFile);
 
             // Debugging purposes
             System.out.println("Successfully written file to disk");

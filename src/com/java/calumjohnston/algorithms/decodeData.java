@@ -3,6 +3,7 @@ package com.java.calumjohnston.algorithms;
 import com.java.calumjohnston.randomgenerators.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
@@ -85,7 +86,13 @@ public class decodeData {
         // Determine whether random embedding is being used
         this.random = binaryToInt(parameters.substring(15, 16)) == 1;
         if (random) {
-            this.generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), "calum");
+            //String seed = JOptionPane.showInputDialog("Please select a password for the data");
+            String seed = "Calum";
+            if(algorithm == 3){
+                generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed, 2);
+            }else {
+                generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed);
+            }
         }
 
         // Get end position for data encoding
@@ -482,7 +489,16 @@ public class decodeData {
         if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
             currentColourPosition = 0;
             firstPosition = generateNextPosition(secondPosition, random);
-            secondPosition = generateNextPosition(firstPosition, random);
+            if(random && algorithm == 3){
+                int newLine = (firstPosition[0] + 1) % stegoImage.getWidth();
+                if (newLine == 0) {
+                    secondPosition = new int[] {0, firstPosition[1] + 1};
+                }else{
+                    secondPosition = new int[] {firstPosition[0] + 1, firstPosition[1]};
+                }
+            }else {
+                secondPosition = generateNextPosition(firstPosition, random);
+            }
         }
 
         // Add data to ArrayList to return

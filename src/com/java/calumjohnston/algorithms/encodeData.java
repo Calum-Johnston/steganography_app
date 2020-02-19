@@ -103,7 +103,11 @@ public class encodeData {
         // Determine whether random embedding is being used
         this.random = random;
         if (random) {
-            generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed);
+            if(algorithm == 3){
+                generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed, 2);
+            }else {
+                generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed);
+            }
         }
     }
 
@@ -513,7 +517,16 @@ public class encodeData {
         if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
             currentColourPosition = 0;
             firstPosition = generateNextPosition(secondPosition, random);
-            secondPosition = generateNextPosition(firstPosition, random);
+            if(random && algorithm == 3){
+                int newLine = (firstPosition[0] + 1) % coverImage.getWidth();
+                if (newLine == 0) {
+                    secondPosition = new int[] {0, firstPosition[1] + 1};
+                }else{
+                    secondPosition = new int[] {firstPosition[0] + 1, firstPosition[1]};
+                }
+            }else {
+                secondPosition = generateNextPosition(firstPosition, random);
+            }
         }
 
         // Add data to ArrayList to return
