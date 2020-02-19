@@ -19,7 +19,7 @@ public class PSNR {
      * @param stego     The modified image
      * @return          The PSNR of the modified image
      */
-    public double computerPSNR(BufferedImage cover, BufferedImage stego){
+    public double calculatePSNR(BufferedImage cover, BufferedImage stego){
         // Get mean squared error of images
         double MSE = calculateMSE(cover, stego);
 
@@ -35,8 +35,8 @@ public class PSNR {
      * @return          The MSE of the the modified image
      */
     public double calculateMSE(BufferedImage cover, BufferedImage stego){
-        int rows = cover.getHeight() - 1;
-        int columns = cover.getWidth() - 1;
+        int rows = cover.getHeight();
+        int columns = cover.getWidth();
         double total = 0;
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < columns; j++){

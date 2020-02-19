@@ -1,5 +1,6 @@
 package com.java.calumjohnston;
 
+import com.java.calumjohnston.algorithms.PSNR;
 import com.java.calumjohnston.algorithms.encodeData;
 import com.java.calumjohnston.exceptions.DataOverflowException;
 
@@ -9,6 +10,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -34,6 +37,7 @@ public class encoder {
     private JComboBox redLSBComboBox;
     private JComboBox greenLSBComboBox;
     private JComboBox blueLSBComboBox;
+    private JTextField psnrTextField;
 
     private final JFileChooser openFileChooser;
     private BufferedImage coverImage;
@@ -210,10 +214,12 @@ public class encoder {
 
         // Calls algorithm to embed the data
         encode = new encodeData();
+        PSNR psnr = new PSNR();
         BufferedImage stegoImage = null;
         try{
-            stegoImage = encode.encode(coverImage, algorithm, red, green, blue, redLSBs, greenLSBs, blueLSBs,
+            stegoImage = encode.encode(deepCopy(coverImage), algorithm, red, green, blue, redLSBs, greenLSBs, blueLSBs,
                     random, seed, text);
+            psnrTextField.setText(Double.toString(psnr.calculatePSNR(coverImage, stegoImage)));
         }catch(DataOverflowException e){
             System.out.println("Error");
         }
@@ -343,6 +349,19 @@ public class encoder {
     public String getSeed(){
         String seed = JOptionPane.showInputDialog("Please select a password for the data");
         return seed;
+    }
+
+    /**
+     * Returns a clone of a buffered image
+     *
+     * @param bi    The image to be cloned
+     * @return      The cloned image
+     */
+    public BufferedImage deepCopy(BufferedImage bi) {
+        ColorModel cm = bi.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = bi.copyData(null);
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
 
     /** Gets the main panel of the form
