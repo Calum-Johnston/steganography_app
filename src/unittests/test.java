@@ -40,7 +40,7 @@ public class test {
 
         long startTime = System.currentTimeMillis();
 
-        // LSB & LSBM
+        // LSB, OPAP & LSBM
         int count = 0; int fail = 0;
         for(int redBits = 1; redBits < 9; redBits++){
             for(int greenBits = 1; greenBits < 9; greenBits++){
@@ -82,13 +82,13 @@ public class test {
             }
         }
 
-        // LSBMR & PVD
+        /** // LSBMR & PVD
         int redBits = 1; int greenBits = 1; int blueBits = 1;
         for(boolean random : new boolean[] {false, true}) {
             for(boolean red : new boolean[] {false, true}) {
                 for (boolean green : new boolean[]{false, true}) {
                     for (boolean blue : new boolean[]{false, true}) {
-                        for(int algorithm = 2; algorithm < 4; algorithm++) {
+                        for(int algorithm = 3; algorithm < 5; algorithm++) {
                             count += 1;
                             String result = "";
                             if (red == false && green == false && blue == false) {
@@ -116,7 +116,7 @@ public class test {
                     }
                 }
             }
-        }
+        }*/
 
 
 

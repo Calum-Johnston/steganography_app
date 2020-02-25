@@ -81,6 +81,7 @@ public class encoder {
 
         // Sets up algorithm options in combo box
         algorithmComboBox.addItem("LSB");
+        algorithmComboBox.addItem("OPAP");
         algorithmComboBox.addItem("LSBM");
         algorithmComboBox.addItem("LSBMR");
         algorithmComboBox.addItem("PVD");

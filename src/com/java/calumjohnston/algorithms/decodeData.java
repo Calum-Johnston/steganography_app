@@ -88,7 +88,7 @@ public class decodeData {
         if (random) {
             //String seed = JOptionPane.showInputDialog("Please select a password for the data");
             String seed = "Calum";
-            if(algorithm == 3){
+            if(algorithm == 4){
                 generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed, 2);
             }else {
                 generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed);
@@ -291,9 +291,9 @@ public class decodeData {
      */
     public StringBuilder decodeSecretData(){
         // Determine which encoding scheme to use
-        if(algorithm <= 1){
+        if(algorithm <= 2){
             return decodeSecretDataLSB();
-        }else if(algorithm == 2){
+        }else if(algorithm == 3){
             return decodeSecretDataLSBMR();
         }else{
             return decodeSecretDataPVD();
@@ -489,7 +489,7 @@ public class decodeData {
         if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
             currentColourPosition = 0;
             firstPosition = generateNextPosition(secondPosition, random);
-            if(random && algorithm == 3){
+            if(random && algorithm == 4){
                 int newLine = (firstPosition[0] + 1) % stegoImage.getWidth();
                 if (newLine == 0) {
                     secondPosition = new int[] {0, firstPosition[1] + 1};

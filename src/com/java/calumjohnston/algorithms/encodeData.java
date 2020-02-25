@@ -203,9 +203,9 @@ public class encodeData {
      */
     public void encodeSecretData(StringBuilder binary){
         // Determine which encoding scheme to use
-        if(algorithm <= 1){
+        if(algorithm <= 2){
             encodeSecretDataLSB(binary);
-        }else if(algorithm == 2){
+        }else if(algorithm == 3){
             encodeSecretDataLSBMR(binary);
         }else{
             encodeSecretDataPVD(binary);
@@ -221,8 +221,9 @@ public class encodeData {
     public void encodeSecretDataLSB(StringBuilder binary){
 
         // Define some variables for manipulating pixel data
-        ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
-        int firstColour;            // Stores the first colour to be manipulated
+        ArrayList<int[]> colourData = null;     // Stores data about the next two colours to manipulate
+        int colour;                             // Stores the colour to be manipulated
+        int newColour = 0;                          // Stores the manipulated colour
 
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
@@ -249,17 +250,22 @@ public class encodeData {
             char data_1 = binary.charAt(i);
 
             // Get the next colour channel data
-            firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
+            colour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
 
             // Update current colour data based on binary data to insert
-            if(algorithm == 0){
-                firstColour = updateColourLSB(firstColour, data_1, lsbsToConsider.get(currentLSBPosition));
-            }else if(algorithm == 1){
-                firstColour = updateColourLSBM(firstColour, data_1, lsbsToConsider.get(currentLSBPosition));
+            if(algorithm == 0 || algorithm == 1){
+                newColour = updateColourLSB(colour, data_1, lsbsToConsider.get(currentLSBPosition));
+            }else if(algorithm == 2){
+                newColour = updateColourLSBM(colour, data_1, lsbsToConsider.get(currentLSBPosition));
+            }
+
+            // OPAP
+            if(algorithm == 1){
+                newColour = optimalPixelAdjustment(colour, newColour, lsbsToConsider.get(currentLSBPosition) + 1);
             }
 
             // Write colour data back to the image
-            writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, firstColour);
+            writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, newColour);
 
         }
 
@@ -725,6 +731,31 @@ public class encodeData {
         }else{
             return "1";
         }
+    }
+
+    /**
+     * Adjusts pixel value to optimal values to enhance image quality
+     *
+     * @return      The optimised value of the pixel
+     */
+    public int optimalPixelAdjustment(int coverValue, int stegoValue, int k){
+
+        int embeddingError = stegoValue - coverValue;
+
+        if(embeddingError > Math.pow(2, k - 1) && embeddingError < Math.pow(2, k)){
+            if(stegoValue >= Math.pow(2, k)) {
+                return stegoValue - (int) Math.pow(2, k);
+            }
+            return stegoValue;
+        }else if(embeddingError >= -Math.pow(2, k-1) && embeddingError <= Math.pow(2, k-1)){
+            return stegoValue;
+        }else if(embeddingError > -Math.pow(2, k) && embeddingError < -Math.pow(2, k-1) ){
+            if(stegoValue < 256 - Math.pow(2, k)){
+                return stegoValue + (int) Math.pow(2, k);
+            }
+            return stegoValue;
+        }
+        return 0;
     }
 
 
