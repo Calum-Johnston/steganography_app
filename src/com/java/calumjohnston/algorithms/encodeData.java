@@ -1,12 +1,15 @@
 package com.java.calumjohnston.algorithms;
 
 import com.java.calumjohnston.exceptions.DataOverflowException;
+import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -17,7 +20,6 @@ public class encodeData {
 
     BufferedImage coverImage;
     ArrayList<Integer> lsbsToConsider;
-    pseudorandom generator;
     int[] coloursToConsider;
     int endPositionX;
     int endPositionY;
@@ -25,6 +27,7 @@ public class encodeData {
     int endLSBPosition;
     int algorithm;
     boolean random;
+    String seed;
 
     /**
      * Constructor
@@ -100,15 +103,11 @@ public class encodeData {
         // Get the LSBs to consider
         lsbsToConsider = getLSBsToConsider(redBits, greenBits, blueBits, red, green, blue);
 
+        // Set the seed
+        this.seed = seed;
+
         // Determine whether random embedding is being used
         this.random = random;
-        if (random) {
-            if(algorithm == 3){
-                generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed, 2);
-            }else {
-                generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed);
-            }
-        }
     }
 
     /**
@@ -203,7 +202,7 @@ public class encodeData {
      */
     public void encodeSecretData(StringBuilder binary){
         // Determine which encoding scheme to use
-        if(algorithm <= 2){
+        if(algorithm <= 2 || algorithm == 5){
             encodeSecretDataLSB(binary);
         }else if(algorithm == 3){
             encodeSecretDataLSBMR(binary);
@@ -221,36 +220,34 @@ public class encodeData {
     public void encodeSecretDataLSB(StringBuilder binary){
 
         // Define some variables for manipulating pixel data
-        ArrayList<int[]> colourData = null;     // Stores data about the next two colours to manipulate
+        ArrayList<Integer> colourData = null;     // Stores data about the next two colours to manipulate
         int colour;                             // Stores the colour to be manipulated
         int newColour = 0;                          // Stores the manipulated colour
 
-        // Define some variables for determining which pixels to manipulate
-        int currentColourPosition = -1;
-        int currentLSBPosition = -1     ;
-        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
+        // Generate Order to embed data in
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        int count = 0;
+        int[] position = new int[2];
+        int currentColourPosition = 0;
+        int currentLSBPosition = 0;
 
         // Loop through binary data to be inserted
         for (int i = 0; i < binary.length(); i += 1) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition, random);
+            colourData = order.get(count);
+            count += 1;
 
             // Update positional information
-            firstPosition = colourData.get(0);
-            currentColourPosition = colourData.get(1)[0];
-            currentLSBPosition = colourData.get(2)[0];
-
-            // Check we are within bounds
-            if(firstPosition[0] >= coverImage.getWidth() || firstPosition[1] >= coverImage.getHeight()){
-                throw new DataOverflowException("Input text too large");
-            }
+            position = new int[] {colourData.get(0), colourData.get(1)};
+            currentColourPosition = colourData.get(2);
+            currentLSBPosition = colourData.get(3);
 
             // Get bit required from binary input
             char data_1 = binary.charAt(i);
 
             // Get the next colour channel data
-            colour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
+            colour = getColourAtPosition(position[0], position[1], currentColourPosition);
 
             // Update current colour data based on binary data to insert
             if(algorithm == 0 || algorithm == 1){
@@ -265,13 +262,13 @@ public class encodeData {
             }
 
             // Write colour data back to the image
-            writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, newColour);
+            writeColourAtPosition(position[0], position[1], currentColourPosition, newColour);
 
         }
 
         // Write end position data (for decoding purposes)
-        endPositionX = firstPosition[0];
-        endPositionY = firstPosition[1];
+        endPositionX = position[0];
+        endPositionY = position[1];
         endColourChannel = currentColourPosition;
         endLSBPosition = currentLSBPosition;
 
@@ -285,30 +282,31 @@ public class encodeData {
     public void encodeSecretDataLSBMR(StringBuilder binary){
 
         // Define some variables for manipulating pixel data
-        ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
+        ArrayList<Integer> firstColourData = null;   // Stores data about the next two colours to manipulate
+        ArrayList<Integer> secondColourData = null;
         int firstColour;            // Stores the first colour to be manipulated
         int secondColour;           // Stores the neighbouring second colour to be manipulated
+        int[] firstPosition = new int[2];
+        int[] secondPosition = new int[2];
+        int currentColourPosition = 0;
 
-        // Define some variables for determining which pixels to manipulate
-        int currentColourPosition = -1;
-        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
-        int[] secondPosition = generateNextPosition(firstPosition, false);
+        // Generate Order to embed data in
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        int count = 0;
 
         // Loop through binary data to be inserted
         for (int i = 0; i < binary.length(); i += 2) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSBMR(firstPosition, secondPosition, currentColourPosition, random);
+            firstColourData = order.get(count);
+            count += 1;
+            secondColourData = order.get(count);
+            count += 1;
 
             // Update positional information
-            firstPosition = colourData.get(0);
-            secondPosition = colourData.get(1);
-            currentColourPosition = colourData.get(2)[0];
-
-            // Check we are within bounds
-            if(secondPosition[0] >= coverImage.getWidth() || secondPosition[1] >= coverImage.getHeight()){
-                throw new DataOverflowException("Input text too large");
-            }
+            firstPosition = new int[] {firstColourData.get(0), firstColourData.get(1)};
+            secondPosition = new int[] {secondColourData.get(0), secondColourData.get(1)};
+            currentColourPosition = firstColourData.get(2);
 
             // Get bits required from binary input
             char data_1 = binary.charAt(i);
@@ -384,26 +382,32 @@ public class encodeData {
     public void encodeSecretDataPVD(StringBuilder binary){
 
         // Define some variables for manipulating pixel data
-        ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
+        ArrayList<Integer> firstColourData = null;   // Stores data about the next two colours to manipulate
+        ArrayList<Integer> secondColourData = null;
         int firstColour;            // Stores the first colour to be manipulated
         int secondColour;           // Stores the neighbouring second colour to be manipulated
-        String dataToEncode;        // Stores the data we wish to encode at one instance (in bits)
+        int[] firstPosition = new int[2];
+        int[] secondPosition = new int[2];
+        int currentColourPosition = 0;
+        String dataToEncode;
 
-        // Define some variables for determining which pixels to manipulate
-        int currentColourPosition = -1;
-        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
-        int[] secondPosition = generateNextPosition(firstPosition, false);
+        // Generate Order to embed data in
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        int count = 0;
 
         // Loop through binary data to be inserted
         for (int i = 0; i < binary.length(); i += dataToEncode.length()) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSBMR(firstPosition, secondPosition, currentColourPosition, random);
+            firstColourData = order.get(count);
+            count += 1;
+            secondColourData = order.get(count);
+            count += 1;
 
             // Update positional information
-            firstPosition = colourData.get(0);
-            secondPosition = colourData.get(1);
-            currentColourPosition = colourData.get(2)[0];
+            firstPosition = new int[] {firstColourData.get(0), firstColourData.get(1)};
+            secondPosition = new int[] {secondColourData.get(0), secondColourData.get(1)};
+            currentColourPosition = firstColourData.get(2);
 
             // Check we are within bounds
             if(secondPosition[0] >= coverImage.getWidth() || secondPosition[1] >= coverImage.getHeight()){
@@ -464,106 +468,106 @@ public class encodeData {
 
     }
 
-    /**
-     * Gets the next pixel we should encode into
-     *
-     * @param firstPosition         The positional data of the first pixel being considered
-     * @param currentColourPosition The current position in coloursToConsider we are using
-     * @param random                Determines whether random embedding was used
-     * @return                      The order we should consider pixel whilst encoding
-     */
-    public ArrayList<int[]> getNextDataLSB(int[] firstPosition, int currentColourPosition, int currentLSBPosition,
-                                        boolean random){
 
-        // Define ArrayList to store data in
-        ArrayList<int[]> current = new ArrayList<>();
 
-        // Update current position to check for in coloursToConsider
-        currentLSBPosition += 1;
+    public ArrayList<ArrayList<Integer>> generateEmbeddingOrder(){
 
-        // Update positions (if ran out of colour channels to manipulate with current positions)
-        if(currentLSBPosition == lsbsToConsider.size()){
-            currentLSBPosition = 0;
-        }
-        if(lsbsToConsider.get(currentLSBPosition) == 0) {
-            currentColourPosition += 1;
-            if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
-                currentColourPosition = 0;
-                firstPosition = generateNextPosition(firstPosition, random);
-            }
+        ArrayList<ArrayList<Integer>> order = new ArrayList<>();
+        ArrayList<int[]> pixelOrder = generatePixelOrder();
+
+        for(int[] pixel : pixelOrder){
+            definePixelInfo(pixel, order);
         }
 
-        // Add data to ArrayList to return
-        current.add(firstPosition);
-        current.add(new int[] {currentColourPosition});
-        current.add(new int[] {currentLSBPosition});
-
-        return current;
+        return order;
     }
 
-    /**
-     * Gets the next two (consecutive) pixels we should encode in
-     *
-     * @param firstPosition         The positional data of the first pixel being considered
-     * @param secondPosition        The positional data of the second pixel being considered
-     * @param currentColourPosition The current position in coloursToConsider we are using
-     * @param random                Determines whether random embedding was used
-     * @return                      The order we should consider pixel whilst encoding
-     */
-    public ArrayList<int[]> getNextDataLSBMR(int[] firstPosition, int[] secondPosition, int currentColourPosition,
-                                             boolean random){
+    public void definePixelInfo(int[] pixel, ArrayList<ArrayList<Integer>> order){
 
-        // Define ArrayList to store data in
-        ArrayList<int[]> current = new ArrayList<>();
-
-        // Update current position to check for in coloursToConsider
-        currentColourPosition += 1;
-
-        // Update positions (if ran out of colour channels to manipulate with current positions)
-        if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
-            currentColourPosition = 0;
-            firstPosition = generateNextPosition(secondPosition, random);
-            if(random && algorithm == 3){
-                int newLine = (firstPosition[0] + 1) % coverImage.getWidth();
-                if (newLine == 0) {
-                    secondPosition = new int[] {0, firstPosition[1] + 1};
-                }else{
-                    secondPosition = new int[] {firstPosition[0] + 1, firstPosition[1]};
-                }
-            }else {
-                secondPosition = generateNextPosition(firstPosition, random);
-            }
+        int nextX = 0; int nextY = 0;
+        if(algorithm == 4){
+            nextX = (pixel[0] + 1) % coverImage.getWidth();
+            nextY = (nextX == 0 ? pixel[1] + 1 : pixel[1]);
         }
 
-        // Add data to ArrayList to return
-        current.add(firstPosition);
-        current.add(secondPosition);
-        current.add(new int[] {currentColourPosition});
+        int colourToConsider = 0;
+        for(int i = 0; i < lsbsToConsider.size(); i++){
+            // Create a new ArrayList
+            ArrayList<Integer> current = new ArrayList<>();
 
-        return current;
-    }
+            // Get the pixel to store
+            int lsbToConsider = lsbsToConsider.get(i);
 
-    /**
-     * Generates the next pixel position to consider when encoding data
-     *
-     * @param currentPosition   The position which data has just been encoded
-     * @param random            Determines whether random embedding will be used or not
-     * @return                  The new position to consider
-     */
-    public int[] generateNextPosition(int[] currentPosition, boolean random) {
-        int imageWidth = coverImage.getWidth();
-        if (random) {
-            int position = generator.getNextElement();
-            return new int[] {position % imageWidth, position / imageWidth};
-        } else {
-            int newLine = (currentPosition[0] + 1) % imageWidth;
-            if (newLine == 0) {
-                return new int[] {0, currentPosition[1] + 1};
-            }else{
-                return new int[] {currentPosition[0] + 1, currentPosition[1]};
+            // Determine if a new colour component is being accessed
+            if(lsbToConsider == 0 && i != 0) {
+                colourToConsider += 1;
+            }
+
+            // Add data to ArrayList to return
+            current.add(pixel[0]);
+            current.add(pixel[1]);
+            current.add(colourToConsider);
+            current.add(lsbToConsider);
+            order.add(current);
+
+            if(algorithm == 4) {
+                current = new ArrayList<>();
+                current.add(nextX);
+                current.add(nextY);
+                current.add(colourToConsider);
+                current.add(lsbToConsider);
+                order.add(current);
             }
         }
     }
+
+    public ArrayList<int[]> generatePixelOrder(){
+        ArrayList<int[]> naiveOrder = new ArrayList<>();
+
+        // Edge-based order
+        if(algorithm == 5){
+            cannyEdgeDetection detection = new cannyEdgeDetection();
+            BufferedImage edgeImage = detection.detectEdges(coverImage);
+            naiveOrder = detection.getEdgePixels(edgeImage);
+            if(random){
+                // https://stackoverflow.com/questions/6284589/setting-a-seed-to-shuffle-arraylist-in-java-deterministically
+                // https://stackoverflow.com/questions/27346809/getting-a-range-off-user-input-for-random-generation
+                Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
+            }
+            return naiveOrder;
+        }
+
+        int width = coverImage.getWidth();
+        int height = coverImage.getHeight();
+        int gap = 1;
+        if(algorithm == 4){
+            gap = 2;
+        }
+
+        // Change final value depending on the gap (prevents errors later)
+        int finalValue = width * height;
+        if(gap > 1 && (width * height) % gap != 0){
+            finalValue = (width * height) - (gap - 1);
+        }
+
+        for(int i = 18; i < finalValue; i += gap){
+            int x = i % width;
+            int y = i / width;
+            naiveOrder.add(new int[] {x, y});
+        }
+
+        // Random order
+        if(random) {
+            Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
+        }
+        return naiveOrder;
+    }
+
+
+
+
+
+
 
     /**
      * Gets colour channel data from an image at a specific location
@@ -810,7 +814,8 @@ public class encodeData {
             // Get current colour to manipulate
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
                 currentColourPosition = 0;
-                currentPosition = generateNextPosition(currentPosition, false);
+                currentPosition[0] = (currentPosition[0] + 1) % coverImage.getWidth();
+                currentPosition[1] = (currentPosition[0] == 0 ? currentPosition[1] + 1 : currentPosition[1]);
             }
             colour = getColourAtPosition(currentPosition[0], currentPosition[1], currentColourPosition);
 

@@ -1,10 +1,13 @@
 package com.java.calumjohnston.algorithms;
 
+import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
 /**
  * Decode Class: This class implements the extraction of data from an image
@@ -22,6 +25,7 @@ public class decodeData {
     int endColourChannel;
     int endLSBPosition;
     int algorithm;
+    String seed;
 
     /**
      * Constructor
@@ -82,17 +86,11 @@ public class decodeData {
         int blueBits = binaryToInt(parameters.substring(12, 15)) + 1;
         this.lsbsToConsider = getLSBsToConsider(redBits, greenBits, blueBits, red, green, blue);
 
+        // Set the seed
+        this.seed = seed;
+
         // Determine whether random embedding is being used
         this.random = binaryToInt(parameters.substring(15, 16)) == 1;
-        if (random) {
-            //String seed = JOptionPane.showInputDialog("Please select a password for the data");
-            String seed = "Calum";
-            if(algorithm == 4){
-                generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed, 2);
-            }else {
-                generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed);
-            }
-        }
 
         // Get end position for data encoding
         endPositionX = binaryToInt(parameters.substring(16,31));
@@ -122,7 +120,8 @@ public class decodeData {
             // Get current colour to manipulate
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
                 currentColourPosition = 0;
-                currentPosition = generateNextPosition(currentPosition, false);
+                currentPosition[0] = (currentPosition[0] + 1) % stegoImage.getWidth();
+                currentPosition[1] = (currentPosition[0] == 0 ? currentPosition[1] + 1 : currentPosition[1]);
             }
             colour = getColourAtPosition(currentPosition[0], currentPosition[1], currentColourPosition);
 
@@ -135,28 +134,6 @@ public class decodeData {
 
         // Return the parameter binary data
         return parameters;
-    }
-
-    /**
-     * Generates the next pixel position to consider when encoding data
-     *
-     * @param currentPosition   The position which data has just been encoded
-     * @param random                Determines whether random embedding was used
-     * @return                  The new position to consider
-     */
-    public int[] generateNextPosition(int[] currentPosition, boolean random) {
-        int imageWidth = stegoImage.getWidth();
-        if (random) {
-            int position = generator.getNextElement();
-            return new int[] {position % imageWidth, position / imageWidth};
-        } else {
-            int newLine = (currentPosition[0] + 1) % imageWidth;
-            if (newLine == 0) {
-                return new int[] {0, currentPosition[1] + 1};
-            }else{
-                return new int[] {currentPosition[0] + 1, currentPosition[1]};
-            }
-        }
     }
 
     /**
@@ -290,7 +267,7 @@ public class decodeData {
      */
     public StringBuilder decodeSecretData(){
         // Determine which encoding scheme to use
-        if(algorithm <= 2){
+        if(algorithm <= 2 || algorithm == 5){
             return decodeSecretDataLSB();
         }else if(algorithm == 3){
             return decodeSecretDataLSBMR();
@@ -307,33 +284,37 @@ public class decodeData {
     public StringBuilder decodeSecretDataLSB(){
 
         // Define some initial variables required
-        ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
-        int firstColour;            // Stores the first colour to be manipulated
+        ArrayList<Integer> colourData = null;     // Stores data about the next two colours to manipulate
+        int colour;                             // Stores the first colour to be manipulated
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
 
-        // Define some variables for determining which pixels to manipulate
-        int currentColourPosition = -1;
-        int currentLSBPosition = -1     ;
-        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
+        // Generate Order to embed data in
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        int count = 0;
+        int[] position = new int[] {0, 0};
+        int currentColourPosition = 0;
+        int currentLSBPosition = 0;
 
         // Loop through binary data to be inserted
-        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentLSBPosition != endLSBPosition) {
+        while(position[0] != endPositionX || position[1] != endPositionY || currentColourPosition != endColourChannel ||
+                currentLSBPosition != endLSBPosition) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition);
+            colourData = order.get(count);
+            count += 1;
 
             // Update positional information
-            firstPosition = colourData.get(0);
-            currentColourPosition = colourData.get(1)[0];
-            currentLSBPosition = colourData.get(2)[0];
+            position = new int[] {colourData.get(0), colourData.get(1)};
+            currentColourPosition = colourData.get(2);
+            currentLSBPosition = colourData.get(3);
 
             // Get the next colour channel data
-            firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
+            colour = getColourAtPosition(position[0], position[1], currentColourPosition);
 
             // Append the retrieved binary data to the final string of data
-            binary.append(getSpecificLSB(firstColour, lsbsToConsider.get(currentLSBPosition)));
-        }
+            binary.append(getSpecificLSB(colour, lsbsToConsider.get(currentLSBPosition)));
 
+        }
         return binary;
     }
 
@@ -344,27 +325,33 @@ public class decodeData {
      */
     public StringBuilder decodeSecretDataLSBMR(){
 
-        // Define some initial variables required
-        ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
+        // Define some variables for manipulating pixel data
+        ArrayList<Integer> firstColourData = null;   // Stores data about the next two colours to manipulate
+        ArrayList<Integer> secondColourData = null;
         int firstColour;            // Stores the first colour to be manipulated
         int secondColour;           // Stores the neighbouring second colour to be manipulated
+        int[] firstPosition = new int[2];
+        int[] secondPosition = new int[2];
+        int currentColourPosition = 0;
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
 
-        // Define some variables for determining which pixels to manipulate
-        int currentColourPosition = -1;
-        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
-        int[] secondPosition = generateNextPosition(firstPosition, false);
+        // Generate Order to embed data in
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        int count = 0;
 
         // Loop through binary data to be inserted
         while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSBMR(firstPosition, secondPosition, currentColourPosition);
+            firstColourData = order.get(count);
+            count += 1;
+            secondColourData = order.get(count);
+            count += 1;
 
             // Update positional information
-            firstPosition = colourData.get(0);
-            secondPosition = colourData.get(1);
-            currentColourPosition = colourData.get(2)[0];
+            firstPosition = new int[] {firstColourData.get(0), firstColourData.get(1)};
+            secondPosition = new int[] {secondColourData.get(0), secondColourData.get(1)};
+            currentColourPosition = firstColourData.get(2);
 
             // Get the next two colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
@@ -385,27 +372,34 @@ public class decodeData {
      */
     public StringBuilder decodeSecretDataPVD(){
 
-        // Define some initial variables required
-        ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
+        // Define some variables for manipulating pixel data
+        ArrayList<Integer> firstColourData = null;   // Stores data about the next two colours to manipulate
+        ArrayList<Integer> secondColourData = null;
         int firstColour;            // Stores the first colour to be manipulated
         int secondColour;           // Stores the neighbouring second colour to be manipulated
+        int[] firstPosition = new int[2];
+        int[] secondPosition = new int[2];
+        int currentColourPosition = 0;
+        String dataToEncode;
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
 
-        // Define some variables for determining which pixels to manipulate
-        int currentColourPosition = -1;
-        int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
-        int[] secondPosition = generateNextPosition(firstPosition, false);
+        // Generate Order to embed data in
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        int count = 0;
 
         // Loop through binary data to be inserted
         while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSBMR(firstPosition, secondPosition, currentColourPosition);
+            firstColourData = order.get(count);
+            count += 1;
+            secondColourData = order.get(count);
+            count += 1;
 
             // Update positional information
-            firstPosition = colourData.get(0);
-            secondPosition = colourData.get(1);
-            currentColourPosition = colourData.get(2)[0];
+            firstPosition = new int[] {firstColourData.get(0), firstColourData.get(1)};
+            secondPosition = new int[] {secondColourData.get(0), secondColourData.get(1)};
+            currentColourPosition = firstColourData.get(2);
 
             // Get the next two colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
@@ -433,80 +427,102 @@ public class decodeData {
         return binary;
     }
 
-    /**
-     * Gets the next pixel we should encode into
-     *
-     * @param firstPosition         The positional data of the first pixel being considered
-     * @param currentColourPosition The current position in coloursToConsider we are using
-     * @return                      The order we should consider pixel whilst encoding
-     */
-    public ArrayList<int[]> getNextDataLSB(int[] firstPosition, int currentColourPosition, int currentLSBPosition){
 
-        // Define ArrayList to store data in
-        ArrayList<int[]> current = new ArrayList<>();
 
-        // Update current position to check for in coloursToConsider
-        currentLSBPosition += 1;
+    public ArrayList<ArrayList<Integer>> generateEmbeddingOrder(){
 
-        // Update positions (if ran out of colour channels to manipulate with current positions)
-        if(currentLSBPosition == lsbsToConsider.size()){
-            currentLSBPosition = 0;
-        }
-        if(lsbsToConsider.get(currentLSBPosition) == 0) {
-            currentColourPosition += 1;
-            if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
-                currentColourPosition = 0;
-                firstPosition = generateNextPosition(firstPosition, random);
-            }
+        ArrayList<ArrayList<Integer>> order = new ArrayList<>();
+        ArrayList<int[]> pixelOrder = generatePixelOrder();
+
+        for(int[] pixel : pixelOrder){
+            definePixelInfo(pixel, order);
         }
 
-        // Add data to ArrayList to return
-        current.add(firstPosition);
-        current.add(new int[] {currentColourPosition});
-        current.add(new int[] {currentLSBPosition});
-
-        return current;
+        return order;
     }
 
-    /**
-     * Gets the next two (consecutive) pixels we should encode in
-     *
-     * @param firstPosition         The positional data of the first pixel being considered
-     * @param secondPosition        The positional data of the second pixel being considered
-     * @param currentColourPosition The current position in coloursToConsider we are using
-     * @return                      The order we should consider pixel whilst encoding
-     */
-    public ArrayList<int[]> getNextDataLSBMR(int[] firstPosition, int[] secondPosition, int currentColourPosition){
+    public void definePixelInfo(int[] pixel, ArrayList<ArrayList<Integer>> order){
 
-        // Define ArrayList to store data in
-        ArrayList<int[]> current = new ArrayList<>();
-
-        // Update current position to check for in coloursToConsider
-        currentColourPosition += 1;
-
-        // Update positions (if ran out of colour channels to manipulate with current positions)
-        if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
-            currentColourPosition = 0;
-            firstPosition = generateNextPosition(secondPosition, random);
-            if(random && algorithm == 4){
-                int newLine = (firstPosition[0] + 1) % stegoImage.getWidth();
-                if (newLine == 0) {
-                    secondPosition = new int[] {0, firstPosition[1] + 1};
-                }else{
-                    secondPosition = new int[] {firstPosition[0] + 1, firstPosition[1]};
-                }
-            }else {
-                secondPosition = generateNextPosition(firstPosition, random);
-            }
+        int nextX = 0; int nextY = 0;
+        if(algorithm == 4){
+            nextX = (pixel[0] + 1) % stegoImage.getWidth();
+            nextY = (nextX == 0 ? pixel[1] + 1 : pixel[1]);
         }
 
-        // Add data to ArrayList to return
-        current.add(firstPosition);
-        current.add(secondPosition);
-        current.add(new int[] {currentColourPosition});
+        int colourToConsider = 0;
+        for(int i = 0; i < lsbsToConsider.size(); i++){
+            // Create a new ArrayList
+            ArrayList<Integer> current = new ArrayList<>();
 
-        return current;
+            // Get the pixel to store
+            int lsbToConsider = lsbsToConsider.get(i);
+
+            // Determine if a new colour component is being accessed
+            if(lsbToConsider == 0 && i != 0) {
+                colourToConsider += 1;
+            }
+
+            // Add data to ArrayList to return
+            current.add(pixel[0]);
+            current.add(pixel[1]);
+            current.add(colourToConsider);
+            current.add(lsbToConsider);
+            order.add(current);
+
+            if(algorithm == 4) {
+                current = new ArrayList<>();
+                current.add(nextX);
+                current.add(nextY);
+                current.add(colourToConsider);
+                current.add(lsbToConsider);
+                order.add(current);
+            }
+        }
     }
+
+    public ArrayList<int[]> generatePixelOrder(){
+        ArrayList<int[]> naiveOrder = new ArrayList<>();
+
+        // Edge-based order
+        if(algorithm == 5){
+            cannyEdgeDetection detection = new cannyEdgeDetection();
+            BufferedImage edgeImage = detection.detectEdges(stegoImage);
+            naiveOrder = detection.getEdgePixels(edgeImage);
+            if(random){
+                // https://stackoverflow.com/questions/6284589/setting-a-seed-to-shuffle-arraylist-in-java-deterministically
+                // https://stackoverflow.com/questions/27346809/getting-a-range-off-user-input-for-random-generation
+                Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
+            }
+            return naiveOrder;
+        }
+
+        int width = stegoImage.getWidth();
+        int height = stegoImage.getHeight();
+        int gap = 1;
+        if(algorithm == 4){
+            gap = 2;
+        }
+
+        // Change final value depending on the gap (prevents errors later)
+        int finalValue = width * height;
+        if(gap > 1 && (width * height) % gap != 0){
+            finalValue = (width * height) - (gap - 1);
+        }
+
+        for(int i = 18; i < finalValue; i += gap){
+            int x = i % width;
+            int y = i / width;
+            naiveOrder.add(new int[] {x, y});
+        }
+
+        // Random order
+        if(random) {
+            Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
+        }
+        return naiveOrder;
+    }
+
+
 
     /**
      * Gets the least significant bit of some integer at a certain point

@@ -125,18 +125,7 @@ public class pvdDecodeModulus {
      * @return                  The new position to consider
      */
     public int[] generateNextPosition(int[] currentPosition) {
-        int imageWidth = stegoImage.getWidth();
-        if (random) {
-            int position = generator.getNextElement();
-            return new int[] {position % imageWidth, position / imageWidth};
-        } else {
-            int newLine = (currentPosition[0] + 1) % imageWidth;
-            if (newLine == 0) {
-                return new int[] {0, currentPosition[1] + 1};
-            }else{
-                return new int[] {currentPosition[0] + 1, currentPosition[1]};
-            }
-        }
+
     }
 
     /**

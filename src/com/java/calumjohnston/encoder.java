@@ -17,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -87,6 +88,7 @@ public class encoder {
         algorithmComboBox.addItem("LSBM");
         algorithmComboBox.addItem("LSBMR");
         algorithmComboBox.addItem("PVD");
+        algorithmComboBox.addItem("Edge-based");
 
         // Sets up LSB options in combo box
         redLSBComboBox.addItem(1); greenLSBComboBox.addItem(1); blueLSBComboBox.addItem(1);
@@ -198,7 +200,8 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cannyEdgeDetection detection = new cannyEdgeDetection();
-                detection.detect(coverImage);
+                BufferedImage newImage = detection.detectEdges(coverImage);
+                ArrayList<int[]> temp = detection.getEdgePixels(newImage);
             }
         });
     }
@@ -231,7 +234,6 @@ public class encoder {
                     random, seed, text);
             System.out.println((stegoImage.getRGB(0, 0) & 0x0000ff00) >> 8);
             psnrTextField.setText(Double.toString(psnr.calculatePSNR(deepCopy(coverImage), deepCopy(stegoImage))));
-            System.out.println((stegoImage.getRGB(0, 0) & 0x0000ff00) >> 8);
         }catch(DataOverflowException e){
             System.out.println("Error");
         }

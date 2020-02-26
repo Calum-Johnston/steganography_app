@@ -17,9 +17,8 @@ public class pseudorandom{
     int height;
     int width;
     int sequencePosition;
-    int consecutiveNum;
     String seed;
-    List<Integer> orderSequence;
+    ArrayList<int[]> orderSequence;
 
     /**
      * Secondary Constructor for the class
@@ -57,7 +56,7 @@ public class pseudorandom{
         this.width = width;
         this.seed = seed;
         this.sequencePosition = 0;
-        this.orderSequence = new ArrayList<Integer>();
+        this.orderSequence = new ArrayList<int[]>();
         generateRandomList(gap);
     }
 
@@ -74,8 +73,10 @@ public class pseudorandom{
             finalValue = (width * height) - (gap - 1);
         }
 
-        for(int i = 0; i < finalValue; i += gap){
-            orderSequence.add(i);
+        for(int i = 18; i < finalValue; i += gap){
+            int x = i % width;
+            int y = i / width;
+            orderSequence.add(new int[] {x, y});
         }
         // https://stackoverflow.com/questions/6284589/setting-a-seed-to-shuffle-arraylist-in-java-deterministically
         // https://stackoverflow.com/questions/27346809/getting-a-range-off-user-input-for-random-generation
@@ -83,43 +84,12 @@ public class pseudorandom{
     }
 
     /**
-     *  Gets the next element in the random sequence
+     *  Gets the random sequence
      *
      * @return      the next element in the sequence
      */
-    public int getNextElement(){
-
-        // Get next random element and updated position
-        int currentElement = orderSequence.get(sequencePosition);
-        sequencePosition += 1;
-
-        // Determine whether it is valid (i.e. not out of user bounds)
-        int x = currentElement % width;
-        int y = currentElement / width;
-        if(x < 17 && y == 0){
-            return getNextElement();
-        }
-
-        // Return the next positional element
-        return currentElement;
+    public ArrayList<int[]> getRandomSequence(){
+        return orderSequence;
     }
 
-
-    /**
-     * SETTER method for variable position
-     *
-     * @param sequencePosition      The new position
-     */
-    public void setPosition(int sequencePosition){
-        this.sequencePosition = sequencePosition;
-    }
-
-    /**
-     * GETTER method for variable position
-     *
-     * @return      The position of the current random number being accessed
-     */
-    public int getPosition(){
-        return sequencePosition;
-    }
 }
