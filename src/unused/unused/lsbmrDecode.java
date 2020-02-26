@@ -1,7 +1,6 @@
 package unused.unused;
 
-import com.java.calumjohnston.randomgenerators.pseudorandom;
-import org.apache.commons.lang3.StringUtils;
+import com.java.calumjohnston.utilities.pseudorandom;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;

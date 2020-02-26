@@ -1,9 +1,8 @@
 package com.java.calumjohnston.algorithms;
 
-import com.java.calumjohnston.randomgenerators.pseudorandom;
+import com.java.calumjohnston.utilities.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 

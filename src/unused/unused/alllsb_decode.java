@@ -1,13 +1,11 @@
 package unused.unused;
 
-import com.java.calumjohnston.randomgenerators.pseudorandom;
+import com.java.calumjohnston.utilities.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.IntStream;
 
 /**
  * lsbDecode Class: This class implements the extraction of data from an image

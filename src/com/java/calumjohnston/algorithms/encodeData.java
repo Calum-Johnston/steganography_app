@@ -1,7 +1,7 @@
 package com.java.calumjohnston.algorithms;
 
 import com.java.calumjohnston.exceptions.DataOverflowException;
-import com.java.calumjohnston.randomgenerators.pseudorandom;
+import com.java.calumjohnston.utilities.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
