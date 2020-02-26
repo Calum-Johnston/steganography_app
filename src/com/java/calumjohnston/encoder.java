@@ -3,6 +3,7 @@ package com.java.calumjohnston;
 import com.java.calumjohnston.algorithms.PSNR;
 import com.java.calumjohnston.algorithms.encodeData;
 import com.java.calumjohnston.exceptions.DataOverflowException;
+import com.java.calumjohnston.utilities.cannyEdgeDetection;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -38,6 +39,7 @@ public class encoder {
     private JComboBox greenLSBComboBox;
     private JComboBox blueLSBComboBox;
     private JTextField psnrTextField;
+    private JButton button1;
 
     private final JFileChooser openFileChooser;
     private BufferedImage coverImage;
@@ -190,6 +192,13 @@ public class encoder {
                     greenLSBComboBox.setEnabled(false);
                     blueLSBComboBox.setEnabled(false);
                 }
+            }
+        });
+        button1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cannyEdgeDetection detection = new cannyEdgeDetection();
+                detection.detect(coverImage);
             }
         });
     }
