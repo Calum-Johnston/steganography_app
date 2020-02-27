@@ -251,14 +251,14 @@ public class encodeData {
 
             // Update current colour data based on binary data to insert
             if(algorithm == 0 || algorithm == 1){
-                newColour = updateColourLSB(colour, data_1, lsbsToConsider.get(currentLSBPosition));
+                newColour = updateColourLSB(colour, data_1, currentLSBPosition);
             }else if(algorithm == 2){
-                newColour = updateColourLSBM(colour, data_1, lsbsToConsider.get(currentLSBPosition));
+                newColour = updateColourLSBM(colour, data_1, currentLSBPosition);
             }
 
             // OPAP
             if(algorithm == 1){
-                newColour = optimalPixelAdjustment(colour, newColour, lsbsToConsider.get(currentLSBPosition) + 1);
+                newColour = optimalPixelAdjustment(colour, newColour, currentLSBPosition + 1);
             }
 
             // Write colour data back to the image

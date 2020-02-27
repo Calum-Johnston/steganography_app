@@ -4,6 +4,7 @@ import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,11 +39,12 @@ public class decodeData {
      * Acts as central controller to decoding functions
      *
      * @param stegoImage    The image we will decode data from
+     * @param testing       Indicates whether testing is occurring
      * @return              The data to be hidden within the image
      */
-    public String decode(BufferedImage stegoImage){
+    public String decode(BufferedImage stegoImage, boolean testing){
         // Setup data to be used for decoding
-        setupData(stegoImage);
+        setupData(stegoImage, testing);
 
         // Check parameter data will allow for successful decoding
         checkData();
@@ -63,8 +65,9 @@ public class decodeData {
     /**
      * Sets up the initial data required for encoding
      * @param stegoImage    The image we will decode data from
+     * @param testing       Indicates whether testing is occurring
      */
-    public void setupData(BufferedImage stegoImage){
+    public void setupData(BufferedImage stegoImage, boolean testing){
 
         // Define the image we are reading data from
         this.stegoImage = stegoImage;
@@ -86,11 +89,17 @@ public class decodeData {
         int blueBits = binaryToInt(parameters.substring(12, 15)) + 1;
         this.lsbsToConsider = getLSBsToConsider(redBits, greenBits, blueBits, red, green, blue);
 
-        // Set the seed
-        this.seed = seed;
-
         // Determine whether random embedding is being used
         this.random = binaryToInt(parameters.substring(15, 16)) == 1;
+
+        // Set the seed
+        if(random) {
+            if (testing) {
+                this.seed = "calum";
+            } else {
+                this.seed = JOptionPane.showInputDialog("Please select a password for the data");
+            }
+        }
 
         // Get end position for data encoding
         endPositionX = binaryToInt(parameters.substring(16,31));
@@ -312,7 +321,7 @@ public class decodeData {
             colour = getColourAtPosition(position[0], position[1], currentColourPosition);
 
             // Append the retrieved binary data to the final string of data
-            binary.append(getSpecificLSB(colour, lsbsToConsider.get(currentLSBPosition)));
+            binary.append(getSpecificLSB(colour, currentLSBPosition));
 
         }
         return binary;
