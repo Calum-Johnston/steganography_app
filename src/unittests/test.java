@@ -2,10 +2,14 @@ package unittests;
 
 import com.java.calumjohnston.algorithms.decodeData;
 import com.java.calumjohnston.algorithms.encodeData;
+import com.java.calumjohnston.utilities.cannyEdgeDetection;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
+import java.nio.Buffer;
 
 import static org.junit.Assert.*;
 
@@ -43,7 +47,7 @@ public class test {
 
         // LSB, OPAP & LSBM
         int count = 0; int fail = 0;
-        for(int redBits = 1; redBits < 9; redBits++){
+        /**for(int redBits = 1; redBits < 9; redBits++){
             for(int greenBits = 1; greenBits < 9; greenBits++){
                 for(int blueBits = 1; blueBits < 9; blueBits++){
                     for(boolean random : new boolean[] {false, true}) {
@@ -81,7 +85,7 @@ public class test {
                     }
                 }
             }
-        }
+        }*/
 
         // LSBMR & PVD
         int redBits = 1; int greenBits = 1; int blueBits = 1;
@@ -89,13 +93,13 @@ public class test {
             for(boolean red : new boolean[] {false, true}) {
                 for (boolean green : new boolean[]{false, true}) {
                     for (boolean blue : new boolean[]{false, true}) {
-                        for(int algorithm = 3; algorithm < 5; algorithm++) {
+                        for(int algorithm = 5; algorithm < 6; algorithm++) {
                             count += 1;
                             String result = "";
                             if (red == false && green == false && blue == false) {
                                 break;
                             }
-                            BufferedImage stegoImage = encoder.encode(coverImage, algorithm, red, green, blue,
+                            BufferedImage stegoImage = encoder.encode(deepCopy(coverImage), algorithm, red, green, blue,
                                     redBits, greenBits, blueBits, random, seed, text);
                             String assertionError = null;
                             try {
@@ -132,4 +136,12 @@ public class test {
     public static void main(String[] args){
         test t = new test();
     }
+
+    public BufferedImage deepCopy(BufferedImage bi) {
+        ColorModel cm = bi.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = bi.copyData(null);
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+    }
+
 }

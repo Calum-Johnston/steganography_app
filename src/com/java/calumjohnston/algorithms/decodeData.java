@@ -1,5 +1,6 @@
 package com.java.calumjohnston.algorithms;
 
+import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
@@ -294,9 +295,12 @@ public class decodeData {
             return decodeSecretDataLSB();
         }else if(algorithm == 3){
             return decodeSecretDataLSBMR();
-        }else{
+        }else if(algorithm == 4){
             return decodeSecretDataPVD();
+        }else if(algorithm == 5){
+            return decodeSecretDataEdge();
         }
+        return new StringBuilder();
     }
 
     /**
@@ -320,7 +324,7 @@ public class decodeData {
         while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentLSBPosition != endLSBPosition) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition);
+            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition, null);
 
             // Update positional information
             firstPosition = colourData.get(0);
@@ -434,13 +438,65 @@ public class decodeData {
     }
 
     /**
+     * Decodes the data hidden in the image by edge based LSB
+     *
+     * @return          The binary data to be hidden within the image
+     */
+    public StringBuilder decodeSecretDataEdge(){
+
+        // Define some initial variables required
+        ArrayList<int[]> colourData = null;   // Stores data about the next two colours to manipulate
+        int firstColour;            // Stores the first colour to be manipulated
+        StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
+
+        // Get positions
+        cannyEdgeDetection canny = new cannyEdgeDetection();
+        BufferedImage edgeImage = canny.detectEdges(stegoImage);
+        ArrayList<int[]> pixels = canny.getEdgePixels(edgeImage);
+
+        // Define some variables for determining which pixels to manipulate
+        int currentColourPosition = -1;
+        int currentLSBPosition = -1;
+        int count = 0;
+        int[] firstPosition = pixels.get(count);
+
+        // Loop through binary data to be inserted
+        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentLSBPosition != endLSBPosition) {
+
+            // Get the colour data required for embedding
+            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition, pixels.get(count + 1));
+
+            // Update positional information
+            firstPosition = colourData.get(0);
+            currentColourPosition = colourData.get(1)[0];
+            currentLSBPosition = colourData.get(2)[0];
+
+            // Update count (if necessary)
+            if(firstPosition == pixels.get(count + 1)){
+                count += 1;
+            }
+
+            // Get the next colour channel data
+            firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
+
+            // Append the retrieved binary data to the final string of data
+            binary.append(getSpecificLSB(firstColour, lsbsToConsider.get(currentLSBPosition)));
+        }
+
+        return binary;
+    }
+
+    /**
      * Gets the next pixel we should encode into
      *
      * @param firstPosition         The positional data of the first pixel being considered
      * @param currentColourPosition The current position in coloursToConsider we are using
+     * @param currentLSBPosition    The current LSB we are accessing in a colour channel
+     * @param nextPosition          The next position to be used (only applies to Edge-based embedding)
      * @return                      The order we should consider pixel whilst encoding
      */
-    public ArrayList<int[]> getNextDataLSB(int[] firstPosition, int currentColourPosition, int currentLSBPosition){
+    public ArrayList<int[]> getNextDataLSB(int[] firstPosition, int currentColourPosition, int currentLSBPosition,
+                                           int[] nextPosition){
 
         // Define ArrayList to store data in
         ArrayList<int[]> current = new ArrayList<>();
@@ -456,7 +512,12 @@ public class decodeData {
             currentColourPosition += 1;
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
                 currentColourPosition = 0;
-                firstPosition = generateNextPosition(firstPosition, random);
+                // Edge-based approach
+                if(algorithm == 5){
+                    firstPosition = nextPosition;
+                }else{
+                    firstPosition = generateNextPosition(firstPosition, random);
+                }
             }
         }
 

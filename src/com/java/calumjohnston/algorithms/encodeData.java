@@ -1,6 +1,7 @@
 package com.java.calumjohnston.algorithms;
 
 import com.java.calumjohnston.exceptions.DataOverflowException;
+import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
@@ -207,8 +208,10 @@ public class encodeData {
             encodeSecretDataLSB(binary);
         }else if(algorithm == 3){
             encodeSecretDataLSBMR(binary);
-        }else{
+        }else if(algorithm == 4){
             encodeSecretDataPVD(binary);
+        }else if(algorithm == 5){
+            encodeSecretDataEdge(binary);
         }
     }
 
@@ -234,7 +237,7 @@ public class encodeData {
         for (int i = 0; i < binary.length(); i += 1) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition, random);
+            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition, random, null);
 
             // Update positional information
             firstPosition = colourData.get(0);
@@ -465,15 +468,79 @@ public class encodeData {
     }
 
     /**
+     * Encodes the data to be hidden into the image by either
+     * LSB or LSBM
+     *
+     * @param binary        The binary data to be hidden within the image
+     */
+    public void encodeSecretDataEdge(StringBuilder binary){
+
+        // Define some variables for manipulating pixel data
+        ArrayList<int[]> colourData = null;     // Stores data about the next two colours to manipulate
+        int colour;                             // Stores the colour to be manipulated
+        int newColour = 0;                          // Stores the manipulated colour
+
+        // Get positions
+        cannyEdgeDetection canny = new cannyEdgeDetection();
+        BufferedImage edgeImage = canny.detectEdges(coverImage);
+        ArrayList<int[]> pixels = canny.getEdgePixels(edgeImage);
+
+        // Define some variables for determining which pixels to manipulate
+        int currentColourPosition = -1;
+        int currentLSBPosition = -1;
+        int count = 0;
+        int[] firstPosition = pixels.get(count);
+
+        // Loop through binary data to be inserted
+        for (int i = 0; i < binary.length(); i += 1) {
+
+            // Get the colour data required for embedding
+            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition, random, pixels.get(count + 1));
+
+            // Update positional information
+            firstPosition = colourData.get(0);
+            currentColourPosition = colourData.get(1)[0];
+            currentLSBPosition = colourData.get(2)[0];
+
+            // Update count (if necessary)
+            if(firstPosition == pixels.get(count + 1)){
+                count += 1;
+            }
+
+            // Get bit required from binary input
+            char data_1 = binary.charAt(i);
+
+            // Get the next colour channel data
+            colour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
+
+            // Update current colour data based on binary data to insert
+            newColour = updateColourLSB(colour, data_1, lsbsToConsider.get(currentLSBPosition));
+
+            // Write colour data back to the image
+            writeColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition, newColour);
+
+        }
+
+        // Write end position data (for decoding purposes)
+        endPositionX = firstPosition[0];
+        endPositionY = firstPosition[1];
+        endColourChannel = currentColourPosition;
+        endLSBPosition = currentLSBPosition;
+
+    }
+
+    /**
      * Gets the next pixel we should encode into
      *
      * @param firstPosition         The positional data of the first pixel being considered
      * @param currentColourPosition The current position in coloursToConsider we are using
+     * @param currentLSBPosition    The current LSB we are accessing in a colour channel
      * @param random                Determines whether random embedding was used
+     * @param nextPosition          The next position to be used (only applies to Edge-based embedding)
      * @return                      The order we should consider pixel whilst encoding
      */
     public ArrayList<int[]> getNextDataLSB(int[] firstPosition, int currentColourPosition, int currentLSBPosition,
-                                        boolean random){
+                                        boolean random, int[] nextPosition){
 
         // Define ArrayList to store data in
         ArrayList<int[]> current = new ArrayList<>();
@@ -489,7 +556,12 @@ public class encodeData {
             currentColourPosition += 1;
             if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
                 currentColourPosition = 0;
-                firstPosition = generateNextPosition(firstPosition, random);
+                // Edge based approach
+                if(algorithm == 5){
+                    firstPosition = nextPosition;
+                }else {
+                    firstPosition = generateNextPosition(firstPosition, random);
+                }
             }
         }
 
