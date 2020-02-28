@@ -103,7 +103,7 @@ public class encodeData {
         // Determine whether random embedding is being used
         this.random = random;
         if (random) {
-            if(algorithm == 3){
+            if(algorithm == 3 || algorithm == 4){
                 generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed, 2);
             }else {
                 generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed);
