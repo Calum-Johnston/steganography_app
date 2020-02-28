@@ -225,7 +225,7 @@ public class encodeData {
         int newColour = 0;                          // Stores the manipulated colour
 
         // Generate Order to embed data in
-        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder(binary.length());
         int count = 0;
         int[] position = new int[2];
         int currentColourPosition = 0;
@@ -267,8 +267,10 @@ public class encodeData {
         }
 
         // Write end position data (for decoding purposes)
-        endPositionX = position[0];
-        endPositionY = position[1];
+        if(!random) {
+            endPositionX = position[0];
+            endPositionY = position[1];
+        }
         endColourChannel = currentColourPosition;
         endLSBPosition = currentLSBPosition;
 
@@ -291,7 +293,7 @@ public class encodeData {
         int currentColourPosition = 0;
 
         // Generate Order to embed data in
-        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder(binary.length());
         int count = 0;
 
         // Loop through binary data to be inserted
@@ -368,8 +370,10 @@ public class encodeData {
         }
 
         // Write end position data (for decoding purposes)
-        endPositionX = firstPosition[0];
-        endPositionY = firstPosition[1];
+        if(!random) {
+            endPositionX = secondPosition[0];
+            endPositionY = secondPosition[1];
+        }
         endColourChannel = currentColourPosition;
 
     }
@@ -392,7 +396,7 @@ public class encodeData {
         String dataToEncode;
 
         // Generate Order to embed data in
-        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder(binary.length());
         int count = 0;
 
         // Loop through binary data to be inserted
@@ -408,11 +412,6 @@ public class encodeData {
             firstPosition = new int[] {firstColourData.get(0), firstColourData.get(1)};
             secondPosition = new int[] {secondColourData.get(0), secondColourData.get(1)};
             currentColourPosition = firstColourData.get(2);
-
-            // Check we are within bounds
-            if(secondPosition[0] >= coverImage.getWidth() || secondPosition[1] >= coverImage.getHeight()){
-                throw new DataOverflowException("Input text too large");
-            }
 
             // Get the next two colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
@@ -462,33 +461,88 @@ public class encodeData {
         }
 
         // Write end position data (for decoding purposes)
-        endPositionX = firstPosition[0];
-        endPositionY = firstPosition[1];
+        if(!random) {
+            endPositionX = secondPosition[0];
+            endPositionY = secondPosition[1];
+        }
         endColourChannel = currentColourPosition;
 
     }
 
 
 
-    public ArrayList<ArrayList<Integer>> generateEmbeddingOrder(){
+    public ArrayList<ArrayList<Integer>> generateEmbeddingOrder(int dataSize){
 
         ArrayList<ArrayList<Integer>> order = new ArrayList<>();
-        ArrayList<int[]> pixelOrder = generatePixelOrder();
+        return generatePixelOrder(dataSize);
 
-        for(int[] pixel : pixelOrder){
-            definePixelInfo(pixel, order);
+    }
+
+    public ArrayList<ArrayList<Integer>> generatePixelOrder(int dataSize){
+        ArrayList<ArrayList<Integer>> order = new ArrayList<>();
+        int[] naiveOrder = new int[2];
+
+        // Edge-based order
+        /**if(algorithm == 5){
+            cannyEdgeDetection detection = new cannyEdgeDetection();
+            BufferedImage edgeImage = detection.detectEdges(coverImage);
+            naiveOrder = detection.getEdgePixels(edgeImage);
+            if(random){
+                // https://stackoverflow.com/questions/6284589/setting-a-seed-to-shuffle-arraylist-in-java-deterministically
+                // https://stackoverflow.com/questions/27346809/getting-a-range-off-user-input-for-random-generation
+                Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
+            }
+            return naiveOrder;
+        }*/
+
+        int width = coverImage.getWidth();
+        int height = coverImage.getHeight();
+        int gap = 1;
+        if(algorithm == 4){
+            gap = 2;
         }
 
+        // Change final value depending on the gap (prevents errors later)
+        int finalValue = width * height;
+        if(gap > 1 && (width * height) % gap != 0){
+            finalValue = (width * height) - (gap - 1);
+        }
+
+        int multipler = 1;
+        if(algorithm == 3){
+            gap = 2;
+            multipler = 2;
+        }
+
+        int x = 0; int y = 0;
+        for(int i = 18; i < finalValue && (dataSize - 1) >= 0; i += gap){
+            dataSize -= lsbsToConsider.size() * multipler;
+            x = i % width;
+            y = i / width;
+            naiveOrder = new int[] {x, y};
+            definePixelInfo(naiveOrder, order);
+        }
+
+        if(random){
+            if(algorithm == 3 || algorithm == 4){
+                endPositionX = (x + 1) % coverImage.getWidth();
+                endPositionY = (endPositionX == 0 ? y + 1 : y);
+            }else {
+                endPositionX = x;
+                endPositionY = y;
+            }
+        }
+
+        // Random order
+        if(random) {
+            Collections.shuffle(order, new Random(seed.hashCode()));
+        }
         return order;
     }
 
     public void definePixelInfo(int[] pixel, ArrayList<ArrayList<Integer>> order){
 
         int nextX = 0; int nextY = 0;
-        if(algorithm == 4){
-            nextX = (pixel[0] + 1) % coverImage.getWidth();
-            nextY = (nextX == 0 ? pixel[1] + 1 : pixel[1]);
-        }
 
         int colourToConsider = 0;
         for(int i = 0; i < lsbsToConsider.size(); i++){
@@ -506,62 +560,23 @@ public class encodeData {
             // Add data to ArrayList to return
             current.add(pixel[0]);
             current.add(pixel[1]);
-            current.add(colourToConsider);
+            current.add(coloursToConsider[colourToConsider]);
             current.add(lsbToConsider);
             order.add(current);
 
-            if(algorithm == 4) {
+            if(algorithm == 4 || algorithm == 3) {
                 current = new ArrayList<>();
+                nextX = (pixel[0] + 1) % coverImage.getWidth();
+                nextY = (nextX == 0 ? pixel[1] + 1 : pixel[1]);
                 current.add(nextX);
                 current.add(nextY);
-                current.add(colourToConsider);
+                current.add(coloursToConsider[colourToConsider]);
                 current.add(lsbToConsider);
                 order.add(current);
             }
         }
     }
 
-    public ArrayList<int[]> generatePixelOrder(){
-        ArrayList<int[]> naiveOrder = new ArrayList<>();
-
-        // Edge-based order
-        if(algorithm == 5){
-            cannyEdgeDetection detection = new cannyEdgeDetection();
-            BufferedImage edgeImage = detection.detectEdges(coverImage);
-            naiveOrder = detection.getEdgePixels(edgeImage);
-            if(random){
-                // https://stackoverflow.com/questions/6284589/setting-a-seed-to-shuffle-arraylist-in-java-deterministically
-                // https://stackoverflow.com/questions/27346809/getting-a-range-off-user-input-for-random-generation
-                Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
-            }
-            return naiveOrder;
-        }
-
-        int width = coverImage.getWidth();
-        int height = coverImage.getHeight();
-        int gap = 1;
-        if(algorithm == 4){
-            gap = 2;
-        }
-
-        // Change final value depending on the gap (prevents errors later)
-        int finalValue = width * height;
-        if(gap > 1 && (width * height) % gap != 0){
-            finalValue = (width * height) - (gap - 1);
-        }
-
-        for(int i = 18; i < finalValue; i += gap){
-            int x = i % width;
-            int y = i / width;
-            naiveOrder.add(new int[] {x, y});
-        }
-
-        // Random order
-        if(random) {
-            Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
-        }
-        return naiveOrder;
-    }
 
 
 

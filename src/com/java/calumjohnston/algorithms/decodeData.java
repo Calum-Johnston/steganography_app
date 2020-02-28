@@ -298,7 +298,7 @@ public class decodeData {
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
 
         // Generate Order to embed data in
-        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder(binary.length());
         int count = 0;
         int[] position = new int[] {0, 0};
         int currentColourPosition = 0;
@@ -345,11 +345,11 @@ public class decodeData {
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
 
         // Generate Order to embed data in
-        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder(binary.length());
         int count = 0;
 
         // Loop through binary data to be inserted
-        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
+        while(secondPosition[0] != endPositionX || secondPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
 
             // Get the colour data required for embedding
             firstColourData = order.get(count);
@@ -393,11 +393,11 @@ public class decodeData {
         StringBuilder binary = new StringBuilder();       // Stores the data we wish have decoded (in bits)
 
         // Generate Order to embed data in
-        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder();
+        ArrayList<ArrayList<Integer>> order = generateEmbeddingOrder(binary.length());
         int count = 0;
 
         // Loop through binary data to be inserted
-        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
+        while(secondPosition[0] != endPositionX || secondPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
 
             // Get the colour data required for embedding
             firstColourData = order.get(count);
@@ -438,13 +438,66 @@ public class decodeData {
 
 
 
-    public ArrayList<ArrayList<Integer>> generateEmbeddingOrder(){
+    public ArrayList<ArrayList<Integer>> generateEmbeddingOrder(int dataSize){
 
         ArrayList<ArrayList<Integer>> order = new ArrayList<>();
-        ArrayList<int[]> pixelOrder = generatePixelOrder();
+        return generatePixelOrder(dataSize);
 
-        for(int[] pixel : pixelOrder){
-            definePixelInfo(pixel, order);
+    }
+
+    public ArrayList<ArrayList<Integer>> generatePixelOrder(int dataSize) {
+        ArrayList<ArrayList<Integer>> order = new ArrayList<>();
+        int[] naiveOrder = new int[2];
+
+        // Edge-based order
+        /**if (algorithm == 5) {
+            cannyEdgeDetection detection = new cannyEdgeDetection();
+            BufferedImage edgeImage = detection.detectEdges(stegoImage);
+            naiveOrder = detection.getEdgePixels(edgeImage);
+            if (random) {
+                // https://stackoverflow.com/questions/6284589/setting-a-seed-to-shuffle-arraylist-in-java-deterministically
+                // https://stackoverflow.com/questions/27346809/getting-a-range-off-user-input-for-random-generation
+                Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
+            }
+            return naiveOrder;
+        }*/
+
+        int width = stegoImage.getWidth();
+        int gap = 1;
+        if (algorithm == 4 || algorithm == 3) {
+            gap = 2;
+        }
+
+        int i = 18;
+        while (endPositionX > (i % width) || endPositionY > (i / width)) {
+            dataSize -= lsbsToConsider.size();
+            int x = i % width;
+            int y = i / width;
+            naiveOrder = new int[]{x, y};
+            i += gap;
+            definePixelInfo(naiveOrder, order);
+        }
+        if (!random || algorithm != 3) {
+            if(algorithm != 4) {
+                definePixelInfo(new int[]{endPositionX, endPositionY}, order);
+            }
+        }
+
+        // Random order
+        if (random) {
+            Collections.shuffle(order, new Random(seed.hashCode()));
+        }
+
+        // Set end position
+        if (algorithm != 3 || algorithm != 4){
+            endPositionX = order.get(order.size() - 1).get(0);
+            endPositionY = order.get(order.size() - 1).get(1);
+
+        }
+
+        if(algorithm == 3 || algorithm == 4){
+            endPositionX = order.get(order.size() - 1).get(0) + 1 % width;
+            endPositionY = (endPositionX == 0 ? order.get(order.size() - 1).get(1) + 1 : order.get(order.size() - 1).get(1));
         }
 
         return order;
@@ -453,10 +506,6 @@ public class decodeData {
     public void definePixelInfo(int[] pixel, ArrayList<ArrayList<Integer>> order){
 
         int nextX = 0; int nextY = 0;
-        if(algorithm == 4){
-            nextX = (pixel[0] + 1) % stegoImage.getWidth();
-            nextY = (nextX == 0 ? pixel[1] + 1 : pixel[1]);
-        }
 
         int colourToConsider = 0;
         for(int i = 0; i < lsbsToConsider.size(); i++){
@@ -474,62 +523,23 @@ public class decodeData {
             // Add data to ArrayList to return
             current.add(pixel[0]);
             current.add(pixel[1]);
-            current.add(colourToConsider);
+            current.add(coloursToConsider[colourToConsider]);
             current.add(lsbToConsider);
             order.add(current);
 
-            if(algorithm == 4) {
+            if(algorithm == 4 || algorithm == 3) {
                 current = new ArrayList<>();
+                nextX = (pixel[0] + 1) % stegoImage.getWidth();
+                nextY = (nextX == 0 ? pixel[1] + 1 : pixel[1]);
                 current.add(nextX);
                 current.add(nextY);
-                current.add(colourToConsider);
+                current.add(coloursToConsider[colourToConsider]);
                 current.add(lsbToConsider);
                 order.add(current);
             }
         }
     }
 
-    public ArrayList<int[]> generatePixelOrder(){
-        ArrayList<int[]> naiveOrder = new ArrayList<>();
-
-        // Edge-based order
-        if(algorithm == 5){
-            cannyEdgeDetection detection = new cannyEdgeDetection();
-            BufferedImage edgeImage = detection.detectEdges(stegoImage);
-            naiveOrder = detection.getEdgePixels(edgeImage);
-            if(random){
-                // https://stackoverflow.com/questions/6284589/setting-a-seed-to-shuffle-arraylist-in-java-deterministically
-                // https://stackoverflow.com/questions/27346809/getting-a-range-off-user-input-for-random-generation
-                Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
-            }
-            return naiveOrder;
-        }
-
-        int width = stegoImage.getWidth();
-        int height = stegoImage.getHeight();
-        int gap = 1;
-        if(algorithm == 4){
-            gap = 2;
-        }
-
-        // Change final value depending on the gap (prevents errors later)
-        int finalValue = width * height;
-        if(gap > 1 && (width * height) % gap != 0){
-            finalValue = (width * height) - (gap - 1);
-        }
-
-        for(int i = 18; i < finalValue; i += gap){
-            int x = i % width;
-            int y = i / width;
-            naiveOrder.add(new int[] {x, y});
-        }
-
-        // Random order
-        if(random) {
-            Collections.shuffle(naiveOrder, new Random(seed.hashCode()));
-        }
-        return naiveOrder;
-    }
 
 
 
