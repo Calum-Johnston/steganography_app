@@ -2,14 +2,12 @@ package unittests;
 
 import com.java.calumjohnston.algorithms.decodeData;
 import com.java.calumjohnston.algorithms.encodeData;
-import com.java.calumjohnston.utilities.cannyEdgeDetection;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
-import java.nio.Buffer;
 
 import static org.junit.Assert.*;
 
@@ -47,7 +45,7 @@ public class test {
 
         // LSB, OPAP & LSBM
         int count = 0; int fail = 0;
-        /**for(int redBits = 1; redBits < 9; redBits++){
+        /*for(int redBits = 1; redBits < 9; redBits++){
             for(int greenBits = 1; greenBits < 9; greenBits++){
                 for(int blueBits = 1; blueBits < 9; blueBits++){
                     for(boolean random : new boolean[] {false, true}) {
@@ -87,7 +85,7 @@ public class test {
             }
         }*/
 
-        // LSBMR & PVD
+        // LSBMR, PVD & Edge-based
         int redBits = 1; int greenBits = 1; int blueBits = 1;
         for(boolean random : new boolean[] {false, true}) {
             for(boolean red : new boolean[] {false, true}) {
