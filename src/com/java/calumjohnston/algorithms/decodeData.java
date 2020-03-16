@@ -4,6 +4,7 @@ import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
@@ -16,12 +17,10 @@ public class decodeData {
     BufferedImage stegoImage;
     boolean random;
     int[] coloursToConsider;
-    ArrayList<Integer> lsbsToConsider;
     pseudorandom generator;
     int endPositionX;
     int endPositionY;
     int endColourChannel;
-    int endLSBPosition;
     int algorithm;
 
     /**
@@ -35,11 +34,12 @@ public class decodeData {
      * Acts as central controller to decoding functions
      *
      * @param stegoImage    The image we will decode data from
+     * @param testEnv       Describes what environment the program is running in
      * @return              The data to be hidden within the image
      */
-    public String decode(BufferedImage stegoImage){
+    public String decode(BufferedImage stegoImage, boolean testEnv){
         // Setup data to be used for decoding
-        setupData(stegoImage);
+        setupData(stegoImage, testEnv);
 
         // Check parameter data will allow for successful decoding
         checkData();
@@ -60,8 +60,9 @@ public class decodeData {
     /**
      * Sets up the initial data required for encoding
      * @param stegoImage    The image we will decode data from
+     * @param testEnv       Describes what environment the program is running in
      */
-    public void setupData(BufferedImage stegoImage){
+    public void setupData(BufferedImage stegoImage, boolean testEnv){
 
         // Define the image we are reading data from
         this.stegoImage = stegoImage;
@@ -78,17 +79,16 @@ public class decodeData {
         boolean blue = binaryToInt(parameters.substring(5,6)) == 1;
         this.coloursToConsider = getColoursToConsider(red, green, blue);
 
-        int redBits = binaryToInt(parameters.substring(6, 9)) + 1;
-        int greenBits = binaryToInt(parameters.substring(9, 12)) + 1;
-        int blueBits = binaryToInt(parameters.substring(12, 15)) + 1;
-        this.lsbsToConsider = getLSBsToConsider(redBits, greenBits, blueBits, red, green, blue);
-
         // Determine whether random embedding is being used
-        this.random = binaryToInt(parameters.substring(15, 16)) == 1;
+        this.random = binaryToInt(parameters.substring(6, 7)) == 1;
         if (random) {
-            //String seed = JOptionPane.showInputDialog("Please select a password for the data");
-            String seed = "Calum";
-            if(algorithm == 3 || algorithm == 4){
+            String seed = "";
+            if(testEnv){
+                seed = "Calum";
+            }else{
+                seed = JOptionPane.showInputDialog("Please select a password for the data");
+            }
+            if(algorithm == 2 || algorithm == 3){
                 generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed, 2);
             }else {
                 generator = new pseudorandom(stegoImage.getHeight(), stegoImage.getWidth(), seed);
@@ -96,11 +96,9 @@ public class decodeData {
         }
 
         // Get end position for data encoding
-        endPositionX = binaryToInt(parameters.substring(16,31));
-        endPositionY = binaryToInt(parameters.substring(31,46));
-        endColourChannel = binaryToInt(parameters.substring(46, 48));
-        endLSBPosition = binaryToInt(parameters.substring(48));
-
+        endPositionX = binaryToInt(parameters.substring(7,22));
+        endPositionY = binaryToInt(parameters.substring(22,37));
+        endColourChannel = binaryToInt(parameters.substring(37, 39));
     }
 
     /**
@@ -236,44 +234,6 @@ public class decodeData {
         return new int[]{0, 1, 2};
     }
 
-    /**
-     * Gets the LSBs that will be used for each colour
-     *
-     * @param redBits       Number of LSBs to use in red colour channel
-     * @param greenBits     Number of LSBs to use in green colour channel
-     * @param blueBits      Number of LSBs to use in blue colour channel
-     * @param red           Determines whether the red colour channel will be used
-     * @param green         Determines whether the green colour channel will be used
-     * @param blue          Determines whether the blue colour channel will be used
-     * @return              The LSBs that will be considered for each colour (same order as coloursToConsider)
-     */
-    public ArrayList<Integer> getLSBsToConsider(int redBits, int greenBits, int blueBits,
-                                                boolean red, boolean green, boolean blue){
-        ArrayList<Integer> lsbToConsider = new ArrayList<Integer>();
-        int count = 0;
-        if(red) {
-            for (int i = 0; i < redBits; i++) {
-                lsbToConsider.add(count);
-                count += 1;
-            }
-        }
-        if(green) {
-            count = 0;
-            for (int i = redBits; i < greenBits + redBits; i++) {
-                lsbToConsider.add(count);
-                count += 1;
-            }
-        }
-        if(blue) {
-            count = 0;
-            for (int i = redBits + greenBits; i < redBits + greenBits + blueBits; i++) {
-                lsbToConsider.add(count);
-                count += 1;
-            }
-        }
-        return lsbToConsider;
-    }
-
 
 
     // ======= CHECK FUNCTIONS =======
@@ -291,13 +251,13 @@ public class decodeData {
      */
     public StringBuilder decodeSecretData(){
         // Determine which encoding scheme to use
-        if(algorithm <= 2){
+        if(algorithm <= 1){
             return decodeSecretDataLSB();
-        }else if(algorithm == 3){
+        }else if(algorithm == 2){
             return decodeSecretDataLSBMR();
-        }else if(algorithm == 4){
+        }else if(algorithm == 3){
             return decodeSecretDataPVD();
-        }else if(algorithm == 5){
+        }else if(algorithm == 4){
             return decodeSecretDataEdge();
         }
         return new StringBuilder();
@@ -317,25 +277,23 @@ public class decodeData {
 
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
-        int currentLSBPosition = -1     ;
         int[] firstPosition = generateNextPosition(new int[] {17, 0}, false);
 
         // Loop through binary data to be inserted
-        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentLSBPosition != endLSBPosition) {
+        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition, null);
+            colourData = getNextDataLSB(firstPosition, currentColourPosition, null);
 
             // Update positional information
             firstPosition = colourData.get(0);
             currentColourPosition = colourData.get(1)[0];
-            currentLSBPosition = colourData.get(2)[0];
 
             // Get the next colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
 
             // Append the retrieved binary data to the final string of data
-            binary.append(getSpecificLSB(firstColour, lsbsToConsider.get(currentLSBPosition)));
+            binary.append(getLSB(firstColour));
         }
 
         return binary;
@@ -461,15 +419,14 @@ public class decodeData {
         int[] firstPosition = pixels.get(count);
 
         // Loop through binary data to be inserted
-        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentLSBPosition != endLSBPosition) {
+        while(firstPosition[0] != endPositionX || firstPosition[1] != endPositionY || currentColourPosition != endColourChannel) {
 
             // Get the colour data required for embedding
-            colourData = getNextDataLSB(firstPosition, currentColourPosition, currentLSBPosition, pixels.get(count + 1));
+            colourData = getNextDataLSB(firstPosition, currentColourPosition, pixels.get(count + 1));
 
             // Update positional information
             firstPosition = colourData.get(0);
             currentColourPosition = colourData.get(1)[0];
-            currentLSBPosition = colourData.get(2)[0];
 
             // Update count (if necessary)
             if(firstPosition == pixels.get(count + 1)){
@@ -480,7 +437,7 @@ public class decodeData {
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
 
             // Append the retrieved binary data to the final string of data
-            binary.append(getSpecificLSB(firstColour, lsbsToConsider.get(currentLSBPosition)));
+            binary.append(getLSB(firstColour));
         }
 
         return binary;
@@ -491,40 +448,29 @@ public class decodeData {
      *
      * @param firstPosition         The positional data of the first pixel being considered
      * @param currentColourPosition The current position in coloursToConsider we are using
-     * @param currentLSBPosition    The current LSB we are accessing in a colour channel
      * @param nextPosition          The next position to be used (only applies to Edge-based embedding)
      * @return                      The order we should consider pixel whilst encoding
      */
-    public ArrayList<int[]> getNextDataLSB(int[] firstPosition, int currentColourPosition, int currentLSBPosition,
-                                           int[] nextPosition){
+    public ArrayList<int[]> getNextDataLSB(int[] firstPosition, int currentColourPosition, int[] nextPosition){
 
         // Define ArrayList to store data in
         ArrayList<int[]> current = new ArrayList<>();
 
         // Update current position to check for in coloursToConsider
-        currentLSBPosition += 1;
-
-        // Update positions (if ran out of colour channels to manipulate with current positions)
-        if(currentLSBPosition == lsbsToConsider.size()){
-            currentLSBPosition = 0;
-        }
-        if(lsbsToConsider.get(currentLSBPosition) == 0) {
-            currentColourPosition += 1;
-            if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
-                currentColourPosition = 0;
-                // Edge-based approach
-                if(algorithm == 5){
-                    firstPosition = nextPosition;
-                }else{
-                    firstPosition = generateNextPosition(firstPosition, random);
-                }
+        currentColourPosition += 1;
+        if ((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0) {
+            currentColourPosition = 0;
+            // Edge-based approach
+            if(algorithm == 4){
+                firstPosition = nextPosition;
+            }else{
+                firstPosition = generateNextPosition(firstPosition, random);
             }
         }
 
         // Add data to ArrayList to return
         current.add(firstPosition);
         current.add(new int[] {currentColourPosition});
-        current.add(new int[] {currentLSBPosition});
 
         return current;
     }
@@ -549,7 +495,7 @@ public class decodeData {
         if((currentColourPosition + 1) % (coloursToConsider.length + 1) == 0){
             currentColourPosition = 0;
             firstPosition = generateNextPosition(secondPosition, random);
-            if(random && algorithm == 3){
+            if(random && algorithm == 2){
                 int newLine = (firstPosition[0] + 1) % stegoImage.getWidth();
                 if (newLine == 0) {
                     secondPosition = new int[] {0, firstPosition[1] + 1};
@@ -567,20 +513,6 @@ public class decodeData {
         current.add(new int[] {currentColourPosition});
 
         return current;
-    }
-
-    /**
-     * Gets the least significant bit of some integer at a certain point
-     *
-     * @param number        The number retrieve the data from
-     * @param LSB           The LSB we are considering
-     * @return              The LSB of the number (in binary)
-     */
-    public char getSpecificLSB(int number, int LSB){
-        StringBuilder binaryColour = new StringBuilder();
-        binaryColour.append(conformBinaryLength(number, 8));
-        int lsb_Position = 7 - LSB;
-        return binaryColour.charAt(lsb_Position);
     }
 
     /**

@@ -73,7 +73,7 @@ public class decoder {
         decode = new decodeData();
         String data = "";
         try{
-            data = decode.decode(stegoImage);
+            data = decode.decode(stegoImage, false);
         }catch(DataOverflowException e){
             System.out.println("Error");
         }

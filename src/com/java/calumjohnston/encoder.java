@@ -34,9 +34,6 @@ public class encoder {
     private JCheckBox randomCheckBox;
     private JComboBox algorithmComboBox;
     private JButton mainMenuButton;
-    private JComboBox redLSBComboBox;
-    private JComboBox greenLSBComboBox;
-    private JComboBox blueLSBComboBox;
     private JTextField psnrTextField;
 
     private final JFileChooser openFileChooser;
@@ -81,21 +78,10 @@ public class encoder {
 
         // Sets up algorithm options in combo box
         algorithmComboBox.addItem("LSB");
-        algorithmComboBox.addItem("OPAP");
         algorithmComboBox.addItem("LSBM");
         algorithmComboBox.addItem("LSBMR");
         algorithmComboBox.addItem("PVD");
         algorithmComboBox.addItem("Edge-based");
-
-        // Sets up LSB options in combo box
-        redLSBComboBox.addItem(1); greenLSBComboBox.addItem(1); blueLSBComboBox.addItem(1);
-        redLSBComboBox.addItem(2); greenLSBComboBox.addItem(2); blueLSBComboBox.addItem(2);
-        redLSBComboBox.addItem(3); greenLSBComboBox.addItem(3); blueLSBComboBox.addItem(3);
-        redLSBComboBox.addItem(4); greenLSBComboBox.addItem(4); blueLSBComboBox.addItem(4);
-        redLSBComboBox.addItem(5); greenLSBComboBox.addItem(5); blueLSBComboBox.addItem(5);
-        redLSBComboBox.addItem(6); greenLSBComboBox.addItem(6); blueLSBComboBox.addItem(6);
-        redLSBComboBox.addItem(7); greenLSBComboBox.addItem(7); blueLSBComboBox.addItem(7);
-        redLSBComboBox.addItem(8); greenLSBComboBox.addItem(8); blueLSBComboBox.addItem(8);
 
         selectImageButton.addActionListener(new ActionListener() {
             @Override
@@ -122,15 +108,6 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 red = !red;
-                if(!red){
-                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
-                        redLSBComboBox.setEnabled(false);
-                    }
-                }else{
-                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
-                        redLSBComboBox.setEnabled(true);
-                    }
-                }
             }
         });
 
@@ -138,15 +115,6 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 green = !green;
-                if(!green){
-                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
-                        greenLSBComboBox.setEnabled(false);
-                    }
-                }else{
-                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
-                        greenLSBComboBox.setEnabled(true);
-                    }
-                }
             }
         });
 
@@ -154,15 +122,6 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 blue = !blue;
-                if(!blue){
-                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
-                        blueLSBComboBox.setEnabled(false);
-                    }
-                }else{
-                    if(algorithmComboBox.getSelectedIndex() != 2 && algorithmComboBox.getSelectedIndex() != 3) {
-                        blueLSBComboBox.setEnabled(true);
-                    }
-                }
             }
         });
 
@@ -170,26 +129,11 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 random = !random;
-                if(randomCheckBox.isSelected()) {
+                if (randomCheckBox.isSelected()) {
                     seed = getSeed();
                 }
-                if(seed == null){
+                if (seed == null) {
                     randomCheckBox.setSelected(false);
-                }
-            }
-        });
-        algorithmComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(algorithmComboBox.getSelectedIndex() == 0 || algorithmComboBox.getSelectedIndex() == 1){
-                    redLSBComboBox.setEnabled(true);
-                    greenLSBComboBox.setEnabled(true);
-                    blueLSBComboBox.setEnabled(true);
-                }
-                if(algorithmComboBox.getSelectedIndex() == 2 || algorithmComboBox.getSelectedIndex() == 3){
-                    redLSBComboBox.setEnabled(false);
-                    greenLSBComboBox.setEnabled(false);
-                    blueLSBComboBox.setEnabled(false);
                 }
             }
         });
@@ -209,9 +153,6 @@ public class encoder {
 
         // Get data from combo boxes
         int algorithm = algorithmComboBox.getSelectedIndex();
-        int redLSBs = redLSBComboBox.getSelectedIndex() + 1;
-        int greenLSBs = greenLSBComboBox.getSelectedIndex() + 1;
-        int blueLSBs = blueLSBComboBox.getSelectedIndex() + 1;
         String text = textField.getText();
 
         // Calls algorithm to embed the data
@@ -219,8 +160,7 @@ public class encoder {
         PSNR psnr = new PSNR();
         BufferedImage stegoImage = null;
         try{
-            stegoImage = encode.encode(deepCopy(coverImage), algorithm, red, green, blue, redLSBs, greenLSBs, blueLSBs,
-                    random, seed, text);
+            stegoImage = encode.encode(deepCopy(coverImage), algorithm, red, green, blue, random, seed, text);
             psnrTextField.setText(Double.toString(psnr.calculatePSNR(deepCopy(coverImage), deepCopy(stegoImage))));
         }catch(DataOverflowException e){
             System.out.println("Error");

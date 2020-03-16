@@ -45,71 +45,28 @@ public class test {
 
         // LSB, OPAP & LSBM
         int count = 0; int fail = 0;
-        /*for(int redBits = 1; redBits < 9; redBits++){
-            for(int greenBits = 1; greenBits < 9; greenBits++){
-                for(int blueBits = 1; blueBits < 9; blueBits++){
-                    for(boolean random : new boolean[] {false, true}) {
-                        for(boolean red : new boolean[] {false, true}) {
-                            for (boolean green : new boolean[]{false, true}) {
-                                for (boolean blue : new boolean[]{false, true}) {
-                                    for(int algorithm = 0; algorithm < 3; algorithm++) {
-                                        count += 1;
-                                        String result = "";
-                                        if (red == false && green == false && blue == false) {
-                                            break;
-                                        }
-                                        BufferedImage stegoImage = encoder.encode(coverImage, algorithm, red, green, blue,
-                                                redBits, greenBits, blueBits, random, seed, text);
-                                        String assertionError = null;
-                                        try {
-                                            result = decoder.decode(stegoImage);
-                                            assertEquals(text, result);
-                                        } catch (AssertionError ae) {
-                                            assertionError = ae.toString();
-                                        }
-                                        if (assertionError != null) {
-                                            System.out.println("Red: " + red + ", Green: " + green + ", Blue: " + blue);
-                                            System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
-                                            System.out.println("Algorithm: LSB");
-                                            System.out.println("Random: " + random + ", with seed: " + seed);
-                                            System.out.println("Text: " + text);
-                                            System.out.println("Result: " + result);
-                                            fail += 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }*/
-
-        // LSBMR, PVD & Edge-based
-        int redBits = 1; int greenBits = 1; int blueBits = 1;
         for(boolean random : new boolean[] {false, true}) {
             for(boolean red : new boolean[] {false, true}) {
                 for (boolean green : new boolean[]{false, true}) {
                     for (boolean blue : new boolean[]{false, true}) {
-                        for(int algorithm = 5; algorithm < 6; algorithm++) {
+                        for(int algorithm = 0; algorithm < 5; algorithm++) {
                             count += 1;
                             String result = "";
                             if (red == false && green == false && blue == false) {
                                 break;
                             }
-                            BufferedImage stegoImage = encoder.encode(deepCopy(coverImage), algorithm, red, green, blue,
-                                    redBits, greenBits, blueBits, random, seed, text);
+                            BufferedImage stegoImage = encoder.encode(coverImage, algorithm, red, green, blue,
+                                                random, seed, text);
                             String assertionError = null;
                             try {
-                                result = decoder.decode(stegoImage);
+                                result = decoder.decode(stegoImage, true);
                                 assertEquals(text, result);
                             } catch (AssertionError ae) {
                                 assertionError = ae.toString();
                             }
                             if (assertionError != null) {
                                 System.out.println("Red: " + red + ", Green: " + green + ", Blue: " + blue);
-                                System.out.println("Red Bits: " + redBits + " Green Bits: " + greenBits + ", Blue bits: " + blueBits);
-                                System.out.println("Algorithm: " + algorithm);
+                                System.out.println("Algorithm: LSB");
                                 System.out.println("Random: " + random + ", with seed: " + seed);
                                 System.out.println("Text: " + text);
                                 System.out.println("Result: " + result);
@@ -120,8 +77,6 @@ public class test {
                 }
             }
         }
-
-
 
         long endTime = System.currentTimeMillis();
         float differenceMS = (endTime - startTime);
