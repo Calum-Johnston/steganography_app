@@ -3,11 +3,14 @@ package com.java.calumjohnston.algorithms;
 import com.java.calumjohnston.exceptions.DataOverflowException;
 import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
+import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -24,6 +27,8 @@ public class encodeData {
     int endColourChannel;
     int algorithm;
     boolean random;
+    int lowThresh;
+    int highThresh;
 
     /**
      * Constructor
@@ -348,11 +353,6 @@ public class encodeData {
             secondPosition = colourData.get(1);
             currentColourPosition = colourData.get(2)[0];
 
-            // Check we are within bounds
-            if(secondPosition[0] >= coverImage.getWidth() || secondPosition[1] >= coverImage.getHeight()){
-                throw new DataOverflowException("Input text too large");
-            }
-
             // Get the next two colour channel data
             firstColour = getColourAtPosition(firstPosition[0], firstPosition[1], currentColourPosition);
             secondColour = getColourAtPosition(secondPosition[0], secondPosition[1], currentColourPosition);
@@ -422,8 +422,7 @@ public class encodeData {
 
         // Get positions
         cannyEdgeDetection canny = new cannyEdgeDetection();
-        BufferedImage edgeImage = canny.detectEdges(coverImage);
-        ArrayList<int[]> pixels = canny.getEdgePixels(edgeImage);
+        ArrayList<int[]> pixels = canny.getEdgePixels(coverImage, binary);
 
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;
@@ -464,6 +463,103 @@ public class encodeData {
         endPositionY = firstPosition[1];
         endColourChannel = currentColourPosition;
 
+    }
+
+    public void encodeSingularData(StringBuilder binary){
+        ArrayList<int[]> pixelOrder;
+        if(algorithm == 0 || algorithm == 1){
+            pixelOrder = generatePixelOrder();
+        }else{
+            cannyEdgeDetection c = new cannyEdgeDetection();
+            pixelOrder = c.getEdgePixels(coverImage, binary);
+        }
+        if(random){
+            Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
+        }
+        int currentPixel = 0;
+        int currentBit = 0;
+        boolean complete = false;
+        while(!complete){
+            int currentX = pixelOrder.get(currentPixel)[0];
+            int currentY = pixelOrder.get(currentPixel)[1];
+            for(int colourChan : coloursToConsider){
+                if(currentBit == binary.length()){
+                    endPositionX = currentX;
+                    endPositionY = currentY;
+                    endColourChannel = colourChan;
+                    complete = true;
+                }
+                char data = binary.charAt(currentBit);
+                int colour  = getColourAtPosition(currentX, currentY, colourChan);
+                int newColour = 0;
+                if(algorithm == 0){
+                    newColour = LSB(data, colour);
+                }else if(algorithm == 1){
+                    newColour = LSBM(data, colour);
+                }
+                writeColourAtPosition(currentX, currentY, colourChan, newColour);
+                currentBit += 1;
+            }
+            currentPixel++;
+        }
+    }
+
+    public int LSB(char data, int colour){
+        if(colour % 2 != Character.getNumericValue(data)){
+            if(colour % 2 == 0){
+                colour++;
+            }else{
+                colour--;
+            }
+        }
+        return colour;
+    }
+
+    public int LSBM(char data, int colour){
+        if(colour % 2 != Character.getNumericValue(data)) {
+            if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
+                colour--;
+                if(colour < 0){
+                    colour = 1;
+                }
+            } else {
+                colour += 1;
+                if(colour > 255){
+                    colour = 254 ;
+                }
+            }
+        }
+        return colour;
+    }
+
+    public ArrayList<int[]> generatePixelOrder(){
+        ArrayList<int[]> order = new ArrayList<>();
+        int x = 0; int y = 0;
+        while(x < coverImage.getWidth() && y < coverImage.getHeight()){
+            order.add(new int[] {x,y});
+            x = (x + 1) % coverImage.getWidth();
+            if(x == 0){
+                y += 1;
+            }
+        }
+        return order;
+    }
+
+
+    public void encodeDoublyData(StringBuilder binary){
+        ArrayList<int[]> pixelOrder = new ArrayList<>();
+        int count = 0;
+
+        for(int i = 0; i < binary.length(); i++){
+            int currentX = pixelOrder.get(count)[0];
+            int currentY = pixelOrder.get(count)[1];
+            int nextX = (currentX + 1) % coverImage.getWidth();
+            int nextY = ((currentY == 0) ? currentY : currentY + 1);
+            for(int colour : coloursToConsider){
+
+            }
+        }
+        count++;
     }
 
     /**
@@ -744,6 +840,9 @@ public class encodeData {
         parameters.append(conformBinaryLength(endPositionX, 15));
         parameters.append(conformBinaryLength(endPositionY, 15));
         parameters.append(conformBinaryLength(endColourChannel, 2));
+        if(algorithm == 4){
+
+        }
         encodeParameters(parameters);
     }
 

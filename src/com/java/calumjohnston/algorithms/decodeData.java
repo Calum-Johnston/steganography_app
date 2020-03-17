@@ -409,8 +409,8 @@ public class decodeData {
 
         // Get positions
         cannyEdgeDetection canny = new cannyEdgeDetection();
-        BufferedImage edgeImage = canny.detectEdges(stegoImage);
-        ArrayList<int[]> pixels = canny.getEdgePixels(edgeImage);
+        int lowThresh = 0; int highThresh = 0;
+        ArrayList<int[]> pixels = canny.getEdgePixels(stegoImage, lowThresh, highThresh);
 
         // Define some variables for determining which pixels to manipulate
         int currentColourPosition = -1;

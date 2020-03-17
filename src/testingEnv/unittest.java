@@ -1,4 +1,4 @@
-package unittests;
+package testingEnv;
 
 import com.java.calumjohnston.algorithms.decodeData;
 import com.java.calumjohnston.algorithms.encodeData;
@@ -14,12 +14,12 @@ import static org.junit.Assert.*;
 /**
  * Runs tests on the various algorithms in the program
  */
-public class test {
+public class unittest {
 
     /**
      * Constructor for the class
      */
-    public test() {
+    public unittest() {
         runTests();
     }
 
@@ -87,7 +87,7 @@ public class test {
     }
 
     public static void main(String[] args){
-        test t = new test();
+        unittest t = new unittest();
     }
 
     public BufferedImage deepCopy(BufferedImage bi) {
