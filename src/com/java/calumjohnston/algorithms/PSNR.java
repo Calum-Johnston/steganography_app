@@ -50,6 +50,10 @@ public class PSNR {
                 double stegoLuma = (0.299 * ((stegoPixel & 0x00ff0000) >> 16) + 0.587 * ((stegoPixel & 0x0000ff00) >> 8)
                         + 0.114 * (stegoPixel & 0x000000ff));
 
+                if(coverLuma != stegoLuma){
+                    System.out.println("asda");
+                }
+
                 // Calculate the squared difference and add to total
                 int difSquared = (int) Math.pow(Math.abs(coverLuma - stegoLuma), 2);
                 total += difSquared;

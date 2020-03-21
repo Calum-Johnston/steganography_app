@@ -48,7 +48,9 @@ public class cannyEdgeDetection {
         double[] thresholds = detOptimalThres(maskedImg, data.length());
 
         // Get edge image from optimal thresholds
-        Mat edgeImg = detectEdges(maskedImg, thresholds[0], thresholds[1]);
+        Mat edgeImg = detectEdges(maskedImg, Math.floor(thresholds[0]), Math.ceil(thresholds[1]));
+
+        int total = getEdgeTotal(edgeImg);
 
         // Store pixel data in a list
         ArrayList<int[]> pixelInfo = determineEdgeInfo(edgeImg);
@@ -132,7 +134,7 @@ public class cannyEdgeDetection {
             lowThresh = (int)(0.5*highThresh);
 
             curPix = calculateThresholds(img, lowThresh, highThresh);
-            System.out.println("High: " + highThresh + ", Low: " + lowThresh + ", Count: " + curPix);
+            //System.out.println("High: " + highThresh + ", Low: " + lowThresh + ", Count: " + curPix);
 
             // Update values
             if(curPix < pixReq){
@@ -150,7 +152,7 @@ public class cannyEdgeDetection {
             prePix = curPix;
         }
 
-        return new double[] {lowThresh, highThresh};
+        return new double[] {lowThresh, highThresh, prePix};
     }
 
     public int calculateThresholds(Mat img, double lowThresh, double highThresh){

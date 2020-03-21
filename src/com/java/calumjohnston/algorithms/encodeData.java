@@ -95,13 +95,6 @@ public class encodeData {
 
         // Determine whether random embedding is being used
         this.random = random;
-        if (random) {
-            if(algorithm == 2 || algorithm == 3){
-                generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed, 2);
-            }else {
-                generator = new pseudorandom(coverImage.getHeight(), coverImage.getWidth(), seed);
-            }
-        }
     }
 
     /**
@@ -170,7 +163,7 @@ public class encodeData {
     public void encodeSingularData(StringBuilder binary){
         ArrayList<int[]> pixelOrder = new ArrayList<>();
         if(algorithm == 0 || algorithm == 1){
-            pixelOrder = generatePixelOrder(1, 18, 0);
+            pixelOrder = generatePixelOrder(1, 13, 0);
             if(random){
                 Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
             }
@@ -182,12 +175,6 @@ public class encodeData {
             int currentX = pixelOrder.get(currentPixel)[0];
             int currentY = pixelOrder.get(currentPixel)[1];
             for(int colourChan : coloursToConsider){
-                if(currentBit == binary.length()){
-                    endPositionX = currentX;
-                    endPositionY = currentY;
-                    endColourChannel = colourChan;
-                    complete = true;
-                }
                 char data = binary.charAt(currentBit);
                 int colour  = getColourAtPosition(currentX, currentY, colourChan);
                 int newColour = 0;
@@ -198,6 +185,13 @@ public class encodeData {
                 }
                 writeColourAtPosition(currentX, currentY, colourChan, newColour);
                 currentBit += 1;
+                if(currentBit == binary.length()){
+                    endPositionX = currentX;
+                    endPositionY = currentY;
+                    endColourChannel = colourChan;
+                    complete = true;
+                    break;
+                }
             }
             currentPixel++;
         }
@@ -206,7 +200,7 @@ public class encodeData {
     public void encodeDoublyData(StringBuilder binary){
         ArrayList<int[]> pixelOrder;
         if(algorithm == 2 || algorithm == 3){
-            pixelOrder = generatePixelOrder(2, 18, 0);
+            pixelOrder = generatePixelOrder(2, 13, 0);
         }else{
             cannyEdgeDetection c = new cannyEdgeDetection();
             pixelOrder = c.getEdgePixels(coverImage, binary);
@@ -227,24 +221,21 @@ public class encodeData {
                 char secondData = binary.charAt(currentBit + 1);
                 int firstColour  = getColourAtPosition(currentX, currentY, colourChan);
                 int secondColour = getColourAtPosition(nextX, nextY, colourChan);
+                int[] newData = new int[3];
                 if(algorithm == 2){
-                    int[] newColours = LSBMR(firstData, secondData, firstColour, secondColour);
-                    writeColourAtPosition(currentX, currentY, colourChan, newColours[0]);
-                    writeColourAtPosition(currentX, currentY, colourChan, newColours[1]);
-                    currentBit += 2;
-                }else if(algorithm == 3){
-                    int[] newData = PVD(firstColour, secondColour, binary, currentBit);
-                    if(newData[0] == 1){
-                        writeColourAtPosition(currentX, currentY, colourChan, newData[2]);
-                        writeColourAtPosition(currentX, currentY, colourChan, newData[3]);
-                    }
-                    currentBit += newData[1];
+                    newData = LSBMR(firstData, secondData, firstColour, secondColour);
+                }else if(algorithm == 3 || algorithm == 4){
+                    newData = PVD(firstColour, secondColour, binary, currentBit);
                 }
+                writeColourAtPosition(currentX, currentY, colourChan, newData[1]);
+                writeColourAtPosition(nextX, nextY, colourChan, newData[2]);
+                currentBit += newData[0];
                 if(currentBit >= binary.length()){
                     endPositionX = currentX;
                     endPositionY = currentY;
                     endColourChannel = colourChan;
                     complete = true;
+                    break;
                 }
             }
             currentPixel++;
@@ -325,7 +316,7 @@ public class encodeData {
                 }
             }
         }
-        return new int[] {firstColour, secondColour};
+        return new int[] {2, firstColour, secondColour};
     }
 
     public int[] PVD(int firstColour, int secondColour, StringBuilder binary, int currentPos){
@@ -357,7 +348,7 @@ public class encodeData {
 
         if(newColours[0] < 0 || newColours[0] > 255 || newColours[1] < 0 || newColours[1] > 255){
             data = "";
-            return new int[] {0, data.length(), 0, 0};
+            return new int[] {data.length(), firstColour, secondColour};
         }else {
 
             // Calculate embedding values
@@ -369,7 +360,7 @@ public class encodeData {
             newColours = updateColoursPVD(firstColour, secondColour, d, d1);
 
             // Write colour data back to the image
-            return new int[] {1, data.length(), newColours[0], newColours[1]};
+            return new int[] {data.length(), newColours[0], newColours[1]};
         }
     }
 
@@ -377,12 +368,14 @@ public class encodeData {
     public ArrayList<int[]> generatePixelOrder(int increment, int startX, int startY){
         ArrayList<int[]> order = new ArrayList<>();
         int x = startX; int y = startY;
+        int prevX = 0;
         while(x < coverImage.getWidth() && y < coverImage.getHeight()){
             order.add(new int[] {x,y});
             x = (x + increment) % coverImage.getWidth();
-            if(x == 0){
-                y += 1;
+            if(prevX > x){
+                y++;
             }
+            prevX = x;
         }
         return order;
     }
@@ -527,6 +520,9 @@ public class encodeData {
         parameters.append(conformBinaryLength(endPositionX, 15));
         parameters.append(conformBinaryLength(endPositionY, 15));
         parameters.append(conformBinaryLength(endColourChannel, 2));
+        if(algorithm == 4){
+            conformBinaryLength(lowThresh, 16);
+        }
         encodeParameters(parameters);
     }
 
@@ -537,7 +533,7 @@ public class encodeData {
      */
     public void encodeParameters(StringBuilder parameters){
         ArrayList<int[]> pixelOrder = new ArrayList<>();
-        pixelOrder = generateParameterPixelOrder(18, 0);
+        pixelOrder = generateParameterPixelOrder(13, 0);
         int[] coloursToConsider = new int[] {0, 1, 2};
         int currentPixel = 0;
         int currentBit = 0;
@@ -546,14 +542,15 @@ public class encodeData {
             int currentX = pixelOrder.get(currentPixel)[0];
             int currentY = pixelOrder.get(currentPixel)[1];
             for(int colourChan : coloursToConsider){
-                if(currentBit == parameters.length()){
-                    complete = true;
-                }
                 char data = parameters.charAt(currentBit);
                 int colour  = getColourAtPosition(currentX, currentY, colourChan);
-                int newColour = newColour = LSB(data, colour);
+                int newColour = LSB(data, colour);
                 writeColourAtPosition(currentX, currentY, colourChan, newColour);
                 currentBit += 1;
+                if(currentBit == parameters.length()){
+                    complete = true;
+                    break;
+                }
             }
             currentPixel++;
         }
@@ -562,7 +559,7 @@ public class encodeData {
     public ArrayList<int[]> generateParameterPixelOrder(int endX, int endY){
         ArrayList<int[]> order = new ArrayList<>();
         int x = 0; int y = 0;
-        while(x < endX && y < endY){
+        while(x < endX || y < endY){
             order.add(new int[] {x,y});
             x = (x + 1) % coverImage.getWidth();
             if(x == 0){
