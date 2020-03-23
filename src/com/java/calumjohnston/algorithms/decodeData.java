@@ -24,6 +24,7 @@ public class decodeData {
     int endPositionY;
     int endColourChannel;
     int algorithm;
+    int dataLength;
 
     /**
      * Constructor
@@ -93,9 +94,13 @@ public class decodeData {
         }
 
         // Get end position for data encoding
-        endPositionX = binaryToInt(parameters.substring(7,22));
-        endPositionY = binaryToInt(parameters.substring(22,37));
-        endColourChannel = binaryToInt(parameters.substring(37, 39));
+        if(algorithm != 4) {
+            endPositionX = binaryToInt(parameters.substring(7, 22));
+            endPositionY = binaryToInt(parameters.substring(22, 37));
+            endColourChannel = binaryToInt(parameters.substring(37, 39));
+        }else{
+            dataLength = binaryToInt(parameters.substring(7,39));
+        }
     }
 
     /**
@@ -106,8 +111,8 @@ public class decodeData {
     public StringBuilder decodeParameters(){
         ArrayList<int[]> pixelOrder = new ArrayList<>();
         StringBuilder result = new StringBuilder();
-        pixelOrder = generateParameterPixelOrder(13, 0);
-        int[] coloursToConsider = new int[] {0, 1, 2};
+        pixelOrder = generateParameterPixelOrder(20, 0);
+        int[] coloursToConsider = new int[] {1, 2};
         int currentPixel = 0;
         boolean complete = false;
         while(!complete){
@@ -117,7 +122,7 @@ public class decodeData {
                 int colour  = getColourAtPosition(currentX, currentY, colourChan);
                 result.append(LSB(colour));
             }
-            if(currentX == 12 && currentY == 0){
+            if(currentX == 19 && currentY == 0){
                 complete = true;
             }
             currentPixel++;
@@ -265,7 +270,7 @@ public class decodeData {
         StringBuilder result = new StringBuilder();
         ArrayList<int[]> pixelOrder = new ArrayList<>();
         if(algorithm == 0 || algorithm == 1){
-            pixelOrder = generatePixelOrder(1, 13, 0);
+            pixelOrder = generatePixelOrder(1, 20, 0);
             if(random){
                 Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
             }
@@ -296,11 +301,11 @@ public class decodeData {
         StringBuilder result = new StringBuilder();
         ArrayList<int[]> pixelOrder;
         if(algorithm == 2 || algorithm == 3){
-            pixelOrder = generatePixelOrder(2, 13, 0);
+            pixelOrder = generatePixelOrder(2, 20, 0);
         }else{
             cannyEdgeDetection c = new cannyEdgeDetection();
-            // Need to get threshold data
-            pixelOrder = c.getEdgePixels(stegoImage, 0, 2);
+            pixelOrder = c.getEdgePixels(stegoImage, dataLength);
+            coloursToConsider = new int[] {1,2};
         }
         if(random){
             Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
@@ -311,7 +316,7 @@ public class decodeData {
             int currentX = pixelOrder.get(currentPixel)[0];
             int currentY = pixelOrder.get(currentPixel)[1];
             int nextX = (currentX + 1) % stegoImage.getWidth();
-            int nextY = ((currentY == 0) ? currentY : currentY + 1);
+            int nextY = ((nextX == 0) ? currentY + 1 : currentY);
             for(int colourChan : coloursToConsider){
                 int firstColour  = getColourAtPosition(currentX, currentY, colourChan);
                 int secondColour = getColourAtPosition(nextX, nextY, colourChan);
@@ -319,12 +324,17 @@ public class decodeData {
                 if(algorithm == 2){
                     result.append(LSB(firstColour));
                     result.append(LSB((firstColour / 2) + secondColour));
-                }else if(algorithm == 3){
+                }else if(algorithm == 3 || algorithm == 4){
                     result.append(PVD(firstColour, secondColour));
                 }
-                if(endPositionX == currentX && endPositionY == currentY && endColourChannel == colourChan){
-                    complete = true;
-                    break;
+                if(algorithm != 4) {
+                    if (endPositionX == currentX && endPositionY == currentY && endColourChannel == colourChan) {
+                        complete = true; break;
+                    }
+                }else{
+                    if(result.length() >= dataLength){
+                        complete = true; break;
+                    }
                 }
             }
             currentPixel++;

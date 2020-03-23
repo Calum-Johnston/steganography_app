@@ -1,8 +1,5 @@
 package com.java.calumjohnston.utilities;
 
-import com.java.calumjohnston.utilities.cloning;
-
-import com.sun.corba.se.impl.interceptors.PICurrent;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -10,8 +7,6 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-import javax.swing.*;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
@@ -39,18 +34,53 @@ public class cannyEdgeDetection {
 
     }
 
-    public ArrayList<int[]> getEdgePixels(BufferedImage image, StringBuilder data){
+    Mat temp1 = new Mat();
+    Mat temp2 = new Mat();
+
+    public void test1(BufferedImage image, int data){
+        // Initialises the data
+        Mat maskedImg = setupData(cloning.deepCopy(image));
+
+        // Determine the optimal thresholds
+        double[] thresholds = detOptimalThres(maskedImg, data);
+
+        // Get edge image from optimal thresholds
+        temp1 = detectEdges(maskedImg, thresholds[0], thresholds[1]);
+    }
+
+    public void test2(BufferedImage image, int data){
+        // Initialises the data
+        Mat maskedImg = setupData(cloning.deepCopy(image));
+
+        // Determine the optimal thresholds
+        double[] thresholds = detOptimalThres(maskedImg, data);
+
+        // Get edge image from optimal thresholds
+        temp2 = detectEdges(maskedImg, thresholds[0], thresholds[1]);
+    }
+
+    public void test3(){
+        for(int i = 0; i < temp1.width(); i++){
+            for(int j = 0; j < temp1.height(); j++){
+                double red1 = temp1.get(i, j)[0];
+                double red2 = temp2.get(i, j)[0];
+                if(red1 != red2){
+                    System.out.print(i + " " + j);
+                }
+            }
+        }
+    }
+
+    public ArrayList<int[]> getEdgePixels(BufferedImage image, int data){
 
         // Initialises the data
         Mat maskedImg = setupData(cloning.deepCopy(image));
 
         // Determine the optimal thresholds
-        double[] thresholds = detOptimalThres(maskedImg, data.length());
+        double[] thresholds = detOptimalThres(maskedImg, data);
 
         // Get edge image from optimal thresholds
-        Mat edgeImg = detectEdges(maskedImg, Math.floor(thresholds[0]), Math.ceil(thresholds[1]));
-
-        int total = getEdgeTotal(edgeImg);
+        Mat edgeImg = detectEdges(maskedImg, thresholds[0], thresholds[1]);
 
         // Store pixel data in a list
         ArrayList<int[]> pixelInfo = determineEdgeInfo(edgeImg);
@@ -58,21 +88,6 @@ public class cannyEdgeDetection {
         // Return the list
         return pixelInfo;
     }
-
-    public ArrayList<int[]> getEdgePixels(BufferedImage image, double lowThresh, double highThresh){
-        // Initialises the data
-        Mat maskedImg = setupData(cloning.deepCopy(image));
-
-        // Get edge image from optimal thresholds
-        Mat edgeImg = detectEdges(maskedImg, lowThresh, highThresh);
-
-        // Store pixel data in a list
-        ArrayList<int[]> pixelInfo = determineEdgeInfo(edgeImg);
-
-        // Return the list
-        return pixelInfo;
-    }
-
 
 
     public Mat setupData(BufferedImage image){
@@ -91,19 +106,11 @@ public class cannyEdgeDetection {
     private Mat maskImage(Mat image){
         for(int i = 0; i < image.rows(); i++){
             for(int j = 0; j < image.cols(); j++){
-                int red = (int) image.get(i, j)[0];
+                int red = (int) image.get(i, j)[2];
                 int green = (int) image.get(i, j)[1];
                 int blue = (int) image.get(i, j)[2];
-                if(red % 2 != 0){
-                    red--;
-                }
-                if(green % 2 != 0){
-                    green--;
-                }
-                if(blue % 2 != 0){
-                    blue--;
-                }
-                image.put(i, j, new double[] {red, green, blue});
+                green = 0; blue = 0;
+                image.put(i, j, new double[] {blue, green, red});
             }
         }
         return image;
@@ -170,7 +177,7 @@ public class cannyEdgeDetection {
 
     public int getEdgeTotal(Mat src){
         int count = 0;
-        int x = 0; int y = 0;
+        int x = 13; int y = 0;
         while(x < src.width() && y < src.height()){
             if(src.get(x,y)[0] != 0 || src.get(x,y)[1] != 0 || src.get(x,y)[2] != 0){
                 count++;
@@ -193,7 +200,7 @@ public class cannyEdgeDetection {
     public ArrayList<int[]> determineEdgeInfo(Mat edgeImg){
         ArrayList<int[]> order = new ArrayList<>();
         int width = edgeImg.width();
-        int x = 0; int y = 0;
+        int x = 13; int y = 0;
         while(x < edgeImg.width() && y < edgeImg.height()){
             if(edgeImg.get(x,y)[0] != 0 || edgeImg.get(x,y)[1] != 0 || edgeImg.get(x,y)[2] != 0){
                 order.add(new int[] {x, y});
