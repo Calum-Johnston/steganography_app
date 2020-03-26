@@ -260,7 +260,7 @@ public class decodeData {
         // Determine which encoding scheme to use
         if(algorithm <= 1){
             return decodeSingularData();
-        }else if(algorithm == 2 || algorithm == 3 || algorithm == 4){
+        }else if(algorithm == 2 || algorithm == 3 || algorithm == 4 || algorithm == 5){
             return decodeDoublyData();
         }
         return new StringBuilder();
@@ -300,7 +300,7 @@ public class decodeData {
     public StringBuilder decodeDoublyData(){
         StringBuilder result = new StringBuilder();
         ArrayList<int[]> pixelOrder;
-        if(algorithm == 2 || algorithm == 3){
+        if(algorithm == 2 || algorithm == 3 || algorithm == 5){
             pixelOrder = generatePixelOrder(2, 20, 0);
         }else{
             cannyEdgeDetection c = new cannyEdgeDetection();
@@ -326,6 +326,8 @@ public class decodeData {
                     result.append(LSB((firstColour / 2) + secondColour));
                 }else if(algorithm == 3 || algorithm == 4){
                     result.append(PVD(firstColour, secondColour));
+                }else if(algorithm == 5){
+                    result.append(AELSB(firstColour, secondColour));
                 }
                 if(algorithm != 4) {
                     if (endPositionX == currentX && endPositionY == currentY && endColourChannel == colourChan) {
@@ -372,6 +374,11 @@ public class decodeData {
         return "";
     }
 
+    public String AELSB(int firstColour, int secondColour){
+        int d = firstColour - secondColour;
+        int bits = rangeDivision(Math.abs(d));
+        return conformBinaryLength((firstColour % (int) Math.pow(2, bits)), bits) + conformBinaryLength((secondColour % (int) Math.pow(2, bits)), bits);
+    }
 
     public ArrayList<int[]> generatePixelOrder(int increment, int startX, int startY){
         ArrayList<int[]> order = new ArrayList<>();
@@ -453,6 +460,16 @@ public class decodeData {
         String binaryParameter = Integer.toBinaryString(data);
         binaryParameter = (StringUtils.repeat('0', length) + binaryParameter).substring(binaryParameter.length());
         return binaryParameter;
+    }
+
+    public int rangeDivision(int difference){
+        if(difference <= 15){
+            return 3;
+        }else if(difference <= 31){
+            return 4;
+        }else{
+            return 5;
+        }
     }
 
 

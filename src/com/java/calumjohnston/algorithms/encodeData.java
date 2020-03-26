@@ -151,7 +151,7 @@ public class encodeData {
         // Determine which encoding scheme to use
         if(algorithm <= 1){
             encodeSingularData(binary);
-        }else if(algorithm == 2 || algorithm == 3 || algorithm == 4){
+        }else if(algorithm == 2 || algorithm == 3 || algorithm == 4 || algorithm == 5){
             encodeDoublyData(binary);
         }
     }
@@ -197,7 +197,7 @@ public class encodeData {
 
     public void encodeDoublyData(StringBuilder binary){
         ArrayList<int[]> pixelOrder;
-        if(algorithm == 2 || algorithm == 3){
+        if(algorithm == 2 || algorithm == 3 || algorithm == 5){
             pixelOrder = generatePixelOrder(2, 20, 0);
         }else{
             cannyEdgeDetection c = new cannyEdgeDetection();
@@ -223,6 +223,8 @@ public class encodeData {
                     newData = LSBMR(firstColour, secondColour, binary, currentBit);
                 }else if(algorithm == 3 || algorithm == 4){
                     newData = PVD(firstColour, secondColour, binary, currentBit);
+                }else if(algorithm == 5){
+                    newData = AELSB(firstColour, secondColour, binary, currentBit);
                 }
                 writeColourAtPosition(currentX, currentY, colourChan, newData[1]);
                 writeColourAtPosition(nextX, nextY, colourChan, newData[2]);
@@ -365,6 +367,132 @@ public class encodeData {
         }
     }
 
+    public int[] AELSB(int firstColour, int secondColour, StringBuilder binary, int currentPos){
+
+        int d = secondColour - firstColour;
+        int bits = rangeDivision(Math.abs(d));
+        String firstData;
+        String secondData;
+
+        if(currentPos + bits > binary.length()){
+            firstData = binary.substring(currentPos);
+            while(firstData.length() < bits){
+                firstData = firstData + "0";
+            }
+            secondData = firstData;
+        }else{
+            firstData = binary.substring(currentPos, currentPos + bits);
+            currentPos = currentPos + bits;
+            if(currentPos + bits> binary.length()){
+                secondData = binary.substring(currentPos);
+                while(secondData.length() < bits){
+                    secondData = secondData + "0";
+                }
+            }else{
+                secondData = binary.substring(currentPos, currentPos + bits);
+            }
+        }
+
+        // Embed data using k-bit LSB
+        String firstColourStr = Integer.toBinaryString(firstColour);
+        String secondColourStr = Integer.toBinaryString(secondColour);
+        firstColourStr = firstColourStr.substring(0, Math.max(0, firstColourStr.length() - bits));
+        secondColourStr = secondColourStr.substring(0, Math.max(0, secondColourStr.length() - bits));
+        String newFirstColourStr = firstColourStr + firstData;
+        String newSecondColourStr = secondColourStr + secondData;
+        int newFirstColour = Integer.parseInt(newFirstColourStr, 2);
+        int newSecondColour = Integer.parseInt(newSecondColourStr, 2);
+
+        // OPAP
+        int adjustedFirstColour = 0;
+        int adjustedSecondColour = 0;
+        int APDif = newFirstColour - firstColour;
+        if(Math.pow(2, bits - 1) < APDif && APDif < Math.pow(2, bits)){
+            if(newFirstColour >= Math.pow(2, bits)){
+                adjustedFirstColour = newFirstColour - (int) Math.pow(2, bits);
+            }else{
+                adjustedFirstColour = newFirstColour;
+            }
+        }else if(-Math.pow(2, bits - 1) <= APDif && APDif <= Math.pow(2, bits - 1)){
+            adjustedFirstColour = newFirstColour;
+        }else if(-Math.pow(2, bits) < APDif && APDif < -Math.pow(2, bits - 1)){
+            if(newFirstColour < 256 - Math.pow(2, bits)){
+                adjustedFirstColour = newFirstColour + (int) Math.pow(2, bits);
+            }else{
+                adjustedFirstColour = newFirstColour;
+            }
+        }
+        APDif = newSecondColour - secondColour;
+        if(Math.pow(2, bits - 1) < APDif && APDif < Math.pow(2, bits)){
+            if(newSecondColour >= Math.pow(2, bits)){
+                adjustedSecondColour = newSecondColour - (int) Math.pow(2, bits);
+            }else{
+                adjustedSecondColour = newSecondColour;
+            }
+        }else if(-Math.pow(2, bits - 1) <= APDif && APDif <= Math.pow(2, bits - 1)){
+            adjustedSecondColour = newSecondColour;
+        }else if(-Math.pow(2, bits) < APDif && APDif < -Math.pow(2, bits - 1)){
+            if(newSecondColour < 256 - Math.pow(2, bits)){
+                adjustedSecondColour = newSecondColour + (int) Math.pow(2, bits);
+            }else{
+                adjustedSecondColour = newSecondColour;
+            }
+        }
+
+        // Update difference if fucked
+        int[] newValuesOne = new int[] {adjustedFirstColour, adjustedSecondColour};
+        int[] newValuesTwo = new int[] {adjustedFirstColour, adjustedSecondColour};
+        d = adjustedFirstColour - adjustedSecondColour;
+        int newBits = rangeDivision(Math.abs(d));
+        if(bits == 3 && newBits != 3){
+            if(adjustedFirstColour >= adjustedSecondColour){
+                newValuesOne[1] = adjustedSecondColour + (int) Math.pow(2, bits);
+                newValuesTwo[0] = adjustedFirstColour - (int) Math.pow(2, bits);
+            }else{
+                newValuesOne[1] = adjustedSecondColour - (int) Math.pow(2, bits);
+                newValuesTwo[0] = adjustedFirstColour + (int) Math.pow(2, bits);
+            }
+        }else if(bits == 4 && newBits == 3){
+            if(adjustedFirstColour >= adjustedSecondColour){
+                newValuesOne[0] = adjustedFirstColour + (int) Math.pow(2, bits);
+                newValuesTwo[1] = adjustedSecondColour - (int) Math.pow(2, bits);
+            }else{
+                newValuesOne[1] = adjustedSecondColour + (int) Math.pow(2, bits);
+                newValuesTwo[0] = adjustedFirstColour - (int) Math.pow(2, bits);
+            }
+        }else if(bits == 4 && newBits == 5){
+            if(adjustedFirstColour >= adjustedSecondColour){
+                newValuesOne[1] = adjustedSecondColour + (int) Math.pow(2, bits);
+                newValuesTwo[0] = adjustedFirstColour - (int) Math.pow(2, bits);
+            }else{
+                newValuesOne[1] = adjustedSecondColour - (int) Math.pow(2, bits);
+                newValuesTwo[0] = adjustedFirstColour + (int) Math.pow(2, bits);
+            }
+        }else if(bits == 5 && newBits != 5){
+            if(adjustedFirstColour >= adjustedSecondColour){
+                newValuesOne[1] = adjustedSecondColour - (int) Math.pow(2, bits);
+                newValuesTwo[0] = adjustedFirstColour + (int) Math.pow(2, bits);
+            }else{
+                newValuesOne[1] = adjustedSecondColour + (int) Math.pow(2, bits);
+                newValuesTwo[0] = adjustedFirstColour - (int) Math.pow(2, bits);
+            }
+        }
+        double first = Math.pow(firstColour - newValuesOne[0], 2) + Math.pow(secondColour - newValuesOne[1], 2);
+        double second = Math.pow(firstColour - newValuesTwo[0], 2) + Math.pow(secondColour - newValuesTwo[1], 2);
+
+        if(first <= second){
+            if(newValuesOne[0] > 255 || newValuesOne[0] < 0 || newValuesOne[1] > 255 || newValuesOne[1] < 0){
+                return new int[] {bits * 2, newValuesTwo[0], newValuesTwo[1]};
+            }
+            return new int[] {bits * 2, newValuesOne[0], newValuesOne[1]};
+        }else{
+            if(newValuesTwo[0] > 255 || newValuesTwo[0] < 0 || newValuesTwo[1] > 255 || newValuesTwo[1] < 0){
+                return new int[] {bits * 2, newValuesOne[0], newValuesOne[1]};
+            }
+            return new int[] {bits * 2, newValuesTwo[0], newValuesTwo[1]};
+        }
+    }
+
 
     public ArrayList<int[]> generatePixelOrder(int increment, int startX, int startY){
         ArrayList<int[]> order = new ArrayList<>();
@@ -480,23 +608,27 @@ public class encodeData {
     public int[] quantisationRangeTable(int difference){
         if(difference <= 7){
             return new int[] {0, 7};
-        }
-        if(difference <= 15){
+        }else if(difference <= 15){
             return new int[] {8, 15};
-        }
-        if(difference <= 31){
+        }else if(difference <= 31){
             return new int[] {16, 31};
-        }
-        if(difference <= 63){
+        }else if(difference <= 63){
             return new int[] {32, 63};
-        }
-        if(difference <= 127){
+        }else if(difference <= 127){
             return new int[] {64, 127};
-        }
-        if(difference <= 255){
+        }else{
             return new int[] {128, 255};
         }
-        return null;
+    }
+
+    public int rangeDivision(int difference){
+        if(difference <= 15){
+            return 3;
+        }else if(difference <= 31){
+            return 4;
+        }else{
+            return 5;
+        }
     }
 
 
