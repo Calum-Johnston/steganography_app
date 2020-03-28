@@ -111,8 +111,8 @@ public class decodeData {
     public StringBuilder decodeParameters(){
         ArrayList<int[]> pixelOrder = new ArrayList<>();
         StringBuilder result = new StringBuilder();
-        pixelOrder = generateParameterPixelOrder(20, 0);
-        int[] coloursToConsider = new int[] {1, 2};
+        pixelOrder = generateParameterPixelOrder(13, 0);
+        coloursToConsider = new int[] {0,1,2};
         int currentPixel = 0;
         boolean complete = false;
         while(!complete){
@@ -122,7 +122,7 @@ public class decodeData {
                 int colour  = getColourAtPosition(currentX, currentY, colourChan);
                 result.append(LSB(colour));
             }
-            if(currentX == 19 && currentY == 0){
+            if(currentX == 12 && currentY == 0){
                 complete = true;
             }
             currentPixel++;
@@ -258,9 +258,9 @@ public class decodeData {
      */
     public StringBuilder decodeSecretData(){
         // Determine which encoding scheme to use
-        if(algorithm <= 1){
+        if(algorithm == 0 || algorithm == 1 || algorithm == 4){
             return decodeSingularData();
-        }else if(algorithm == 2 || algorithm == 3 || algorithm == 4 || algorithm == 5){
+        }else if(algorithm == 2 || algorithm == 3 || algorithm == 5){
             return decodeDoublyData();
         }
         return new StringBuilder();
@@ -270,10 +270,13 @@ public class decodeData {
         StringBuilder result = new StringBuilder();
         ArrayList<int[]> pixelOrder = new ArrayList<>();
         if(algorithm == 0 || algorithm == 1){
-            pixelOrder = generatePixelOrder(1, 20, 0);
-            if(random){
-                Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
-            }
+            pixelOrder = generatePixelOrder(1, 13, 0);
+        }else if(algorithm == 4){
+            cannyEdgeDetection c = new cannyEdgeDetection();
+            pixelOrder = c.getEdgePixels(stegoImage, dataLength);
+        }
+        if(random){
+            Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
         }
         int currentPixel = 0;
         boolean complete = false;
@@ -282,15 +285,15 @@ public class decodeData {
             int currentY = pixelOrder.get(currentPixel)[1];
             for(int colourChan : coloursToConsider){
                 int colour  = getColourAtPosition(currentX, currentY, colourChan);
-                if(algorithm == 0){ //LSB
+                if(algorithm == 0 || algorithm == 4){ //LSB
                     result.append(LSB(colour));
                 }else if(algorithm == 1){ //LSBM
                     result.append(LSB(colour));
                 }
-                if(endPositionX == currentX && endPositionY == currentY && endColourChannel == colourChan){
-                    complete = true;
-                    break;
+                if(result.length() >= dataLength){
+                    complete = true; break;
                 }
+
             }
             currentPixel++;
         }
@@ -299,13 +302,12 @@ public class decodeData {
 
     public StringBuilder decodeDoublyData(){
         StringBuilder result = new StringBuilder();
-        ArrayList<int[]> pixelOrder;
+        ArrayList<int[]> pixelOrder = new ArrayList<>();
         if(algorithm == 2 || algorithm == 3 || algorithm == 5){
-            pixelOrder = generatePixelOrder(2, 20, 0);
-        }else{
+            pixelOrder = generatePixelOrder(2, 13, 0);
+        }else if(algorithm == 4){
             cannyEdgeDetection c = new cannyEdgeDetection();
             pixelOrder = c.getEdgePixels(stegoImage, dataLength);
-            coloursToConsider = new int[] {1,2};
         }
         if(random){
             Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
@@ -320,23 +322,16 @@ public class decodeData {
             for(int colourChan : coloursToConsider){
                 int firstColour  = getColourAtPosition(currentX, currentY, colourChan);
                 int secondColour = getColourAtPosition(nextX, nextY, colourChan);
-                int[] newData = new int[3];
-                if(algorithm == 2){
+                if(algorithm == 2 || algorithm == 4){
                     result.append(LSB(firstColour));
                     result.append(LSB((firstColour / 2) + secondColour));
-                }else if(algorithm == 3 || algorithm == 4){
+                }else if(algorithm == 3){
                     result.append(PVD(firstColour, secondColour));
                 }else if(algorithm == 5){
                     result.append(AELSB(firstColour, secondColour));
                 }
-                if(algorithm != 4) {
-                    if (endPositionX == currentX && endPositionY == currentY && endColourChannel == colourChan) {
-                        complete = true; break;
-                    }
-                }else{
-                    if(result.length() >= dataLength){
-                        complete = true; break;
-                    }
+                if(result.length() >= dataLength){
+                    complete = true; break;
                 }
             }
             currentPixel++;

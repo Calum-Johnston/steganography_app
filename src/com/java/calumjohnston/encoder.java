@@ -81,7 +81,10 @@ public class encoder {
         algorithmComboBox.addItem("LSBM");
         algorithmComboBox.addItem("LSBMR");
         algorithmComboBox.addItem("PVD");
-        algorithmComboBox.addItem("Edge-based");
+        algorithmComboBox.addItem("Canny-LSB");
+        algorithmComboBox.addItem("AE-LSB");
+        algorithmComboBox.addItem("Sobel-LSBMR");
+        algorithmComboBox.addItem("NEW Technique");
 
         selectImageButton.addActionListener(new ActionListener() {
             @Override

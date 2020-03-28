@@ -45,14 +45,22 @@ public class PSNR {
                 int stegoPixel = stego.getRGB(i, j);
 
                 // Convert RGB to YCrCy Colour Space (just for Luma channel)
-                double coverLuma = (0.299 * ((coverPixel & 0x00ff0000) >> 16) + 0.587 * ((coverPixel & 0x0000ff00) >> 8)
-                        + 0.114 * (coverPixel & 0x000000ff));
-                double stegoLuma = (0.299 * ((stegoPixel & 0x00ff0000) >> 16) + 0.587 * ((stegoPixel & 0x0000ff00) >> 8)
-                        + 0.114 * (stegoPixel & 0x000000ff));
+                int red = (coverPixel & 0x00ff0000) >> 16;
+                int green = (coverPixel & 0x0000ff00) >> 8;
+                int blue = coverPixel & 0x000000ff;
+                int red1 = (stegoPixel & 0x00ff0000) >> 16;
+                int green1 = (stegoPixel & 0x0000ff00) >> 8;
+                int blue1 = stegoPixel & 0x000000ff;
+                //double coverLuma = (0.299 * ((coverPixel & 0x00ff0000) >> 16) + 0.587 * ((coverPixel & 0x0000ff00) >> 8)
+                     //   + 0.114 * (coverPixel & 0x000000ff));
+                //double stegoLuma = (0.299 * ((stegoPixel & 0x00ff0000) >> 16) + 0.587 * ((stegoPixel & 0x0000ff00) >> 8)
+                     //   + 0.114 * (stegoPixel & 0x000000ff));
 
                 // Calculate the squared difference and add to total
-                int difSquared = (int) Math.pow(Math.abs(coverLuma - stegoLuma), 2);
-                total += difSquared;
+                double difSquared = Math.pow(Math.abs(red - red1), 2);
+                double difSquared2 = Math.pow(Math.abs(green - green1), 2);
+                double difSquared3 = Math.pow(Math.abs(blue - blue1), 2);
+                total += difSquared + difSquared2 + difSquared3;
             }
         }
         // Divide total by height * width or images

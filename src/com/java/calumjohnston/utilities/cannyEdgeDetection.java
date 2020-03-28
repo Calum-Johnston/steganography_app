@@ -34,50 +34,19 @@ public class cannyEdgeDetection {
 
     }
 
-    Mat temp1 = new Mat();
-    Mat temp2 = new Mat();
-
-    public void test1(BufferedImage image, int data){
-        // Initialises the data
-        Mat maskedImg = setupData(cloning.deepCopy(image));
-
-        // Determine the optimal thresholds
-        double[] thresholds = detOptimalThres(maskedImg, data);
-
-        // Get edge image from optimal thresholds
-        temp1 = detectEdges(maskedImg, thresholds[0], thresholds[1]);
-    }
-
-    public void test2(BufferedImage image, int data){
-        // Initialises the data
-        Mat maskedImg = setupData(cloning.deepCopy(image));
-
-        // Determine the optimal thresholds
-        double[] thresholds = detOptimalThres(maskedImg, data);
-
-        // Get edge image from optimal thresholds
-        temp2 = detectEdges(maskedImg, thresholds[0], thresholds[1]);
-    }
-
-    public void test3(){
-        for(int i = 0; i < temp1.width(); i++){
-            for(int j = 0; j < temp1.height(); j++){
-                double red1 = temp1.get(i, j)[0];
-                double red2 = temp2.get(i, j)[0];
-                if(red1 != red2){
-                    System.out.print(i + " " + j);
-                }
-            }
-        }
-    }
-
     public ArrayList<int[]> getEdgePixels(BufferedImage image, int data){
 
         // Initialises the data
         Mat maskedImg = setupData(cloning.deepCopy(image));
 
+        // Calculate max amount of edges
+        Mat maxImg = detectEdges(maskedImg, 0, 1);
+        int maxNum = getEdgeTotal(maxImg);
+        System.out.println(maxNum);
+
         // Determine the optimal thresholds
         double[] thresholds = detOptimalThres(maskedImg, data);
+        double[] asda = detOptimalThresholds(maskedImg, data);
 
         // Get edge image from optimal thresholds
         Mat edgeImg = detectEdges(maskedImg, thresholds[0], thresholds[1]);
@@ -88,6 +57,7 @@ public class cannyEdgeDetection {
         // Return the list
         return pixelInfo;
     }
+
 
 
     public Mat setupData(BufferedImage image){
@@ -106,10 +76,9 @@ public class cannyEdgeDetection {
     private Mat maskImage(Mat image){
         for(int i = 0; i < image.rows(); i++){
             for(int j = 0; j < image.cols(); j++){
-                int red = (int) image.get(i, j)[2];
-                int green = (int) image.get(i, j)[1];
-                int blue = (int) image.get(i, j)[2];
-                green = 0; blue = 0;
+                int red = (int) image.get(i, j)[2] & 11111110;
+                int green = (int) image.get(i, j)[1] & 11111110;
+                int blue = (int) image.get(i, j)[2] & 11111110;
                 image.put(i, j, new double[] {blue, green, red});
             }
         }
@@ -141,7 +110,6 @@ public class cannyEdgeDetection {
             lowThresh = (int)(0.5*highThresh);
 
             curPix = calculateThresholds(img, lowThresh, highThresh);
-            //System.out.println("High: " + highThresh + ", Low: " + lowThresh + ", Count: " + curPix);
 
             // Update values
             if(curPix < pixReq){
@@ -149,6 +117,42 @@ public class cannyEdgeDetection {
                 preChoice = 1;
             }else if(curPix > 1.1 * pixReq){
                 tMin = highThresh;
+                if(preChoice == 2 && curPix == prePix){
+                    complete = true;
+                }
+                preChoice = 2;
+            }else{
+                complete = true;
+            }
+            prePix = curPix;
+        }
+
+        return new double[] {lowThresh, highThresh, prePix};
+    }
+    public double[] detOptimalThresholds(Mat img, int pixReq){
+        int curPix = pixReq; int prePix = pixReq;
+        int preChoice = 3;
+        double highThresh = 1; double lowThresh = 0;
+        boolean complete = false;
+        int decreaseValue = 10; int increaseValue = 10;
+
+        while(!complete){
+
+            lowThresh = highThresh * 0.4;
+            curPix = calculateThresholds(img, lowThresh, highThresh);
+
+            // Update values
+            if(curPix < pixReq){
+                if(preChoice == 2){
+                    decreaseValue -= 1;
+                }
+                highThresh -= decreaseValue;
+                preChoice = 1;
+            }else if(curPix > 1.1 * pixReq){
+                if(preChoice == 1){
+                    increaseValue -= 10;
+                }
+                highThresh += increaseValue;
                 if(preChoice == 2 && curPix == prePix){
                     complete = true;
                 }
@@ -181,8 +185,8 @@ public class cannyEdgeDetection {
         while(x < src.width() && y < src.height()){
             if(src.get(x,y)[0] != 0 || src.get(x,y)[1] != 0 || src.get(x,y)[2] != 0){
                 count++;
-                x = (x + 2) % src.width();
-                if(x == 0 || x == 1){
+                x = (x + 1) % src.width();
+                if(x == 0){
                     y++;
                 }
             }else{
@@ -204,10 +208,6 @@ public class cannyEdgeDetection {
         while(x < edgeImg.width() && y < edgeImg.height()){
             if(edgeImg.get(x,y)[0] != 0 || edgeImg.get(x,y)[1] != 0 || edgeImg.get(x,y)[2] != 0){
                 order.add(new int[] {x, y});
-                x = (x + 1) % width;
-                if(x == 0){
-                    y += 1;
-                }
             }
             x = (x + 1) % width;
             if(x == 0){
