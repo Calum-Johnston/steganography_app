@@ -28,9 +28,6 @@ public class encoder {
     private JButton encodeButton;
     private JTextField textField;
     private JButton textButton;
-    private JCheckBox redCheckBox;
-    private JCheckBox greenCheckBox;
-    private JCheckBox blueCheckBox;
     private JCheckBox randomCheckBox;
     private JComboBox algorithmComboBox;
     private JButton mainMenuButton;
@@ -42,9 +39,6 @@ public class encoder {
     private String text;
     private String coverImageName;
 
-    private boolean red;
-    private boolean green;
-    private boolean blue;
     private boolean random;
     private String seed;
 
@@ -58,9 +52,6 @@ public class encoder {
     public encoder() {
 
         // Define initial parameter values
-        red = true;
-        green = true;
-        blue = true;
         random = false;
         seed = "";
 
@@ -70,11 +61,6 @@ public class encoder {
         // Defines the file chooser (for selecting images)
         openFileChooser = new JFileChooser();
         openFileChooser.setCurrentDirectory(new File("C:\\Users\\Calum\\Documents\\Projects\\Dissertation\\Dissertation Project\\rsts"));
-
-        // Set check boxes to default as selected
-        redCheckBox.setSelected(true);
-        greenCheckBox.setSelected(true);
-        blueCheckBox.setSelected(true);
 
         // Sets up algorithm options in combo box
         algorithmComboBox.addItem("LSB");
@@ -104,27 +90,6 @@ public class encoder {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 encodeData();
-            }
-        });
-
-        redCheckBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                red = !red;
-            }
-        });
-
-        greenCheckBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                green = !green;
-            }
-        });
-
-        blueCheckBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                blue = !blue;
             }
         });
 
@@ -163,7 +128,7 @@ public class encoder {
         PSNR psnr = new PSNR();
         BufferedImage stegoImage = null;
         try{
-            stegoImage = encode.encode(deepCopy(coverImage), algorithm, red, green, blue, random, seed, text);
+            stegoImage = encode.encode(deepCopy(coverImage), algorithm, random, seed, text);
             psnrTextField.setText(Double.toString(psnr.calculatePSNR(deepCopy(coverImage), deepCopy(stegoImage))));
         }catch(DataOverflowException e){
             System.out.println("Error");
@@ -192,12 +157,6 @@ public class encoder {
         // Check whether an image has been provided
         if(coverImage == null){
             JOptionPane.showMessageDialog(rootPanel, "You have forgotten to select an image!");
-            return false;
-        }
-
-        // Check whether at least one colour channel is selected
-        if(redCheckBox.isSelected() == false && greenCheckBox.isSelected() == false && blueCheckBox.isSelected() == false){
-            JOptionPane.showMessageDialog(rootPanel, "Please select at least one colour channel");
             return false;
         }
 

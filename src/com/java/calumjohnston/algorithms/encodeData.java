@@ -25,6 +25,7 @@ public class encodeData {
     int endColourChannel;
     int algorithm;
     boolean random;
+    double threshold;
 
     /**
      * Constructor
@@ -38,18 +39,14 @@ public class encodeData {
      *
      * @param coverImage    The image we will encode data into
      * @param algorithm     The algorithm being used for encoding
-     * @param red           Determines whether the red colour channel will be used
-     * @param green         Determines whether the green colour channel will be used
-     * @param blue          Determines whether the blue colour channel will be used
      * @param random        Determines whether random embedding has been used
      * @param seed          The seed used to initialise the PRNG (if used)
      * @param text          The data to be hidden within the image
      * @return              The image with the hidden data embedded into it
      */
-    public BufferedImage encode(BufferedImage coverImage, int algorithm, boolean red, boolean green, boolean blue,
-                                boolean random, String seed, String text){
+    public BufferedImage encode(BufferedImage coverImage, int algorithm, boolean random, String seed, String text){
         // Setup data to be used for encoding
-        setupData(coverImage, algorithm, red, green, blue, random, seed);
+        setupData(coverImage, algorithm, random, seed);
 
         // Get the binary data to encode
         StringBuilder binary = getBinaryText(text);
@@ -58,7 +55,7 @@ public class encodeData {
         encodeSecretData(binary);
 
         // Encode parameters to the image
-        encodeParameterData(red, green, blue, binary.length());
+        encodeParameterData(binary.length());
 
         // Return the manipulated image
         return coverImage;
@@ -71,14 +68,10 @@ public class encodeData {
      * Sets up the initial data required for encoding
      * @param coverImage    The image we will encode data into
      * @param algorithm     The algorithm being used for encoding
-     * @param red           Determines whether the red colour channel will be used
-     * @param green         Determines whether the green colour channel will be used
-     * @param blue          Determines whether the blue colour channel will be used
      * @param random        Determines whether random embedding has been used
      * @param seed          The seed used to initialise the PRNG (if used)
      */
-    public void setupData(BufferedImage coverImage, int algorithm, boolean red, boolean green, boolean blue,
-                          boolean random, String seed){
+    public void setupData(BufferedImage coverImage, int algorithm, boolean random, String seed){
 
         // Define the image we are embedding data into
         this.coverImage = coverImage;
@@ -86,38 +79,8 @@ public class encodeData {
         // Define the algorithm being used
         this.algorithm = algorithm;
 
-        // Get the colours to consider (some combination of red, green and blue)
-        coloursToConsider = getColoursToConsider(red, green, blue);
-
         // Determine whether random embedding is being used
         this.random = random;
-    }
-
-    /**
-     * Gets the colour channels that will be used
-     *
-     * @param red           Determines whether the red colour channel will be used
-     * @param green         Determines whether the green colour channel will be used
-     * @param blue          Determines whether the blue colour channel will be used
-     * @return              The colours that will be considered when encoding data
-     */
-    public int[] getColoursToConsider(boolean red, boolean green, boolean blue) {
-        if (red && green && blue) {
-            return new int[]{0, 1, 2};
-        } else if (red && green) {
-            return new int[]{0, 1};
-        } else if (red && blue) {
-            return new int[]{0, 2};
-        } else if (blue && green) {
-            return new int[]{1, 2};
-        } else if (red) {
-            return new int[]{0};
-        } else if (green) {
-            return new int[]{1};
-        } else if (blue) {
-            return new int[]{2};
-        }
-        return new int[]{0, 1, 2};
     }
 
     /**
@@ -164,62 +127,66 @@ public class encodeData {
         while(!complete){
             int currentX = pixelOrder.get(currentPixel)[0];
             int currentY = pixelOrder.get(currentPixel)[1];
-            for(int colourChan : coloursToConsider){
-                char data = binary.charAt(currentBit);
-                int colour  = getColourAtPosition(currentX, currentY, colourChan);
-                int newColour = 0;
-                if(algorithm == 0 || algorithm == 4){
-                    newColour = LSB(data, colour);
-                }else if(algorithm == 1) {
-                    newColour = LSBM(data, colour);
-                }
-                writeColourAtPosition(currentX, currentY, colourChan, newColour);
-                currentBit += 1;
-                if(currentBit == binary.length()){
-                    endPositionX = currentX;
-                    endPositionY = currentY;
-                    endColourChannel = colourChan;
-                    complete = true;
-                    break;
-                }
+            char data = binary.charAt(currentBit);
+            int colour  = getColourAtPosition(currentX, currentY);
+            int newColour = 0;
+            if(algorithm == 0 || algorithm == 4){
+                newColour = LSB(data, colour);
+            }else if(algorithm == 1) {
+                newColour = LSBM(data, colour);
+            }
+            writeColourAtPosition(currentX, currentY, newColour);
+            currentBit += 1;
+            if(currentBit == binary.length()){
+                complete = true;
             }
             currentPixel++;
         }
     }
 
     public void encodeDoublyData(StringBuilder binary){
-        ArrayList<int[]> pixelOrder = getPixelOrder(binary);
+        //ArrayList<int[]> pixelOrder = getPixelOrder(binary);
+        sobelEdgeDetection s = new sobelEdgeDetection();
+        ArrayList<int[]> pixelOrder = s.getEdgePixels(coverImage, binary.length());
+        if(random){
+            Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
+        }
         int currentPixel = 0;
         int currentBit = 0;
         boolean complete = false;
         while(!complete){
             int currentX = pixelOrder.get(currentPixel)[0];
             int currentY = pixelOrder.get(currentPixel)[1];
-            int nextX = (currentX + 1) % coverImage.getWidth();
-            int nextY = ((nextX == 0) ? currentY + 1 : currentY);
-            for(int colourChan : coloursToConsider){
-                int firstColour  = getColourAtPosition(currentX, currentY, colourChan);
-                int secondColour = getColourAtPosition(nextX, nextY, colourChan);
-                int[] newData = new int[3];
-                if(algorithm == 2 || algorithm == 6){
-                    newData = LSBMR(firstColour, secondColour, binary, currentBit);
-                }else if(algorithm == 3) {
-                    newData = PVD(firstColour, secondColour, binary, currentBit);
-                }else if(algorithm == 5){
-                    newData = AELSB(firstColour, secondColour, binary, currentBit);
-                }
-                writeColourAtPosition(currentX, currentY, colourChan, newData[1]);
-                writeColourAtPosition(nextX, nextY, colourChan, newData[2]);
-                currentBit += newData[0];
-                if(currentBit >= binary.length()){
-                    endPositionX = currentX;
-                    endPositionY = currentY;
-                    endColourChannel = colourChan;
-                    complete = true;
-                    break;
-                }
+            int nextX = 0; int nextY = 0;
+            if(algorithm == 6){
+                currentPixel++;
+                nextX = pixelOrder.get(currentPixel)[0];
+                nextY = pixelOrder.get(currentPixel)[1];
+            }else{
+                nextX = (currentX + 1) % coverImage.getWidth();
+                nextY = ((nextX == 0) ? currentY + 1 : currentY);
+            }
+            int firstColour  = getColourAtPosition(currentX, currentY);
+            int secondColour = getColourAtPosition(nextX, nextY);
+            int[] newData = new int[3];
+            if(algorithm == 2 || algorithm == 6){
+                newData = LSBMR(firstColour, secondColour, binary, currentBit);
+            }else if(algorithm == 3) {
+                newData = PVD(firstColour, secondColour, binary, currentBit);
+            }else if(algorithm == 5){
+                newData = AELSB(firstColour, secondColour, binary, currentBit);
+            }
+            writeColourAtPosition(currentX, currentY, newData[1]);
+            writeColourAtPosition(nextX, nextY, newData[2]);
+            currentBit += newData[0];
+            if(currentBit >= binary.length()){
+                complete = true;
             }
             currentPixel++;
+        }
+
+        if(algorithm == 6){
+            threshold = s.adjustGradients(coverImage, binary.length());
         }
     }
 
@@ -478,9 +445,9 @@ public class encodeData {
     public ArrayList<int[]> getPixelOrder(StringBuilder binary){
         ArrayList<int[]> pixelOrder = new ArrayList<>();
         if(algorithm == 0 || algorithm == 1){
-            pixelOrder = generatePixelOrder(1, 13, 0);
+            pixelOrder = generatePixelOrder(1, 33, 0);
         }else if(algorithm == 2 || algorithm == 3 || algorithm == 5) {
-            pixelOrder = generatePixelOrder(2, 13, 0);
+            pixelOrder = generatePixelOrder(2, 33, 0);
         }else if(algorithm == 6){
             sobelEdgeDetection s = new sobelEdgeDetection();
             pixelOrder = s.getEdgePixels(coverImage, binary.length());
@@ -516,24 +483,10 @@ public class encodeData {
      *
      * @param x                 x coordinate of pixel
      * @param y                 y coordinate of pixel
-     * @param colourChannel     The colour channel we are considering (R, G or B)
      * @return                  The value of the colour channel at position (x,y) in image
      */
-    public int getColourAtPosition(int x, int y, int colourChannel) {
-        int pixel = coverImage.getRGB(x, y);
-        if(colourChannel == 0){
-            int red = (pixel & 0x00ff0000) >> 16;
-            return red;
-        }
-        if(colourChannel == 1){
-            int green = (pixel & 0x0000ff00) >> 8;
-            return green;
-        }
-        if(colourChannel == 2){
-            int blue = pixel & 0x000000ff;
-            return blue;
-        }
-        return -1;
+    public int getColourAtPosition(int x, int y) {
+        return coverImage.getRGB(x, y) & 0x000000ff;
     }
 
     /**
@@ -541,24 +494,10 @@ public class encodeData {
      *
      * @param x                 x coordinate of pixel
      * @param y                 y coordinate of pixel
-     * @param colourChannel     The colour channel we are considering (R, G or B)
      * @param data              The data to be written
      */
-    public void writeColourAtPosition(int x, int y, int colourChannel, int data){
-        int pixel = coverImage.getRGB(x, y);
-        int red = (pixel & 0x00ff0000) >> 16;
-        int green = (pixel & 0x0000ff00) >> 8;
-        int blue = pixel & 0x000000ff;
-        if(colourChannel == 0){
-            red = data;
-        }
-        if(colourChannel == 1){
-            green = data;
-        }
-        if(colourChannel == 2){
-            blue = data;
-        }
-        Color color = new Color(red, green, blue);
+    public void writeColourAtPosition(int x, int y, int data){
+        Color color = new Color(data, data, data);
         coverImage.setRGB(x, y, color.getRGB());
     }
 
@@ -640,18 +579,16 @@ public class encodeData {
     /**
      * Converts parameter data to binary and writes to image
      *
-     * @param red       Determines whether the red colour channel has been used
-     * @param green     Determines whether the green colour channel has been used
-     * @param blue      Determines whether the blue colour channel has been used
+     * @param binaryLength      The amount of data embedded
      */
-    public void encodeParameterData(boolean red, boolean green, boolean blue, int binaryLength){
+    public void encodeParameterData(int binaryLength){
         StringBuilder parameters = new StringBuilder();
         parameters.append(conformBinaryLength(algorithm, 3));
-        parameters.append(conformBinaryLength(red ? 1 : 0, 1));
-        parameters.append(conformBinaryLength(green ? 1 : 0, 1));
-        parameters.append(conformBinaryLength(blue ? 1 : 0, 1));
         parameters.append(conformBinaryLength(random ? 1 : 0, 1));
-        parameters.append(conformBinaryLength(binaryLength, 32));
+        parameters.append(conformBinaryLength(binaryLength, 20));
+        if(algorithm == 6){
+            parameters.append(conformBinaryLength((int) threshold, 9));
+        }
         encodeParameters(parameters);
     }
 
@@ -662,24 +599,25 @@ public class encodeData {
      */
     public void encodeParameters(StringBuilder parameters){
         ArrayList<int[]> pixelOrder = new ArrayList<>();
-        pixelOrder = generateParameterPixelOrder(13, 0);
-        coloursToConsider = new int[] {0,1,2};
+        pixelOrder = generateParameterPixelOrder(33, 0);
         int currentPixel = 0;
         int currentBit = 0;
         boolean complete = false;
         while(!complete){
+            if(currentPixel >= parameters.length()){
+                complete = true;
+                break;
+            }
             int currentX = pixelOrder.get(currentPixel)[0];
             int currentY = pixelOrder.get(currentPixel)[1];
-            for(int colourChan : coloursToConsider){
-                char data = parameters.charAt(currentBit);
-                int colour  = getColourAtPosition(currentX, currentY, colourChan);
-                int newColour = LSB(data, colour);
-                writeColourAtPosition(currentX, currentY, colourChan, newColour);
-                currentBit += 1;
-                if(currentBit == parameters.length()){
-                    complete = true;
-                    break;
-                }
+            char data = parameters.charAt(currentBit);
+            int colour  = getColourAtPosition(currentX, currentY);
+            int newColour = LSB(data, colour);
+            writeColourAtPosition(currentX, currentY, newColour);
+            currentBit += 1;
+            if(currentBit == parameters.length()){
+                complete = true;
+                break;
             }
             currentPixel++;
         }

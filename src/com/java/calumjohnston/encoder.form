@@ -24,30 +24,6 @@
           <text value="Select Image"/>
         </properties>
       </component>
-      <component id="97be3" class="javax.swing.JCheckBox" binding="redCheckBox">
-        <constraints>
-          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Use Red?"/>
-        </properties>
-      </component>
-      <component id="f4011" class="javax.swing.JCheckBox" binding="greenCheckBox">
-        <constraints>
-          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Use Green?"/>
-        </properties>
-      </component>
-      <component id="a57ac" class="javax.swing.JCheckBox" binding="blueCheckBox">
-        <constraints>
-          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Use Blue?"/>
-        </properties>
-      </component>
       <component id="c92e" class="javax.swing.JCheckBox" binding="randomCheckBox">
         <constraints>
           <grid row="2" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
@@ -77,11 +53,6 @@
           <text value="Get Text"/>
         </properties>
       </component>
-      <hspacer id="44612">
-        <constraints>
-          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-      </hspacer>
       <hspacer id="e38e">
         <constraints>
           <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>

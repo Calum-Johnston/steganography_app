@@ -5,10 +5,13 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.awt.image.Raster;
 import java.util.ArrayList;
 
 /**
@@ -26,12 +29,13 @@ public class cannyEdgeDetection {
     private Mat srcBlur = new Mat();
     private Mat detectedEdges = new Mat();
     private Mat dst = new Mat();
+    private Imgcodecs imageCodecs;
 
     /**
      * Constructor
      */
     public cannyEdgeDetection(){
-
+        imageCodecs = new Imgcodecs();
     }
 
     public ArrayList<int[]> getEdgePixels(BufferedImage image, int data){
@@ -42,7 +46,6 @@ public class cannyEdgeDetection {
         // Calculate max amount of edges
         Mat maxImg = detectEdges(maskedImg, 0, 1);
         int maxNum = getEdgeTotal(maxImg);
-        System.out.println(maxNum);
 
         // Determine the optimal thresholds
         double[] thresholds = detOptimalThres(maskedImg, data);
@@ -67,19 +70,22 @@ public class cannyEdgeDetection {
 
     private Mat convertImagetoMat(BufferedImage image){
         // https://stackoverflow.com/questions/14958643/converting-bufferedimage-to-mat-in-opencv
-        Mat src = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC3);
-        byte[] data = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-        src.put(0, 0, data);
+        Mat src = new Mat(image.getHeight(), image.getWidth(), CvType.CV_8UC1);
+        for(int i = 0; i < image.getHeight(); i++){
+            for(int j = 0; j < image.getWidth(); j++){
+                src.put(i, j, (image.getRGB(i, j) & 0x00ff0000) >> 16 );
+            }
+        }
         return src;
     }
 
     private Mat maskImage(Mat image){
         for(int i = 0; i < image.rows(); i++){
             for(int j = 0; j < image.cols(); j++){
-                int red = (int) image.get(i, j)[2] & 11111110;
-                int green = (int) image.get(i, j)[1] & 11111110;
-                int blue = (int) image.get(i, j)[2] & 11111110;
-                image.put(i, j, new double[] {blue, green, red});
+                if(image.get(i, j)[0] % 2 != 0){
+                    double newValue = image.get(i, j)[0] - 1;
+                    image.put(i, j, new double[] {newValue});
+                }
             }
         }
         return image;
@@ -107,7 +113,7 @@ public class cannyEdgeDetection {
 
         while(!complete){
             highThresh = ((tMin + tMax) / 2);
-            lowThresh = (int)(0.5*highThresh);
+            lowThresh = (int)(0.33*highThresh);
 
             curPix = calculateThresholds(img, lowThresh, highThresh);
 
@@ -181,9 +187,9 @@ public class cannyEdgeDetection {
 
     public int getEdgeTotal(Mat src){
         int count = 0;
-        int x = 13; int y = 0;
+        int x = 28; int y = 0;
         while(x < src.width() && y < src.height()){
-            if(src.get(x,y)[0] != 0 || src.get(x,y)[1] != 0 || src.get(x,y)[2] != 0){
+            if(src.get(x,y)[0] != 0){
                 count++;
                 x = (x + 1) % src.width();
                 if(x == 0){
@@ -204,9 +210,9 @@ public class cannyEdgeDetection {
     public ArrayList<int[]> determineEdgeInfo(Mat edgeImg){
         ArrayList<int[]> order = new ArrayList<>();
         int width = edgeImg.width();
-        int x = 13; int y = 0;
+        int x = 28; int y = 0;
         while(x < edgeImg.width() && y < edgeImg.height()){
-            if(edgeImg.get(x,y)[0] != 0 || edgeImg.get(x,y)[1] != 0 || edgeImg.get(x,y)[2] != 0){
+            if(edgeImg.get(x,y)[0] != 0){
                 order.add(new int[] {x, y});
             }
             x = (x + 1) % width;
