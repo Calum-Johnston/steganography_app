@@ -1,5 +1,6 @@
 package com.java.calumjohnston.algorithms;
 
+import com.java.calumjohnston.algorithms.techniques.CannyLSBMR;
 import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
 import com.java.calumjohnston.utilities.sobelEdgeDetection;
@@ -79,7 +80,7 @@ public class decodeData {
         if (random) {
             String seed = "";
             if(testEnv){
-                seed = "Calum";
+                seed = "seed";
             }else{
                 seed = JOptionPane.showInputDialog("Please select a password for the data");
             }
@@ -239,6 +240,10 @@ public class decodeData {
     public StringBuilder decodeDoublyData(){
         StringBuilder result = new StringBuilder();
         ArrayList<int[]> pixelOrder = getPixelOrder(dataLength);
+        if(algorithm == 7){
+            CannyLSBMR cannyLSBMR = new CannyLSBMR();
+            return cannyLSBMR.decode(stegoImage, pixelOrder, dataLength);
+        }
         int currentPixel = 0;
         boolean complete = false;
         while(!complete){

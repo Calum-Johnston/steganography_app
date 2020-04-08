@@ -1,5 +1,6 @@
 package com.java.calumjohnston.algorithms;
 
+import com.java.calumjohnston.algorithms.techniques.CannyLSBMR;
 import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
 import com.java.calumjohnston.utilities.sobelEdgeDetection;
@@ -19,13 +20,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public class encodeData {
 
     BufferedImage coverImage;
-    int[] coloursToConsider;
-    int endPositionX;
-    int endPositionY;
-    int endColourChannel;
     int algorithm;
     boolean random;
     double threshold;
+
+    cannyEdgeDetection c;
+    sobelEdgeDetection s;
 
     /**
      * Constructor
@@ -81,6 +81,14 @@ public class encodeData {
 
         // Determine whether random embedding is being used
         this.random = random;
+
+        // Setup edge detection technique
+        if(algorithm == 4 || algorithm == 7){
+            c = new cannyEdgeDetection();
+        }
+        if(algorithm == 6){
+            s = new sobelEdgeDetection();
+        }
     }
 
     /**
@@ -145,11 +153,11 @@ public class encodeData {
     }
 
     public void encodeDoublyData(StringBuilder binary){
-        //ArrayList<int[]> pixelOrder = getPixelOrder(binary);
-        sobelEdgeDetection s = new sobelEdgeDetection();
-        ArrayList<int[]> pixelOrder = s.getEdgePixels(coverImage, binary.length());
-        if(random){
-            Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
+        ArrayList<int[]> pixelOrder = getPixelOrder(binary);
+        if(algorithm == 7){
+            CannyLSBMR cannyLSBMR = new CannyLSBMR();
+            cannyLSBMR.embed(coverImage, pixelOrder, binary);
+            return;
         }
         int currentPixel = 0;
         int currentBit = 0;
@@ -442,6 +450,7 @@ public class encodeData {
     }
 
 
+
     public ArrayList<int[]> getPixelOrder(StringBuilder binary){
         ArrayList<int[]> pixelOrder = new ArrayList<>();
         if(algorithm == 0 || algorithm == 1){
@@ -449,10 +458,8 @@ public class encodeData {
         }else if(algorithm == 2 || algorithm == 3 || algorithm == 5) {
             pixelOrder = generatePixelOrder(2, 33, 0);
         }else if(algorithm == 6){
-            sobelEdgeDetection s = new sobelEdgeDetection();
             pixelOrder = s.getEdgePixels(coverImage, binary.length());
         }else if(algorithm == 4 || algorithm == 7){
-            cannyEdgeDetection c = new cannyEdgeDetection();
             pixelOrder = c.getEdgePixels(coverImage, binary.length());
         }
         if(random){

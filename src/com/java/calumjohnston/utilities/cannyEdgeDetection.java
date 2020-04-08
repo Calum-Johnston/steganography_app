@@ -1,5 +1,6 @@
 package com.java.calumjohnston.utilities;
 
+import org.apache.commons.lang3.StringUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -8,10 +9,8 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.awt.image.Raster;
 import java.util.ArrayList;
 
 /**
@@ -82,13 +81,20 @@ public class cannyEdgeDetection {
     private Mat maskImage(Mat image){
         for(int i = 0; i < image.rows(); i++){
             for(int j = 0; j < image.cols(); j++){
-                if(image.get(i, j)[0] % 2 != 0){
-                    double newValue = image.get(i, j)[0] - 1;
+                int currentValue = (int) image.get(i, j)[0];
+                if(currentValue % 4 != 0){
+                    double newValue = currentValue - (currentValue % 4);
                     image.put(i, j, new double[] {newValue});
                 }
             }
         }
         return image;
+    }
+
+    public String conformBinaryLength(int data, int length){
+        String binaryParameter = Integer.toBinaryString(data);
+        binaryParameter = (StringUtils.repeat('0', length) + binaryParameter).substring(binaryParameter.length());
+        return binaryParameter;
     }
 
     private BufferedImage convertMatToImage(Mat src){
@@ -187,7 +193,7 @@ public class cannyEdgeDetection {
 
     public int getEdgeTotal(Mat src){
         int count = 0;
-        int x = 28; int y = 0;
+        int x = 33; int y = 0;
         while(x < src.width() && y < src.height()){
             if(src.get(x,y)[0] != 0){
                 count++;
@@ -210,7 +216,7 @@ public class cannyEdgeDetection {
     public ArrayList<int[]> determineEdgeInfo(Mat edgeImg){
         ArrayList<int[]> order = new ArrayList<>();
         int width = edgeImg.width();
-        int x = 28; int y = 0;
+        int x = 33; int y = 0;
         while(x < edgeImg.width() && y < edgeImg.height()){
             if(edgeImg.get(x,y)[0] != 0){
                 order.add(new int[] {x, y});
