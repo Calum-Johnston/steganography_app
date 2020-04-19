@@ -41,7 +41,7 @@ public class PVD {
         int[] newColours = updateColoursPVD(firstColour, secondColour, d, encodingData[1]);
 
         if(newColours[0] < 0 || newColours[0] > 255 || newColours[1] < 0 || newColours[1] > 255){
-            return new int[] {firstColour, secondColour, n};
+            return new int[] {firstColour, secondColour, 0};
         }else {
 
             // Calculate embedding values
