@@ -1,6 +1,6 @@
 package com.java.calumjohnston.algorithms;
 
-import com.java.calumjohnston.algorithms.techniques.CannyLSBMR;
+import com.java.calumjohnston.algorithms.techniques.*;
 import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.pseudorandom;
 import com.java.calumjohnston.utilities.sobelEdgeDetection;
@@ -102,20 +102,12 @@ public class decodeData {
      * @return      The binary parameter data that was hidden within the image
      */
     public StringBuilder decodeParameters(){
-        ArrayList<int[]> pixelOrder = new ArrayList<>();
         StringBuilder result = new StringBuilder();
-        pixelOrder = generateParameterPixelOrder(33, 0);
+        ArrayList<int[]> pixelOrder = generateParameterPixelOrder(33, 0);
         int currentPixel = 0;
-        boolean complete = false;
-        while(!complete){
-            int currentX = pixelOrder.get(currentPixel)[0];
-            int currentY = pixelOrder.get(currentPixel)[1];
-            int colour  = getColourAtPosition(currentX, currentY);
-            result.append(LSB(colour));
-            if(currentX == 32 && currentY == 0){
-                complete = true;
-            }
-            currentPixel++;
+        while(result.length() < pixelOrder.size()){
+            result.append(LSB.decode(stegoImage, pixelOrder.get(currentPixel)));
+            currentPixel += 1;
         }
         return result;
     }
@@ -206,119 +198,74 @@ public class decodeData {
      * @return        The binary data hidden within the image
      */
     public StringBuilder decodeSecretData(){
-        // Determine which encoding scheme to use
-        if(algorithm == 0 || algorithm == 1 || algorithm == 4){
-            return decodeSingularData();
-        }else if(algorithm == 2 || algorithm == 3 || algorithm == 5 || algorithm == 6 || algorithm == 7){
-            return decodeDoublyData();
-        }
-        return new StringBuilder();
-    }
 
-    public StringBuilder decodeSingularData() {
+        // Pre-process
         StringBuilder result = new StringBuilder();
         ArrayList<int[]> pixelOrder = getPixelOrder(dataLength);
         int currentPixel = 0;
-        boolean complete = false;
-        while(!complete){
-            int currentX = pixelOrder.get(currentPixel)[0];
-            int currentY = pixelOrder.get(currentPixel)[1];
-            int colour  = getColourAtPosition(currentX, currentY);
-            if(algorithm == 0 || algorithm == 4){ //LSB
-                result.append(LSB(colour));
-            }else if(algorithm == 1){ //LSBM
-                result.append(LSB(colour));
-            }
-            if(result.length() >= dataLength){
-                complete = true; break;
-            }
-            currentPixel++;
+        int update = 1;
+        if(algorithm == 0 || algorithm == 1 || algorithm == 3 || algorithm == 4 || algorithm == 5) {
+            update = 1;
+        }else if(algorithm == 2 || algorithm == 6) {
+            update = 2;
+        }else if(algorithm == 7){
+            update = 50;  // Block Size (+2)
         }
-        return result;
-    }
 
-    public StringBuilder decodeDoublyData(){
-        StringBuilder result = new StringBuilder();
-        ArrayList<int[]> pixelOrder = getPixelOrder(dataLength);
-        if(algorithm == 7){
-            CannyLSBMR cannyLSBMR = new CannyLSBMR();
-            return cannyLSBMR.decode(stegoImage, pixelOrder, dataLength);
+        // Embed
+        while(result.length() < dataLength){
+            if (algorithm == 0) {  // LSB
+                result.append(LSB.decode(stegoImage, pixelOrder.get(currentPixel)));
+                currentPixel += 1;
+            }
+            if (algorithm == 1) {  // LSBM
+                result.append(LSBM.decode(stegoImage, pixelOrder.get(currentPixel)));
+                currentPixel += 1;
+            }
+            if (algorithm == 2) { // LSBMR
+                result.append(LSBMR.decode(stegoImage, pixelOrder.get(currentPixel), pixelOrder.get(currentPixel + 1)));
+                currentPixel += 2;
+            }
+            if (algorithm == 3) { // PVD
+                result.append(PVD.decode(stegoImage, pixelOrder.get(currentPixel)));
+                currentPixel += 1;
+            }
+            if (algorithm == 4) { // Canny LSB
+                result.append(LSB.decode(stegoImage, pixelOrder.get(currentPixel)));
+                currentPixel += 1;
+            }
+            if (algorithm == 5) { // AE-LSB
+                result.append(AELSB.decode(stegoImage, pixelOrder.get(currentPixel)));
+                currentPixel += 1;
+            }
+            if (algorithm == 6) { // Sobel LSBMR
+                result.append(LSBMR.decode(stegoImage, pixelOrder.get(currentPixel), pixelOrder.get(currentPixel + 1)));
+                currentPixel += 2;
+            }
+            if (algorithm == 7) { // Canny LSBMR (Proposed
+                if(result.length() + 50 < dataLength){
+                    ArrayList<int[]> subsetOrder = new ArrayList<>(pixelOrder.subList(currentPixel, currentPixel + 52));
+                    result.append(CannyLSBMR.decode(stegoImage, subsetOrder));
+                }else{
+                    ArrayList<int[]> subsetOrder = new ArrayList<>(pixelOrder.subList(currentPixel, currentPixel + dataLength - result.length() + 2));
+                    result.append(CannyLSBMR.decode(stegoImage, subsetOrder));
+                }
+                currentPixel += 52;
+            }
         }
-        int currentPixel = 0;
-        boolean complete = false;
-        while(!complete){
-            int currentX = pixelOrder.get(currentPixel)[0];
-            int currentY = pixelOrder.get(currentPixel)[1];
-            int nextX = 0; int nextY = 0;
-            if(algorithm == 6){
-                currentPixel++;
-                nextX = pixelOrder.get(currentPixel)[0];
-                nextY = pixelOrder.get(currentPixel)[1];
-            }else{
-                nextX = (currentX + 1) % stegoImage.getWidth();
-                nextY = ((nextX == 0) ? currentY + 1 : currentY);
-            }
-            int firstColour  = getColourAtPosition(currentX, currentY);
-            int secondColour = getColourAtPosition(nextX, nextY);
-            if(algorithm == 2 || algorithm == 4 || algorithm == 6){
-                result.append(LSB(firstColour));
-                result.append(LSB((firstColour / 2) + secondColour));
-            }else if(algorithm == 3){
-                result.append(PVD(firstColour, secondColour));
-            }else if(algorithm == 5){
-                result.append(AELSB(firstColour, secondColour));
-            }
-            if(result.length() >= dataLength){
-                complete = true; break;
-            }
-            currentPixel++;
-        }
+
         return result;
     }
 
 
-    public String LSB(int colour){
-        if(colour % 2 == 0){
-            return "0";
-        }else{
-            return "1";
-        }
-    }
-
-    public String PVD(int firstColour, int secondColour){
-        int d = secondColour - firstColour;
-
-        int[] decodingData = quantisationRangeTable(Math.abs(d));
-
-        // Calculate the quantisation range width, then the number of bits to encode
-        int width = decodingData[1] - decodingData[0] + 1;
-        int t = (int)Math.floor(Math.log(width)/Math.log(2.0));
-
-        // DETERMINE WHETHER DATA EMBEDDING HAS OCCURRED
-        int[] newColours = updateColoursPVD(firstColour, secondColour, d, decodingData[1]);
-
-        if(newColours[0] < 0 || newColours[0] > 255 || newColours[1] < 0 || newColours[1] > 255) {
-            int a = 2;
-        }else{
-            int b = Math.abs(d) - decodingData[0];
-            return conformBinaryLength(b, t);
-        }
-        return "";
-    }
-
-    public String AELSB(int firstColour, int secondColour){
-        int d = firstColour - secondColour;
-        int bits = rangeDivision(Math.abs(d));
-        return conformBinaryLength((firstColour % (int) Math.pow(2, bits)), bits) + conformBinaryLength((secondColour % (int) Math.pow(2, bits)), bits);
-    }
 
 
 
     public ArrayList<int[]> getPixelOrder(int binaryLength){
         ArrayList<int[]> pixelOrder = new ArrayList<>();
-        if(algorithm == 0 || algorithm == 1){
+        if(algorithm == 0 || algorithm == 1 || algorithm == 2){
             pixelOrder = generatePixelOrder(1, 33, 0);
-        }else if(algorithm == 2 || algorithm == 3 || algorithm == 5) {
+        }else if(algorithm == 3 || algorithm == 5) {
             pixelOrder = generatePixelOrder(2, 33, 0);
         }else if(algorithm == 6){
             sobelEdgeDetection s = new sobelEdgeDetection();

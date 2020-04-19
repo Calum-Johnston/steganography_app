@@ -1,14 +1,10 @@
 package com.java.calumjohnston.utilities;
 
-import org.apache.commons.lang3.StringUtils;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
@@ -28,14 +24,42 @@ public class cannyEdgeDetection {
     private Mat srcBlur = new Mat();
     private Mat detectedEdges = new Mat();
     private Mat dst = new Mat();
-    private Imgcodecs imageCodecs;
 
     /**
      * Constructor
      */
     public cannyEdgeDetection(){
-        imageCodecs = new Imgcodecs();
     }
+
+    public void displayDifferences(BufferedImage original, BufferedImage modified){
+        Mat originalMat = convertImagetoMat(original);
+        Mat modifiedMat = convertImagetoMat(modified);
+        Mat originalMatEdge = detectEdges(originalMat, 0, 1);
+        Mat modifiedMatEdge = detectEdges(modifiedMat, 0, 1);
+        BufferedImage outImg = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
+        int diff;
+        int result;
+        for (int i = 0; i < original.getHeight(); i++) {
+            for (int j = 0; j < original.getWidth(); j++) {
+                int rgb1 = (int) originalMatEdge.get(j, i)[0];
+                int rgb2 = (int) modifiedMatEdge.get(j, i)[0];
+
+                diff = Math.abs(rgb1 - rgb2); // Change
+                // Make the difference image gray scale
+                // The RGB components are all the same
+                result = (diff << 16) | (diff << 8) | diff;
+                outImg.setRGB(j, i, result); // Set result
+            }
+        }
+        JFrame frame = new JFrame("Edge Map (Canny detector demo)");
+        frame.getContentPane().setLayout(new FlowLayout());
+        frame.getContentPane().add(new JLabel(new ImageIcon(outImg)));
+        frame.pack();
+        frame.setVisible(true);
+    }
+
+
+
 
     public ArrayList<int[]> getEdgePixels(BufferedImage image, int data){
 
@@ -44,11 +68,10 @@ public class cannyEdgeDetection {
 
         // Calculate max amount of edges
         Mat maxImg = detectEdges(maskedImg, 0, 1);
-        int maxNum = getEdgeTotal(maxImg);
+        int maxNum = Core.countNonZero(maxImg);
 
         // Determine the optimal thresholds
-        double[] thresholds = detOptimalThres(maskedImg, data);
-        double[] asda = detOptimalThresholds(maskedImg, data);
+        double[] thresholds = binarySearchThres(maskedImg, data);
 
         // Get edge image from optimal thresholds
         Mat edgeImg = detectEdges(maskedImg, thresholds[0], thresholds[1]);
@@ -91,12 +114,6 @@ public class cannyEdgeDetection {
         return image;
     }
 
-    public String conformBinaryLength(int data, int length){
-        String binaryParameter = Integer.toBinaryString(data);
-        binaryParameter = (StringUtils.repeat('0', length) + binaryParameter).substring(binaryParameter.length());
-        return binaryParameter;
-    }
-
     private BufferedImage convertMatToImage(Mat src){
         // https://stackoverflow.com/questions/30258163/display-image-in-mat-with-jframe-opencv-3-00
         int type = BufferedImage.TYPE_BYTE_GRAY;
@@ -110,7 +127,7 @@ public class cannyEdgeDetection {
 
 
 
-    public double[] detOptimalThres(Mat img, int pixReq){
+    public double[] binarySearchThres(Mat img, int pixReq){
         int curPix = pixReq; int prePix = pixReq;
         int preChoice = 3;
         double tMax = 1000; double tMin = 0;
@@ -121,7 +138,8 @@ public class cannyEdgeDetection {
             highThresh = ((tMin + tMax) / 2);
             lowThresh = (int)(0.33*highThresh);
 
-            curPix = calculateThresholds(img, lowThresh, highThresh);
+            Mat edgeImg = detectEdges(img, lowThresh, highThresh);
+            curPix =  Core.countNonZero(edgeImg);
 
             // Update values
             if(curPix < pixReq){
@@ -141,47 +159,6 @@ public class cannyEdgeDetection {
 
         return new double[] {lowThresh, highThresh, prePix};
     }
-    public double[] detOptimalThresholds(Mat img, int pixReq){
-        int curPix = pixReq; int prePix = pixReq;
-        int preChoice = 3;
-        double highThresh = 1; double lowThresh = 0;
-        boolean complete = false;
-        int decreaseValue = 10; int increaseValue = 10;
-
-        while(!complete){
-
-            lowThresh = highThresh * 0.4;
-            curPix = calculateThresholds(img, lowThresh, highThresh);
-
-            // Update values
-            if(curPix < pixReq){
-                if(preChoice == 2){
-                    decreaseValue -= 1;
-                }
-                highThresh -= decreaseValue;
-                preChoice = 1;
-            }else if(curPix > 1.1 * pixReq){
-                if(preChoice == 1){
-                    increaseValue -= 10;
-                }
-                highThresh += increaseValue;
-                if(preChoice == 2 && curPix == prePix){
-                    complete = true;
-                }
-                preChoice = 2;
-            }else{
-                complete = true;
-            }
-            prePix = curPix;
-        }
-
-        return new double[] {lowThresh, highThresh, prePix};
-    }
-
-    public int calculateThresholds(Mat img, double lowThresh, double highThresh){
-        Mat edgeImg = detectEdges(img, lowThresh, highThresh);
-        return getEdgeTotal(edgeImg);
-    }
 
     private Mat detectEdges(Mat src, double lowThresh, double highThresh) {
         Imgproc.blur(src, srcBlur, BLUR_SIZE);
@@ -189,26 +166,6 @@ public class cannyEdgeDetection {
         dst = new Mat(src.size(), CvType.CV_8UC3, Scalar.all(0));
         src.copyTo(dst, detectedEdges);
         return dst;
-    }
-
-    public int getEdgeTotal(Mat src){
-        int count = 0;
-        int x = 33; int y = 0;
-        while(x < src.width() && y < src.height()){
-            if(src.get(x,y)[0] != 0){
-                count++;
-                x = (x + 1) % src.width();
-                if(x == 0){
-                    y++;
-                }
-            }else{
-                x = (x + 1) % src.width();
-                if(x == 0){
-                    y += 1;
-                }
-            }
-        }
-        return count;
     }
 
 
