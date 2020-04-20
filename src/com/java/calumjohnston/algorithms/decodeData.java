@@ -206,7 +206,7 @@ public class decodeData {
         int update = 1;
         if(algorithm == 0 || algorithm == 1 || algorithm == 3 || algorithm == 4 || algorithm == 5) {
             update = 1;
-        }else if(algorithm == 2 || algorithm == 6) {
+        }else if(algorithm == 2 || algorithm == 4 || algorithm == 6) {
             update = 2;
         }else if(algorithm == 7){
             update = 50;  // Block Size (+2)
@@ -231,7 +231,7 @@ public class decodeData {
                 currentPixel += 1;
             }
             if (algorithm == 4) { // Canny LSB
-                result.append(LSB.decode(stegoImage, pixelOrder.get(currentPixel)));
+                result.append(LSB_2.decode(stegoImage, pixelOrder.get(currentPixel)));
                 currentPixel += 1;
             }
             if (algorithm == 5) { // AE-LSB
@@ -272,10 +272,13 @@ public class decodeData {
             pixelOrder = s.getEdgePixels(stegoImage, binaryLength, threshold);
         }else if(algorithm == 4 || algorithm == 7){
             cannyEdgeDetection c = new cannyEdgeDetection();
-            pixelOrder = c.getEdgePixels(stegoImage, binaryLength);
+            int requiredPixels = binaryLength + ((int)(Math.ceil(binaryLength / 50)) * 2);
+            pixelOrder = c.getEdgePixels(stegoImage, requiredPixels, "seed");
         }
         if(random){
-            Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
+            if(algorithm != 4 && algorithm != 7) {
+                Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
+            }
         }
         return pixelOrder;
     }

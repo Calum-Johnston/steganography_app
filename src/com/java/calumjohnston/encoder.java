@@ -129,7 +129,6 @@ public class encoder {
         BufferedImage stegoImage = null;
         try{
             stegoImage = encode.encode(deepCopy(coverImage), algorithm, random, seed, text);
-            psnrTextField.setText(Double.toString(psnr.calculatePSNR(deepCopy(coverImage), deepCopy(stegoImage))));
         }catch(DataOverflowException e){
             System.out.println("Error");
         }
@@ -178,6 +177,7 @@ public class encoder {
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             try {
                 // Get image based from file explorer
+                File file = openFileChooser.getSelectedFile();
                 coverImage = ImageIO.read(openFileChooser.getSelectedFile());
 
                 // Store image name (ensuring to remove extension)

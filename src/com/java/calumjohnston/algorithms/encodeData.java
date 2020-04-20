@@ -121,9 +121,9 @@ public class encodeData {
         ArrayList<int[]> pixelOrder = getPixelOrder(binary);
         int currentPixel = 0;
         int update = 1;
-        if(algorithm == 0 || algorithm == 1 || algorithm == 3 || algorithm == 4 || algorithm == 5) {
+        if(algorithm == 0 || algorithm == 1 || algorithm == 3 || algorithm == 5) {
             update = 1;
-        }else if(algorithm == 2 || algorithm == 6) {
+        }else if(algorithm == 2 || algorithm == 4 || algorithm == 6) {
             update = 2;
         }else if(algorithm == 7){
             update = 50;  // Block Size (+2)
@@ -152,7 +152,7 @@ public class encodeData {
                 currentPixel += 1;
             }
             if (algorithm == 4) { // Canny LSB
-                LSB.encode(coverImage, pixelOrder.get(currentPixel), binary.charAt(i));
+                LSB_2.encode(coverImage, pixelOrder.get(currentPixel), binary.charAt(i), binary.charAt(i+1));
                 currentPixel += 1;
             }
             if (algorithm == 5) { // AE-LSB
@@ -198,10 +198,13 @@ public class encodeData {
         }else if(algorithm == 6){
             pixelOrder = s.getEdgePixels(coverImage, binary.length());
         }else if(algorithm == 4 || algorithm == 7){
-            pixelOrder = c.getEdgePixels(coverImage, binary.length());
+            int requiredPixels = binary.length() + ((int)(Math.ceil(binary.length() / 50)) * 2);
+            pixelOrder = c.getEdgePixels(coverImage, requiredPixels, "seed");
         }
         if(random){
-            Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
+            if(algorithm != 4 && algorithm != 7){
+                Collections.shuffle(pixelOrder, new Random("seed".hashCode()));
+            }
         }
         return pixelOrder;
     }

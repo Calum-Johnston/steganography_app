@@ -130,6 +130,15 @@ public class CannyLSBMR {
         return new int[] {newFirstColour, newSecondColour};
     }
 
+    public int replaceLSB(int colour, char data){
+        if(colour % 2 == 0  && data == '1'){
+            return colour++;
+        }else if(colour % 2 == 1 && data == '0'){
+            return colour--;
+        }
+        return colour;
+    }
+
 
 
     public static StringBuilder decode(BufferedImage image, ArrayList<int[]> subsetOrder){

@@ -8,6 +8,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
 /**
  * Canny Edge Detection Class: This class implements the detection of edges
@@ -61,26 +63,49 @@ public class cannyEdgeDetection {
 
 
 
-    public ArrayList<int[]> getEdgePixels(BufferedImage image, int data){
+    public ArrayList<int[]> getEdgePixels(BufferedImage image, int data, String seed){
 
         // Initialises the data
+        ArrayList<int[]> edgeInfo = new ArrayList<>();
         Mat maskedImg = setupData(cloning.deepCopy(image));
 
         // Calculate max amount of edges
         Mat maxImg = detectEdges(maskedImg, 0, 1);
         int maxNum = Core.countNonZero(maxImg);
 
-        // Determine the optimal thresholds
-        double[] thresholds = binarySearchThres(maskedImg, data);
+        if(data > maxNum){
+            // Get all edge info
+            edgeInfo = determineEdgeInfo(maxImg);
 
-        // Get edge image from optimal thresholds
-        Mat edgeImg = detectEdges(maskedImg, thresholds[0], thresholds[1]);
+            // Get non edge info
+            ArrayList<int[]> nonEdgeInfo = determineNonEdgeInfo(maxImg);
 
-        // Store pixel data in a list
-        ArrayList<int[]> pixelInfo = determineEdgeInfo(edgeImg);
+            // Randomise if necessary
+            if(seed != null){
+                Collections.shuffle(edgeInfo, new Random(seed.hashCode()));
+                Collections.shuffle(nonEdgeInfo, new Random(seed.hashCode()));
+            }
+
+            // Add info that isn't part of edges
+            edgeInfo.addAll(nonEdgeInfo);
+        }else{
+            // Determine the optimal thresholds
+            double[] thresholds = binarySearchThres(maskedImg, data);
+
+            // Get edge image from optimal thresholds
+            Mat edgeImg = detectEdges(maskedImg, thresholds[0], thresholds[1]);
+
+            // Store pixel data in a list
+            edgeInfo = determineEdgeInfo(edgeImg);
+
+            // Randomise if necessary
+            if(seed != null){
+                Collections.shuffle(edgeInfo, new Random(seed.hashCode()));
+            }
+        }
 
         // Return the list
-        return pixelInfo;
+        return edgeInfo;
     }
 
 
@@ -186,5 +211,20 @@ public class cannyEdgeDetection {
         return order;
     }
 
+    public ArrayList<int[]> determineNonEdgeInfo(Mat edgeImg){
+        ArrayList<int[]> order = new ArrayList<>();
+        int width = edgeImg.width();
+        int x = 33; int y = 0;
+        while(x < edgeImg.width() && y < edgeImg.height()){
+            if(edgeImg.get(x,y)[0] == 0){
+                order.add(new int[] {x, y});
+            }
+            x = (x + 1) % width;
+            if(x == 0){
+                y += 1;
+            }
+        }
+        return order;
+    }
 
 }
