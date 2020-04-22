@@ -7,6 +7,7 @@ import com.java.calumjohnston.exceptions.DataOverflowException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -128,7 +129,7 @@ public class encoder {
         PSNR psnr = new PSNR();
         BufferedImage stegoImage = null;
         try{
-            stegoImage = encode.encode(deepCopy(coverImage), algorithm, random, seed, text);
+            stegoImage = encode.encode(deepCopy(convert(coverImage)), algorithm, random, seed, text);
         }catch(DataOverflowException e){
             System.out.println("Error");
         }
@@ -266,6 +267,14 @@ public class encoder {
         boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
         WritableRaster raster = bi.copyData(null);
         return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+    }
+
+    public BufferedImage convert(BufferedImage src){
+        BufferedImage img = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = img.createGraphics();
+        g2d.drawImage(src, 0, 0,null);
+        g2d.dispose();
+        return img;
     }
 
     /** Gets the main panel of the form

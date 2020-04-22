@@ -272,7 +272,7 @@ public class decodeData {
             pixelOrder = s.getEdgePixels(stegoImage, binaryLength, threshold);
         }else if(algorithm == 4 || algorithm == 7){
             cannyEdgeDetection c = new cannyEdgeDetection();
-            int requiredPixels = binaryLength + ((int)(Math.ceil(binaryLength / 50)) * 2);
+            int requiredPixels = binaryLength + ((int)(Math.ceil(binaryLength / 50)) * 2) + 1;
             pixelOrder = c.getEdgePixels(stegoImage, requiredPixels, "seed");
         }
         if(random){

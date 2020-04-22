@@ -3,16 +3,14 @@ package testingEnv;
 import com.java.calumjohnston.algorithms.decodeData;
 import com.java.calumjohnston.algorithms.encodeData;
 
-import java.awt.image.BufferedImage.*;
-
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
 import java.io.*;
-import java.nio.Buffer;
 import java.security.SecureRandom;
+
+import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -33,33 +31,35 @@ public class batchGen {
     public void runTests() {
 
         encodeData encoder = new encodeData();
-        decodeData decoder = new decodeData();
 
-        int algorithm = 0;
-        String seed = "seed";
-        String text = generateText((((512*512) - 32) / 8));
+        String text = "";
+        boolean random = true;
+
+        double[] values = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5};
+        String[] names = new String[] {"005", "010", "020", "030", "040", "050"};
+        int[] algorithms = new int[] {1};
 
         try {
-
-            PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream("src/testingEnv/payloads_" + algorithm + ".txt"), "UTF-8"));
-            for(int i = 1; i < 10001; i++){
-                System.out.println(i);
-                BufferedImage coverImage = null;
-                String image_name = i + ".png";
-                try{
-                    coverImage = ImageIO.read(new File("C:\\Users\\Calum\\Documents\\Projects\\Dissertation\\Dissertation Project\\src\\testingEnv\\testdata\\" + image_name));
-                }catch(Exception e){
+            for (int algorithm : algorithms) {
+                for (int a = 0; a < 6; a++) {
+                    double bpp = values[a] * (512 * 512);
+                    for (int i = 1; i < 21; i++) {
+                        BufferedImage coverImage = null;
+                        String image_name = i + ".png";
+                        try {
+                            coverImage = ImageIO.read(new File("C:\\Users\\Calum\\Documents\\Projects\\Dissertation\\Dataset\\testdata\\" + image_name));
+                        } catch (Exception e) {
+                        }
+                        text = generateText((int) bpp / 8);
+                        System.out.println(algorithm + " " +  values[a] + " " + i + " " + text);
+                        String seed = generateText(10);
+                        BufferedImage stegoImage = encoder.encode(deepCopy(coverImage), algorithm, random, seed, text);
+                        writeImageFile(stegoImage, Integer.toString(i), algorithm, names[a]);
+                    }
                 }
-
-                String subText = randomSubString(text, (((512*512) - 32) / 8));
-
-                writer.println(subText.length());
-
-                BufferedImage stegoImage = encoder.encode(deepCopy(coverImage), algorithm, true, seed, subText);
-                writeImageFile(stegoImage, Integer.toString(i), algorithm);
             }
-            writer.close();
-        }catch(Exception e){ }
+        }catch(Exception e){
+        }
     }
 
     public static void main(String[] args){
@@ -76,14 +76,11 @@ public class batchGen {
         return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
 
-    public void writeImageFile(BufferedImage image, String name, int algorithm) {
+    public void writeImageFile(BufferedImage image, String name, int algorithm, String bpp) {
         try {
             // Writes file to the disk (w/extension of algorithm used)
-            File outputFile = new File("src/testingEnv/testdata_" +  algorithm + "/" + name + "_encoded.png");
+            File outputFile = new File("C:\\Users\\Calum\\Documents\\Projects\\Dissertation\\Dataset\\stego_" +  algorithm + "_" + bpp + "\\" + name + ".png");
             ImageIO.write(image, "png", outputFile);
-
-            // Debugging purposes
-            System.out.println("Successfully written file to disk");
 
         } catch (Exception e) {
             e.printStackTrace();

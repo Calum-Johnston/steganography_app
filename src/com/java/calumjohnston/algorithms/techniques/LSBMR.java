@@ -42,12 +42,12 @@ public class LSBMR {
                 if (ThreadLocalRandom.current().nextInt(0, 2) < 1) {
                     secondColour -= 1;
                     if(secondColour == -1){
-                        secondColour = 255;
+                        secondColour = 1;
                     }
                 } else {
                     secondColour += 1;
                     if(secondColour == 256){
-                        secondColour = 0;
+                        secondColour = 254;
                     }
                 }
             }
@@ -55,12 +55,12 @@ public class LSBMR {
             if (secondData == m1) {
                 firstColour -= 1;
                 if(firstColour == -1){
-                    firstColour = 255;
+                    firstColour = 1;
                 }
             } else {
                 firstColour += 1;
                 if(firstColour == 256){
-                    firstColour = 0;
+                    firstColour = 254;
                 }
             }
         }

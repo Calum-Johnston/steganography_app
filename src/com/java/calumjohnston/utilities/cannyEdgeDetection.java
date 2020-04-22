@@ -71,7 +71,7 @@ public class cannyEdgeDetection {
 
         // Calculate max amount of edges
         Mat maxImg = detectEdges(maskedImg, 0, 1);
-        int maxNum = Core.countNonZero(maxImg);
+        int maxNum = Core.countNonZero(maxImg) - countParameterInfo(maxImg);
 
         if(data > maxNum){
             // Get all edge info
@@ -164,13 +164,13 @@ public class cannyEdgeDetection {
             lowThresh = (int)(0.33*highThresh);
 
             Mat edgeImg = detectEdges(img, lowThresh, highThresh);
-            curPix =  Core.countNonZero(edgeImg);
+            curPix =  Core.countNonZero(edgeImg) - countParameterInfo(edgeImg);
 
             // Update values
             if(curPix < pixReq){
                 tMax = highThresh;
                 preChoice = 1;
-            }else if(curPix > 1.1 * pixReq){
+            }else if(curPix >= 1.1 * pixReq){
                 tMin = highThresh;
                 if(preChoice == 2 && curPix == prePix){
                     complete = true;
@@ -194,6 +194,18 @@ public class cannyEdgeDetection {
     }
 
 
+
+    public int countParameterInfo(Mat img){
+        int x = 0; int y = 0;
+        int count = 0;
+        while(x < 33){
+            if(img.get(x,y)[0] != 0){
+                count++;
+            }
+            x++;
+        }
+        return count;
+    }
 
     public ArrayList<int[]> determineEdgeInfo(Mat edgeImg){
         ArrayList<int[]> order = new ArrayList<>();

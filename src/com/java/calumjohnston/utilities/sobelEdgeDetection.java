@@ -144,11 +144,11 @@ public class sobelEdgeDetection {
                                         double y_dir = (values[0][0]) + (2*values[1][0]) + (values[2][0])
                                                 - (values[0][2]) - (2*values[1][2]) - (values[2][2]);
                                         double newGrad = Math.abs(x_dir) + Math.abs(y_dir);
-                                        if(newGrad >= targetGradient){
+                                        if(newGrad >= targetGradient && ((values[i][j] >= 0) && (values[i][j] <= 255))){
                                             Color color = new Color((int) values[i][j], (int) values[i][j], (int) values[i][j]);
                                             image.setRGB(x + i - 1, y + j - 1, color.getRGB());
                                             break out;
-                                        }else if(targetGradient - newGrad < targetGradient - modifiedGradient){
+                                        }else if(targetGradient - newGrad < targetGradient - modifiedGradient && ((values[i][j] >= 0) && (values[i][j] <= 255))){
                                             Color color = new Color((int) values[i][j], (int) values[i][j], (int) values[i][j]);
                                             image.setRGB(x + i - 1, y + j - 1, color.getRGB());
                                             break;

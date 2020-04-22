@@ -195,10 +195,13 @@ public class encodeData {
             pixelOrder = generatePixelOrder(1, 33, 0);
         }else if(algorithm == 3 || algorithm == 5) {
             pixelOrder = generatePixelOrder(2, 33, 0);
-        }else if(algorithm == 6){
+        }else if(algorithm == 6) {
             pixelOrder = s.getEdgePixels(coverImage, binary.length());
+        }else if (algorithm == 4){
+            int requiredPixels = binary.length() / 2;
+            pixelOrder = c.getEdgePixels(coverImage, requiredPixels, "seed");
         }else if(algorithm == 4 || algorithm == 7){
-            int requiredPixels = binary.length() + ((int)(Math.ceil(binary.length() / 50)) * 2);
+            int requiredPixels = binary.length() + ((int)(Math.ceil(binary.length() / 50)) * 2) + 3;
             pixelOrder = c.getEdgePixels(coverImage, requiredPixels, "seed");
         }
         if(random){
