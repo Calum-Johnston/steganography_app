@@ -36,8 +36,11 @@ public class cannyEdgeDetection {
     public void displayDifferences(BufferedImage original, BufferedImage modified){
         Mat originalMat = convertImagetoMat(original);
         Mat modifiedMat = convertImagetoMat(modified);
-        Mat originalMatEdge = detectEdges(originalMat, 0, 1);
-        Mat modifiedMatEdge = detectEdges(modifiedMat, 0, 1);
+        Mat originalMatEdge = detectEdges(originalMat, 0, 200);
+        Mat modifiedMatEdge = detectEdges(modifiedMat, 0, 200);
+
+        BufferedImage originalEdge = convertMatToImage(originalMatEdge);
+        BufferedImage modifiedEdge = convertMatToImage(modifiedMatEdge);
         BufferedImage outImg = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
         int diff;
         int result;
@@ -53,7 +56,25 @@ public class cannyEdgeDetection {
                 outImg.setRGB(j, i, result); // Set result
             }
         }
-        JFrame frame = new JFrame("Edge Map (Canny detector demo)");
+        JFrame frame = new JFrame("Original");
+        frame.getContentPane().setLayout(new FlowLayout());
+        frame.getContentPane().add(new JLabel(new ImageIcon(original)));
+        frame.pack();
+        frame.setVisible(true);
+
+        frame = new JFrame("Original Edges");
+        frame.getContentPane().setLayout(new FlowLayout());
+        frame.getContentPane().add(new JLabel(new ImageIcon(originalEdge)));
+        frame.pack();
+        frame.setVisible(true);
+
+        frame = new JFrame("Modified Edges");
+        frame.getContentPane().setLayout(new FlowLayout());
+        frame.getContentPane().add(new JLabel(new ImageIcon(modifiedEdge)));
+        frame.pack();
+        frame.setVisible(true);
+
+        frame = new JFrame("Difference");
         frame.getContentPane().setLayout(new FlowLayout());
         frame.getContentPane().add(new JLabel(new ImageIcon(outImg)));
         frame.pack();

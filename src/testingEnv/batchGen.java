@@ -36,14 +36,14 @@ public class batchGen {
         boolean random = true;
 
         double[] values = new double[] {0.05, 0.1, 0.2, 0.3, 0.4, 0.5};
-        String[] names = new String[] {"005", "010", "020", "030", "040", "050"};
+        String[] names = new String[] {"005", "010", "020", "030", "040","050"};
         int[] algorithms = new int[] {1};
 
         try {
             for (int algorithm : algorithms) {
-                for (int a = 0; a < 6; a++) {
+                for (int a = 0; a < names.length; a++) {
                     double bpp = values[a] * (512 * 512);
-                    for (int i = 1; i < 21; i++) {
+                    for (int i = 1; i < 2000; i++) {
                         BufferedImage coverImage = null;
                         String image_name = i + ".png";
                         try {

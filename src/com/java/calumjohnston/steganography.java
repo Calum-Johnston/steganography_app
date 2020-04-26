@@ -17,7 +17,7 @@ public class steganography extends JFrame{
      */
     public steganography() {
         setLayout(new GridLayout());
-        setSize(550, 550);
+        setSize(500, 500);
         setTitle("Steganography");
         setBackground(Color.YELLOW);
         setResizable(false);

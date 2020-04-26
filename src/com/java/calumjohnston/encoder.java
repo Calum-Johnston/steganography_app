@@ -32,7 +32,7 @@ public class encoder {
     private JCheckBox randomCheckBox;
     private JComboBox algorithmComboBox;
     private JButton mainMenuButton;
-    private JTextField psnrTextField;
+    private JTextField textField1;
 
     private final JFileChooser openFileChooser;
     private BufferedImage coverImage;

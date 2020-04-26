@@ -4,7 +4,9 @@ import com.java.calumjohnston.algorithms.techniques.*;
 import com.java.calumjohnston.utilities.cannyEdgeDetection;
 import com.java.calumjohnston.utilities.sobelEdgeDetection;
 import org.apache.commons.lang3.StringUtils;
+import org.opencv.core.Mat;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
